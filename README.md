@@ -20,29 +20,80 @@ Aplicativo mobile do ConnectAI — plataforma para descoberta e criação de eve
 | Push notifications | expo-notifications |
 | Build / CI | EAS (Expo Application Services) |
 
-## Pré-requisitos
+## Requisitos da máquina (macOS)
 
-- Node.js 18+
-- npm
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-- [EAS CLI](https://docs.expo.dev/eas/) — para builds
-- Xcode (iOS) ou Android Studio (Android)
-- Conta no [Expo](https://expo.dev) — conta: `netobonato`
+### Essenciais
 
-## Instalação
+- Node.js `18+` (recomendado: `20 LTS`)
+- pnpm `10+` (via Corepack)
+- Git
+- Xcode (App Store) com Command Line Tools
+- CocoaPods
+- Conta no [Expo](https://expo.dev)
+
+### Opcionais (somente se for rodar Android no Mac)
+
+- Android Studio
+- Android SDK (API 35+)
+- Emulador Android configurado
+- Java 17
+
+### Instalação sugerida dos requisitos
+
+```bash
+# Homebrew (caso não tenha)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Ferramentas base
+brew install node watchman cocoapods git
+
+# Ativar o pnpm via Corepack
+corepack enable
+corepack prepare pnpm@latest --activate
+```
+
+Instalar Xcode pela App Store e depois executar:
+
+```bash
+sudo xcodebuild -runFirstLaunch
+xcode-select --install
+```
+
+Se você for usar Android também:
+
+```bash
+brew install --cask android-studio
+brew install openjdk@17
+```
+
+### Validar se o ambiente está pronto
+
+```bash
+node -v
+pnpm -v
+git --version
+xcodebuild -version
+pod --version
+```
+
+## Instalação do projeto
 
 ```bash
 # Clonar o repositório
 git clone https://github.com/netobonato/connectai-mobile.git
 cd connectai-mobile
 
-# Instalar dependências
-npm install
+# Instalar dependências JS
+pnpm install
+
+# Instalar pods do iOS (bare workflow)
+cd ios && pod install && cd ..
 
 # Configurar variáveis de ambiente
 cp .env.example .env.local
-# Editar .env.local com os valores reais
 ```
+
+Depois edite o arquivo `.env.local` com os valores reais.
 
 ## Variáveis de ambiente
 
@@ -55,20 +106,68 @@ MAPBOX_DOWNLOAD_TOKEN=sk.ey...seu_token_aqui
 
 > Em produção, os valores são injetados via EAS Secrets — nunca ficam no repositório.
 
-## Desenvolvimento
+## Como rodar localmente (passo a passo)
 
-```bash
-# Iniciar o Metro bundler
-npx expo start
+### 1) Subir backend/API
 
-# Rodar no simulador iOS
-npx expo run:ios
+Antes do app mobile, garanta que a API esteja rodando e acessível na URL definida em `API_URL`.
 
-# Rodar no emulador Android
-npx expo run:android
+### 2) Configurar variáveis de ambiente
+
+Arquivo `.env.local`:
+
+```env
+API_URL=http://localhost:3333
+MAPBOX_DOWNLOAD_TOKEN=sk.ey...seu_token_aqui
 ```
 
-> O projeto usa `--dev-client`, então é necessário ter um [development build](https://docs.expo.dev/develop/development-builds/introduction/) instalado no dispositivo/simulador antes de usar `expo start`.
+### 3) Rodar no iOS (MacBook)
+
+```bash
+# compilar e instalar o app no simulador iOS (primeira vez pode demorar)
+pnpm ios
+```
+
+Em outro terminal, inicie o Metro:
+
+```bash
+pnpm start
+```
+
+Se o simulador não abrir automaticamente:
+
+```bash
+open -a Simulator
+```
+
+### 4) Rodar no Android (opcional)
+
+Com o emulador Android aberto:
+
+```bash
+pnpm android
+```
+
+### 5) Fluxo diário após primeira build
+
+Depois que o app já foi instalado no simulador/emulador:
+
+```bash
+pnpm start
+```
+
+> O projeto usa `expo start --dev-client`. Isso significa que você precisa do app de desenvolvimento instalado no dispositivo/simulador (gerado por `pnpm ios` ou `pnpm android`).
+
+## Troubleshooting rápido
+
+- Porta ocupada no Metro:
+  - Rode `pnpm expo start --clear`.
+- Erro de pods no iOS:
+  - Rode `cd ios && pod install && cd ..`.
+- Alterou dependência nativa e quebrou build:
+  - Rode `pnpm expo prebuild --clean` e depois `cd ios && pod install && cd ..`.
+- App abre mas não conecta na API:
+  - Verifique se `API_URL` aponta para a API correta e se o backend está online.
 
 ## Estrutura de pastas
 
@@ -108,19 +207,19 @@ A arquitetura segue **Feature-Sliced + Clean Architecture**: cada feature é aut
 ## Scripts
 
 ```bash
-npm start              # Inicia o Metro bundler
-npm run ios            # Roda no simulador iOS
-npm run android        # Roda no emulador Android
+pnpm start             # Inicia o Metro bundler
+pnpm ios               # Roda no simulador iOS
+pnpm android           # Roda no emulador Android
 
-npm run lint           # Reporta erros de ESLint
-npm run lint:fix       # Corrige erros automaticamente
-npm run format         # Formata o código com Prettier
-npm run format:check   # Verifica formatação sem modificar
-npm run typecheck      # Verificação de tipos TypeScript
+pnpm lint              # Reporta erros de ESLint
+pnpm lint:fix          # Corrige erros automaticamente
+pnpm format            # Formata o código com Prettier
+pnpm format:check      # Verifica formatação sem modificar
+pnpm typecheck         # Verificação de tipos TypeScript
 
-npm run build:ios      # Build iOS via EAS
-npm run build:android  # Build Android via EAS
-npm run build:all      # Build iOS + Android via EAS
+pnpm build:ios         # Build iOS via EAS
+pnpm build:android     # Build Android via EAS
+pnpm build:all         # Build iOS + Android via EAS
 ```
 
 ## Build com EAS
