@@ -76,6 +76,55 @@ xcodebuild -version
 pod --version
 ```
 
+## Requisitos da máquina (Windows)
+
+> No Windows, este projeto roda em **Android**. Build iOS exige macOS + Xcode.
+
+### Essenciais
+
+- Windows 10/11
+- Node.js `18+` (recomendado: `20 LTS`)
+- pnpm `10+` (via Corepack)
+- Git
+- Android Studio
+- Android SDK (API 35+)
+- Java 17
+- Conta no [Expo](https://expo.dev)
+
+### Instalação sugerida dos requisitos (PowerShell)
+
+```powershell
+# Ativar pnpm via Corepack
+corepack enable
+corepack prepare pnpm@latest --activate
+```
+
+Depois, no Android Studio:
+
+1. Instale o Android SDK (API 35 ou superior)
+2. Instale o Android SDK Platform-Tools
+3. Instale o Android SDK Build-Tools
+4. Crie um emulador em Device Manager
+
+### Variáveis de ambiente (Windows)
+
+Defina no sistema:
+
+- `ANDROID_HOME` = `C:\Users\SEU_USUARIO\AppData\Local\Android\Sdk`
+- Adicionar ao `Path`:
+  - `%ANDROID_HOME%\platform-tools`
+  - `%ANDROID_HOME%\emulator`
+
+### Validar ambiente no Windows
+
+```powershell
+node -v
+pnpm -v
+git --version
+java -version
+adb --version
+```
+
 ## Instalação do projeto
 
 ```bash
@@ -94,6 +143,12 @@ cp .env.example .env.local
 ```
 
 Depois edite o arquivo `.env.local` com os valores reais.
+
+No Windows (PowerShell), use:
+
+```powershell
+Copy-Item .env.example .env.local
+```
 
 ## Variáveis de ambiente
 
@@ -146,6 +201,20 @@ Com o emulador Android aberto:
 
 ```bash
 pnpm android
+```
+
+### 4.1) Rodar no Windows (Android)
+
+Com o emulador Android aberto no Android Studio:
+
+```powershell
+pnpm android
+```
+
+Se quiser só iniciar o bundler:
+
+```powershell
+pnpm start
 ```
 
 ### 5) Fluxo diário após primeira build
