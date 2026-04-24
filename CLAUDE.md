@@ -141,6 +141,8 @@ src/
 │   │   ├── api.ts          → instância Axios configurada
 │   │   ├── queryClient.ts  → configuração do TanStack Query
 │   │   └── secureStore.ts  → wrapper do SecureStore
+│   ├── utils/              → funções utilitárias puras e reutilizáveis
+│   │   └── masks.ts        → formatPhone, futuros formatadores de input
 │   └── types/              → tipos globais (ApiError, PaginatedResponse, etc.)
 │
 └── global.css              → diretivas Tailwind (NativeWind)
@@ -159,6 +161,7 @@ src/
 | `features/<nome>/schemas/` | Schemas Zod e tipos inferidos | Qualquer lógica |
 | `features/<nome>/store/` | Estado global da feature via Zustand | Chamadas HTTP diretas |
 | `shared/components/` | Componentes genéricos e reutilizáveis | Lógica de domínio |
+| `shared/utils/` | Funções puras reutilizáveis (formatadores, máscaras, parsers) | Side-effects, chamadas HTTP |
 | `shared/lib/api.ts` | Configuração do Axios (baseURL, interceptors, token) | Lógica de negócio |
 
 ---
@@ -374,6 +377,7 @@ export const useAuthStore = create<AuthState>(set => ({
 - **Hook nunca acessa Axios diretamente** — sempre via service
 - **Componente nunca acessa store global** — recebe dados via props ou hook da própria feature
 - **`shared/components/`** nunca importa de `features/` — dependência só desce, nunca sobe
+- **`shared/utils/`** para funções puras reutilizáveis — se uma função de formatação/máscara/parse for usada em mais de um lugar (ou puder ser), ela vai em `shared/utils/`, não embutida no componente. Ex: `formatPhone` em `masks.ts`, não dentro de `StepAccount.tsx`
 - **NativeWind para estilos** — evitar `StyleSheet.create` exceto para casos não suportados pelo Tailwind
 - Erros de API tratados nos interceptors do Axios — não repetir tratamento em cada hook
 
