@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { api } from '@/shared/lib/api'
+import { authService } from '../services/authService'
 import { useAuthStore } from '../store/authStore'
 import { saveToken } from '@/shared/lib/secureStore'
 import type { RegisterInput, RegisterPayload } from '../schemas/registerSchema'
@@ -23,18 +23,10 @@ export function useRegister() {
         isPrivate: data.isPrivate,
       }
 
-      await api.post('/users', payload)
-
-      const { data: loginData } = await api.post('/auth/login', {
-        email: data.email,
-        password: data.password,
-      })
-
-      const { data: me } = await api.get('/auth/me', {
-        headers: { Authorization: `Bearer ${loginData.token}` },
-      })
-
-      return { token: loginData.token as string, userId: me.id as string }
+      await authService.register(payload)
+      const { token } = await authService.login({ email: data.email, password: data.password })
+      const me = await authService.me()
+      return { token: token as string, userId: me.id as string }
     },
     onSuccess: async ({ token, userId }) => {
       await saveToken(token)

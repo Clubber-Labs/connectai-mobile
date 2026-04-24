@@ -14,7 +14,7 @@ export default {
         cameraPermissionText: "Precisamos da câmera para fotos de perfil e eventos"
       }],
       ["@rnmapbox/maps", {
-        RNMAPBOX_MAPS_DOWNLOAD_TOKEN: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN
+        RNMapboxMapsDownloadToken: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN
       }]
     ],
     extra: {

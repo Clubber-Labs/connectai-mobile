@@ -5,21 +5,33 @@ import { Stack, useRouter, useSegments } from 'expo-router'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/shared/lib/queryClient'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import { getToken } from '@/shared/lib/secureStore'
+import { getToken, deleteToken } from '@/shared/lib/secureStore'
+import { authService } from '@/features/auth/services/authService'
 
 function AuthGuard() {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
   const setUser = useAuthStore(s => s.setUser)
+  const logout = useAuthStore(s => s.logout)
   const segments = useSegments()
   const router = useRouter()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    getToken().then(token => {
-      if (token) setUser('restored')
+    async function restoreSession() {
+      const token = await getToken()
+      if (token) {
+        try {
+          const me = await authService.me()
+          setUser(me.id)
+        } catch {
+          await deleteToken()
+          logout()
+        }
+      }
       setReady(true)
-    })
-  }, [setUser])
+    }
+    restoreSession()
+  }, [setUser, logout])
 
   useEffect(() => {
     if (!ready) return
