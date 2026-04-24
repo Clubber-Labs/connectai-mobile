@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import type { ComponentProps } from 'react'
 
-type IconName = React.ComponentProps<typeof Ionicons>['name']
+type IconName = ComponentProps<typeof Ionicons>['name']
 
 type TabConfig = {
   name: string
