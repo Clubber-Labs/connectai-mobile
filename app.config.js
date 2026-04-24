@@ -6,6 +6,7 @@ export default {
     slug: "connectai-mobile",
     version: "1.0.0",
     scheme: "connectai",
+    userInterfaceStyle: "automatic",
     plugins: [
       "expo-router",
       "expo-secure-store",
@@ -13,7 +14,7 @@ export default {
         cameraPermissionText: "Precisamos da câmera para fotos de perfil e eventos"
       }],
       ["@rnmapbox/maps", {
-        RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOAD_TOKEN
+        RNMapboxMapsDownloadToken: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN
       }]
     ],
     extra: {

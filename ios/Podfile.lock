@@ -1780,6 +1780,28 @@ PODS:
     - React-utils (= 0.81.5)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.81.5)
+  - RNDateTimePicker (9.1.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - rnmapbox-maps (10.3.0):
     - MapboxMaps (~> 11.18.2)
     - React
@@ -2088,6 +2110,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - "ReactCommon/turbomodule/core (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@react-native+metro-config@0.85.2_@babel+core@7._a0df58fc1fe96c31423c9b72cceb7fec/node_modules/react-native/ReactCommon`)"
   - "ReactNativeDependencies (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@react-native+metro-config@0.85.2_@babel+core@7._a0df58fc1fe96c31423c9b72cceb7fec/node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)"
+  - "RNDateTimePicker (from `../node_modules/.pnpm/@react-native-community+datetimepicker@9.1.0_expo@54.0.33_react-native@0.81.5_@babel+co_f49b9f66e40373b90cce97890cb838e6/node_modules/@react-native-community/datetimepicker`)"
   - "rnmapbox-maps (from `../node_modules/.pnpm/@rnmapbox+maps@10.3.0_expo@54.0.33_react-dom@19.2.5_react@19.1.0__react-native@0.81.5_@_e83c24f79ae625288eb93c5c98c53bce/node_modules/@rnmapbox/maps`)"
   - "RNReanimated (from `../node_modules/.pnpm/react-native-reanimated@4.3.0_react-native-worklets@0.8.1_@babel+core@7.29.0_@react-nat_52e39e33269124c25f322cd383c1fcf3/node_modules/react-native-reanimated`)"
   - "RNScreens (from `../node_modules/.pnpm/react-native-screens@4.16.0_react-native@0.81.5_@babel+core@7.29.0_@react-native+metro-_85d298e7181ad04463c6b9d3cf700780/node_modules/react-native-screens`)"
@@ -2264,6 +2287,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@react-native+metro-config@0.85.2_@babel+core@7._a0df58fc1fe96c31423c9b72cceb7fec/node_modules/react-native/ReactCommon"
   ReactNativeDependencies:
     :podspec: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@react-native+metro-config@0.85.2_@babel+core@7._a0df58fc1fe96c31423c9b72cceb7fec/node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
+  RNDateTimePicker:
+    :path: "../node_modules/.pnpm/@react-native-community+datetimepicker@9.1.0_expo@54.0.33_react-native@0.81.5_@babel+co_f49b9f66e40373b90cce97890cb838e6/node_modules/@react-native-community/datetimepicker"
   rnmapbox-maps:
     :path: "../node_modules/.pnpm/@rnmapbox+maps@10.3.0_expo@54.0.33_react-dom@19.2.5_react@19.1.0__react-native@0.81.5_@_e83c24f79ae625288eb93c5c98c53bce/node_modules/@rnmapbox/maps"
   RNReanimated:
@@ -2361,6 +2386,7 @@ SPEC CHECKSUMS:
   ReactCodegen: aba3d3db98711294b66d12cb7a79f878e7892a5c
   ReactCommon: 08810150b1206cc44aecf5f6ae19af32f29151a8
   ReactNativeDependencies: 71ce9c28beb282aa720ea7b46980fff9669f428a
+  RNDateTimePicker: 9025ccd219b382f246e9ceb85cd4095279b9bad1
   rnmapbox-maps: 30c5b33f811509feea581214d9973ffe3795c0c0
   RNReanimated: 292050e9c68d1ce36e125dad499ce68423ac6c7a
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845

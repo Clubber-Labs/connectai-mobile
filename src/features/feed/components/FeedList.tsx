@@ -1,26 +1,47 @@
-import { FlatList, View, Text } from 'react-native'
+import { FlatList, View, Text, ActivityIndicator, RefreshControl } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useFeed } from '../hooks/useFeed'
 import { EventCard } from '@/features/events/components/EventCard'
+import type { FeedEvent } from '@/shared/types'
 
 export function FeedList() {
-  const { data: events, isLoading, isError } = useFeed()
   const router = useRouter()
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+    isRefetching,
+  } = useFeed()
 
-  if (isLoading) return <View className="flex-1 bg-white" />
-
-  if (isError || !events) {
+  if (isLoading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <Text className="text-gray-500">Erro ao carregar o feed.</Text>
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#2563eb" />
       </View>
     )
   }
 
+  if (isError) {
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-gray-500 text-center">Erro ao carregar o feed.</Text>
+      </View>
+    )
+  }
+
+  const events = data?.pages.flatMap(page => page.data) ?? []
+
   if (events.length === 0) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <Text className="text-gray-500">Nenhum evento por aqui ainda.</Text>
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-gray-900 font-semibold text-base mb-1">Nada por aqui ainda</Text>
+        <Text className="text-gray-500 text-center text-sm">
+          Siga pessoas para ver os eventos delas no seu feed.
+        </Text>
       </View>
     )
   }
@@ -28,15 +49,30 @@ export function FeedList() {
   return (
     <FlatList
       data={events}
-      keyExtractor={item => item.id}
+      keyExtractor={(item: FeedEvent) => item.id}
       contentContainerStyle={{ padding: 16 }}
       renderItem={({ item }) => (
         <EventCard
-          title={item.title}
-          date={item.date}
+          event={item}
           onPress={() => router.push(`/events/${item.id}`)}
         />
       )}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor="#2563eb"
+        />
+      }
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) fetchNextPage()
+      }}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <ActivityIndicator size="small" color="#2563eb" className="py-4" />
+        ) : null
+      }
     />
   )
 }
