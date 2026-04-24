@@ -10,6 +10,7 @@ import { StepPersonal } from './steps/StepPersonal'
 import { StepAccount } from './steps/StepAccount'
 import { StepPassword } from './steps/StepPassword'
 import { StepProfile } from './steps/StepProfile'
+import { getApiError, isConflictError } from '@/shared/lib/apiError'
 
 const STEPS: (keyof RegisterInput)[][] = [
   ['name', 'lastname', 'birthdate'],
@@ -25,16 +26,18 @@ const FIELD_TO_STEP: Partial<Record<keyof RegisterInput, number>> = {
   bio: 3, isPrivate: 3,
 }
 
-function getApiFieldError(error: unknown): { field: keyof RegisterInput; message: string } | null {
-  if (!error || typeof error !== 'object' || !('response' in error)) return null
-  const message = (
-    (error as { response: { data?: { message?: string } } }).response?.data?.message ?? ''
-  ).toLowerCase()
+const CONFLICT_FIELD_MAP: { keyword: string; field: keyof RegisterInput; message: string }[] = [
+  { keyword: 'telefone', field: 'phone', message: 'Telefone já cadastrado.' },
+  { keyword: 'phone', field: 'phone', message: 'Telefone já cadastrado.' },
+  { keyword: 'email', field: 'email', message: 'E-mail já cadastrado.' },
+  { keyword: 'username', field: 'username', message: 'Username já está em uso.' },
+]
 
-  if (message.includes('telefone') || message.includes('phone')) return { field: 'phone', message: 'Telefone já cadastrado.' }
-  if (message.includes('email')) return { field: 'email', message: 'E-mail já cadastrado.' }
-  if (message.includes('username')) return { field: 'username', message: 'Username já está em uso.' }
-  return null
+function getConflictField(error: unknown): { field: keyof RegisterInput; message: string } | null {
+  if (!isConflictError(error)) return null
+  const { message } = getApiError(error)
+  const lower = message.toLowerCase()
+  return CONFLICT_FIELD_MAP.find(({ keyword }) => lower.includes(keyword)) ?? null
 }
 
 export function RegisterForm() {
@@ -80,13 +83,13 @@ export function RegisterForm() {
 
   function handleApiError(error: unknown) {
     setGenericError(null)
-    const fieldError = getApiFieldError(error)
+    const fieldError = getConflictField(error)
     if (fieldError) {
       setError(fieldError.field, { message: fieldError.message })
-      const targetStep = FIELD_TO_STEP[fieldError.field]
+      const targetStep = FIELD_TO_STEP[fieldError.field as keyof RegisterInput]
       if (targetStep !== undefined && targetStep !== currentStep) goToStep(targetStep, 'back')
     } else {
-      setGenericError('Algo deu errado. Tente novamente.')
+      setGenericError(getApiError(error).message)
     }
   }
 
