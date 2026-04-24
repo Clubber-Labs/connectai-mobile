@@ -2,22 +2,11 @@ import { View, Text, TextInput } from 'react-native'
 import { Controller } from 'react-hook-form'
 import type { Control, FieldErrors } from 'react-hook-form'
 import type { RegisterInput } from '../../schemas/registerSchema'
+import { formatPhone } from '@/shared/utils/masks'
 
 type Props = {
   control: Control<RegisterInput>
   errors: FieldErrors<RegisterInput>
-}
-
-function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 10) {
-    return digits.replace(/(\d{2})(\d{4})(\d{0,4})/, (_, a, b, c) =>
-      c ? `(${a}) ${b}-${c}` : b ? `(${a}) ${b}` : a ? `(${a}` : '',
-    )
-  }
-  return digits.replace(/(\d{2})(\d{5})(\d{0,4})/, (_, a, b, c) =>
-    c ? `(${a}) ${b}-${c}` : b ? `(${a}) ${b}` : a ? `(${a}` : '',
-  )
 }
 
 export function StepAccount({ control, errors }: Props) {

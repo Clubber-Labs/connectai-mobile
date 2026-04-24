@@ -28,7 +28,11 @@ export function DatePicker({
         onPress={() => setOpen(true)}
         className={`border ${hasError ? 'border-red-400' : 'border-gray-200'} bg-gray-50 rounded-xl px-4 py-3.5`}
       >
-        <Text className={value ? 'text-base text-gray-900' : 'text-base text-gray-400'}>
+        <Text
+          className={
+            value ? 'text-base text-gray-900' : 'text-base text-gray-400'
+          }
+        >
           {value ? value.toLocaleDateString('pt-BR') : placeholder}
         </Text>
       </Pressable>
@@ -39,7 +43,9 @@ export function DatePicker({
             <View className="bg-white rounded-t-2xl pb-8">
               <View className="flex-row justify-end px-4 pt-4 pb-2">
                 <Pressable onPress={() => setOpen(false)}>
-                  <Text className="text-blue-600 font-semibold text-base">Confirmar</Text>
+                  <Text className="text-blue-600 font-semibold text-base">
+                    Confirmar
+                  </Text>
                 </Pressable>
               </View>
               <DateTimePicker
@@ -48,7 +54,7 @@ export function DatePicker({
                 display="spinner"
                 maximumDate={maximumDate}
                 minimumDate={minimumDate}
-                onValueChange={(_, date) => { if (date) onChange(date) }}
+                onValueChange={(_, date) => onChange(date)}
                 locale="pt-BR"
               />
             </View>
@@ -64,7 +70,7 @@ export function DatePicker({
             minimumDate={minimumDate}
             onValueChange={(_, date) => {
               setOpen(false)
-              if (date) onChange(date)
+              onChange(date)
             }}
             onDismiss={() => setOpen(false)}
           />
