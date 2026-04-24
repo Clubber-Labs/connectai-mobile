@@ -156,7 +156,7 @@ Crie `.env.local` na raiz (nunca commitar):
 
 ```env
 API_URL=http://localhost:3333
-MAPBOX_DOWNLOAD_TOKEN=sk.ey...seu_token_aqui
+RNMAPBOX_MAPS_DOWNLOAD_TOKEN=sk.ey...seu_token_aqui
 ```
 
 > Em produção, os valores são injetados via EAS Secrets — nunca ficam no repositório.
@@ -173,7 +173,7 @@ Arquivo `.env.local`:
 
 ```env
 API_URL=http://localhost:3333
-MAPBOX_DOWNLOAD_TOKEN=sk.ey...seu_token_aqui
+RNMAPBOX_MAPS_DOWNLOAD_TOKEN=sk.ey...seu_token_aqui
 ```
 
 ### 3) Rodar no iOS (MacBook)

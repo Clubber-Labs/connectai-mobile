@@ -175,6 +175,18 @@ Tela (app/) → hook (features/*/hooks/) → service (features/*/services/) → 
 
 **Princípio:** a tela nunca chama o service diretamente — sempre via hook. O hook nunca acessa o Axios diretamente — sempre via service.
 
+**Princípio de granularidade de componentes:** cada componente tem seu próprio arquivo. Nunca definir múltiplos componentes exportáveis no mesmo arquivo. Componentes auxiliares de um fluxo complexo (ex: steps de cadastro) ficam em subpastas:
+
+```
+features/auth/components/
+├── RegisterForm.tsx         → orquestra o fluxo
+├── RegisterProgressBar.tsx  → componente auxiliar reutilizável
+└── steps/
+    ├── StepName.tsx
+    ├── StepUsername.tsx
+    └── ...
+```
+
 ---
 
 ## Exemplo: criando uma nova feature

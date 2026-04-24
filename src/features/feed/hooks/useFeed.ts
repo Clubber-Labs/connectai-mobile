@@ -1,9 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
-import { api } from '@/shared/lib/api'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { feedService } from '../services/feedService'
 
 export function useFeed() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['feed'],
-    queryFn: () => api.get('/feed').then(r => r.data),
+    queryFn: ({ pageParam }) => feedService.getFeed(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: lastPage => lastPage.nextCursor ?? null,
   })
 }
