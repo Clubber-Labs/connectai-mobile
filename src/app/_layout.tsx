@@ -3,6 +3,8 @@ import '@/shared/lib/reactotron'
 import { useEffect } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { useFonts } from 'expo-font'
+import { Ionicons } from '@expo/vector-icons'
 import { queryClient } from '@/shared/lib/queryClient'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { getToken, deleteToken } from '@/shared/lib/secureStore'
@@ -50,6 +52,8 @@ function AuthGuard() {
 }
 
 export default function RootLayout() {
+  useFonts(Ionicons.font)
+
   return (
     <QueryClientProvider client={queryClient}>
       <Stack screenOptions={{ headerShown: false }} />
