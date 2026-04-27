@@ -68,7 +68,7 @@ export function InlineCommentsSection({ eventId }: Props) {
 
       <View className="flex-row items-end gap-2 px-3 py-2 border-t border-zinc-800 bg-zinc-900">
         <TextInput
-          className="flex-1 border border-zinc-800 bg-zinc-900 rounded-full px-4 py-2 text-sm text-white max-h-24"
+          className="flex-1 border border-zinc-800 bg-zinc-800 rounded-full px-4 py-2 text-sm text-white max-h-24"
           placeholder="Escreva um comentário..."
           placeholderTextColor="#71717a"
           value={text}
