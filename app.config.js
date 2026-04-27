@@ -7,6 +7,12 @@ export default {
     version: "1.0.0",
     scheme: "connectai",
     userInterfaceStyle: "automatic",
+    ios: {
+      bundleIdentifier: 'com.netobonato.connectaimobile',
+    },
+    android: {
+      package: 'com.netobonato.connectaimobile',
+    },
     plugins: [
       "expo-router",
       "expo-secure-store",

@@ -24,7 +24,10 @@ export function useRegister() {
       }
 
       await authService.register(payload)
-      const { token } = await authService.login({ email: data.email, password: data.password })
+      const { token } = await authService.login({
+        email: data.email,
+        password: data.password,
+      })
       const me = await authService.me()
       return { token: token as string, userId: me.id as string }
     },

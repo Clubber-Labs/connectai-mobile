@@ -13,7 +13,9 @@ export function StepProfile({ control, errors }: Props) {
     <View className="gap-5">
       <View className="gap-1">
         <Text className="text-2xl font-bold text-gray-900">Seu perfil</Text>
-        <Text className="text-sm text-gray-500">Opcional — você pode preencher depois.</Text>
+        <Text className="text-sm text-gray-500">
+          Opcional — você pode preencher depois.
+        </Text>
       </View>
 
       <View className="gap-4">
@@ -34,13 +36,19 @@ export function StepProfile({ control, errors }: Props) {
               />
             )}
           />
-          {errors.bio && <Text className="text-red-500 text-xs">{errors.bio.message}</Text>}
+          {errors.bio && (
+            <Text className="text-red-500 text-xs">{errors.bio.message}</Text>
+          )}
         </View>
 
         <View className="flex-row items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5">
           <View className="gap-0.5">
-            <Text className="text-base font-medium text-gray-900">Perfil privado</Text>
-            <Text className="text-xs text-gray-500">Apenas seguidores aprovados verão seu conteúdo</Text>
+            <Text className="text-base font-medium text-gray-900">
+              Perfil privado
+            </Text>
+            <Text className="text-xs text-gray-500">
+              Apenas seguidores aprovados verão seu conteúdo
+            </Text>
           </View>
           <Controller
             control={control}

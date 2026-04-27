@@ -1,4 +1,10 @@
-import { FlatList, View, Text, ActivityIndicator, RefreshControl } from 'react-native'
+import {
+  FlatList,
+  View,
+  Text,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native'
 import { useRouter } from 'expo-router'
 import { useFeed } from '../hooks/useFeed'
 import { EventCard } from '@/features/events/components/EventCard'
@@ -28,7 +34,9 @@ export function FeedList() {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-gray-500 text-center">Erro ao carregar o feed.</Text>
+        <Text className="text-gray-500 text-center">
+          Erro ao carregar o feed.
+        </Text>
       </View>
     )
   }
@@ -38,7 +46,9 @@ export function FeedList() {
   if (events.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-gray-900 font-semibold text-base mb-1">Nada por aqui ainda</Text>
+        <Text className="text-gray-900 font-semibold text-base mb-1">
+          Nada por aqui ainda
+        </Text>
         <Text className="text-gray-500 text-center text-sm">
           Siga pessoas para ver os eventos delas no seu feed.
         </Text>

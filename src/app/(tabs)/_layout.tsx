@@ -12,10 +12,15 @@ type TabConfig = {
 }
 
 const TABS: TabConfig[] = [
-  { name: 'feed', title: 'Feed', icon: 'home-outline', iconFocused: 'home' },
-  { name: 'map', title: 'Mapa', icon: 'map-outline', iconFocused: 'map' },
   {
-    name: 'profile',
+    name: 'feed/index',
+    title: 'Feed',
+    icon: 'home-outline',
+    iconFocused: 'home',
+  },
+  { name: 'map/index', title: 'Mapa', icon: 'map-outline', iconFocused: 'map' },
+  {
+    name: 'profile/index',
     title: 'Perfil',
     icon: 'person-outline',
     iconFocused: 'person',

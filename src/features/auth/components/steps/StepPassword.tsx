@@ -13,7 +13,9 @@ export function StepPassword({ control, errors }: Props) {
     <View className="gap-5">
       <View className="gap-1">
         <Text className="text-2xl font-bold text-gray-900">Crie sua senha</Text>
-        <Text className="text-sm text-gray-500">Use pelo menos 8 caracteres.</Text>
+        <Text className="text-sm text-gray-500">
+          Use pelo menos 8 caracteres.
+        </Text>
       </View>
 
       <View className="gap-4">
@@ -33,11 +35,17 @@ export function StepPassword({ control, errors }: Props) {
               />
             )}
           />
-          {errors.password && <Text className="text-red-500 text-xs">{errors.password.message}</Text>}
+          {errors.password && (
+            <Text className="text-red-500 text-xs">
+              {errors.password.message}
+            </Text>
+          )}
         </View>
 
         <View className="gap-1">
-          <Text className="text-sm font-medium text-gray-600">Confirmar senha</Text>
+          <Text className="text-sm font-medium text-gray-600">
+            Confirmar senha
+          </Text>
           <Controller
             control={control}
             name="confirmPassword"
@@ -52,7 +60,11 @@ export function StepPassword({ control, errors }: Props) {
               />
             )}
           />
-          {errors.confirmPassword && <Text className="text-red-500 text-xs">{errors.confirmPassword.message}</Text>}
+          {errors.confirmPassword && (
+            <Text className="text-red-500 text-xs">
+              {errors.confirmPassword.message}
+            </Text>
+          )}
         </View>
       </View>
     </View>

@@ -1,4 +1,4 @@
-package com.connectaimobile
+package com.netobonato.connectaimobile
 
 import android.os.Build
 import android.os.Bundle

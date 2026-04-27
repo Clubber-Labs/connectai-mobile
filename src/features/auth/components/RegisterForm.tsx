@@ -1,5 +1,11 @@
 import { useRef, useState } from 'react'
-import { View, Text, Animated, KeyboardAvoidingView, Platform } from 'react-native'
+import {
+  View,
+  Text,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterInput } from '../schemas/registerSchema'
@@ -20,24 +26,42 @@ const STEPS: (keyof RegisterInput)[][] = [
 ]
 
 const FIELD_TO_STEP: Partial<Record<keyof RegisterInput, number>> = {
-  name: 0, lastname: 0, birthdate: 0,
-  username: 1, email: 1, phone: 1,
-  password: 2, confirmPassword: 2,
-  bio: 3, isPrivate: 3,
+  name: 0,
+  lastname: 0,
+  birthdate: 0,
+  username: 1,
+  email: 1,
+  phone: 1,
+  password: 2,
+  confirmPassword: 2,
+  bio: 3,
+  isPrivate: 3,
 }
 
-const CONFLICT_FIELD_MAP: { keyword: string; field: keyof RegisterInput; message: string }[] = [
+const CONFLICT_FIELD_MAP: {
+  keyword: string
+  field: keyof RegisterInput
+  message: string
+}[] = [
   { keyword: 'telefone', field: 'phone', message: 'Telefone já cadastrado.' },
   { keyword: 'phone', field: 'phone', message: 'Telefone já cadastrado.' },
   { keyword: 'email', field: 'email', message: 'E-mail já cadastrado.' },
-  { keyword: 'username', field: 'username', message: 'Username já está em uso.' },
+  {
+    keyword: 'username',
+    field: 'username',
+    message: 'Username já está em uso.',
+  },
 ]
 
-function getConflictField(error: unknown): { field: keyof RegisterInput; message: string } | null {
+function getConflictField(
+  error: unknown,
+): { field: keyof RegisterInput; message: string } | null {
   if (!isConflictError(error)) return null
   const { message } = getApiError(error)
   const lower = message.toLowerCase()
-  return CONFLICT_FIELD_MAP.find(({ keyword }) => lower.includes(keyword)) ?? null
+  return (
+    CONFLICT_FIELD_MAP.find(({ keyword }) => lower.includes(keyword)) ?? null
+  )
 }
 
 export function RegisterForm() {
@@ -47,7 +71,13 @@ export function RegisterForm() {
   const progress = useRef(new Animated.Value(1 / STEPS.length)).current
   const slideAnim = useRef(new Animated.Value(0)).current
 
-  const { control, handleSubmit, trigger, setError, formState: { errors } } = useForm<RegisterInput>({
+  const {
+    control,
+    handleSubmit,
+    trigger,
+    setError,
+    formState: { errors },
+  } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     mode: 'onTouched',
     defaultValues: { isPrivate: false },
@@ -59,8 +89,16 @@ export function RegisterForm() {
   function goToStep(index: number, direction: 'forward' | 'back') {
     const toValue = direction === 'forward' ? -30 : 30
     Animated.sequence([
-      Animated.timing(slideAnim, { toValue, duration: 150, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(slideAnim, {
+        toValue,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
     ]).start()
     setCurrentStep(index)
     Animated.timing(progress, {
@@ -87,7 +125,8 @@ export function RegisterForm() {
     if (fieldError) {
       setError(fieldError.field, { message: fieldError.message })
       const targetStep = FIELD_TO_STEP[fieldError.field as keyof RegisterInput]
-      if (targetStep !== undefined && targetStep !== currentStep) goToStep(targetStep, 'back')
+      if (targetStep !== undefined && targetStep !== currentStep)
+        goToStep(targetStep, 'back')
     } else {
       setGenericError(getApiError(error).message)
     }
@@ -106,9 +145,15 @@ export function RegisterForm() {
   ]
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View className="gap-6">
-        <RegisterProgressBar current={currentStep} total={totalSteps} progressWidth={progressWidth} />
+        <RegisterProgressBar
+          current={currentStep}
+          total={totalSteps}
+          progressWidth={progressWidth}
+        />
 
         <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
           {steps[currentStep]}
@@ -130,9 +175,10 @@ export function RegisterForm() {
             {isLastStep ? (
               <Button
                 label={isPending ? 'Criando conta...' : 'Criar conta'}
-                onPress={handleSubmit(
-                  data => { setGenericError(null); register(data, { onError: handleApiError }) },
-                )}
+                onPress={handleSubmit(data => {
+                  setGenericError(null)
+                  register(data, { onError: handleApiError })
+                })}
                 loading={isPending}
               />
             ) : (

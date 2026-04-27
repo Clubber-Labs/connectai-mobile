@@ -36,19 +36,26 @@ export function EventCard({ event, onPress }: Props) {
         )}
       </View>
 
-      <Text className="text-lg font-bold text-gray-900 mb-1">{event.title}</Text>
-      <Text className="text-sm text-gray-500 mb-3">{formatDate(event.createdAt)}</Text>
+      <Text className="text-lg font-bold text-gray-900 mb-1">
+        {event.title}
+      </Text>
+      <Text className="text-sm text-gray-500 mb-3">
+        {formatDate(event.createdAt)}
+      </Text>
 
       <View className="flex-row items-center justify-between">
         <View className="flex-row gap-4">
           <Text className="text-xs text-gray-400">
-            {event._count.attendances} presença{event._count.attendances !== 1 ? 's' : ''}
+            {event._count.attendances} presença
+            {event._count.attendances !== 1 ? 's' : ''}
           </Text>
           <Text className="text-xs text-gray-400">
-            {event._count.comments} comentário{event._count.comments !== 1 ? 's' : ''}
+            {event._count.comments} comentário
+            {event._count.comments !== 1 ? 's' : ''}
           </Text>
           <Text className="text-xs text-gray-400">
-            {event._count.reactions} reação{event._count.reactions !== 1 ? 'ões' : ''}
+            {event._count.reactions} reação
+            {event._count.reactions !== 1 ? 'ões' : ''}
           </Text>
         </View>
       </View>

@@ -35,6 +35,9 @@ export const registerSchema = z
 
 export type RegisterInput = z.infer<typeof registerSchema>
 
-export type RegisterPayload = Omit<RegisterInput, 'confirmPassword' | 'birthdate'> & {
+export type RegisterPayload = Omit<
+  RegisterInput,
+  'confirmPassword' | 'birthdate'
+> & {
   birthdate: string
 }

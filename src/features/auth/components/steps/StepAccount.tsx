@@ -14,7 +14,9 @@ export function StepAccount({ control, errors }: Props) {
     <View className="gap-5">
       <View className="gap-1">
         <Text className="text-2xl font-bold text-gray-900">Sua conta</Text>
-        <Text className="text-sm text-gray-500">Esses dados são usados para acessar o ConnectAI.</Text>
+        <Text className="text-sm text-gray-500">
+          Esses dados são usados para acessar o ConnectAI.
+        </Text>
       </View>
 
       <View className="gap-4">
@@ -34,7 +36,11 @@ export function StepAccount({ control, errors }: Props) {
               />
             )}
           />
-          {errors.username && <Text className="text-red-500 text-xs">{errors.username.message}</Text>}
+          {errors.username && (
+            <Text className="text-red-500 text-xs">
+              {errors.username.message}
+            </Text>
+          )}
         </View>
 
         <View className="gap-1">
@@ -54,7 +60,9 @@ export function StepAccount({ control, errors }: Props) {
               />
             )}
           />
-          {errors.email && <Text className="text-red-500 text-xs">{errors.email.message}</Text>}
+          {errors.email && (
+            <Text className="text-red-500 text-xs">{errors.email.message}</Text>
+          )}
         </View>
 
         <View className="gap-1">
@@ -73,7 +81,9 @@ export function StepAccount({ control, errors }: Props) {
               />
             )}
           />
-          {errors.phone && <Text className="text-red-500 text-xs">{errors.phone.message}</Text>}
+          {errors.phone && (
+            <Text className="text-red-500 text-xs">{errors.phone.message}</Text>
+          )}
         </View>
       </View>
     </View>
