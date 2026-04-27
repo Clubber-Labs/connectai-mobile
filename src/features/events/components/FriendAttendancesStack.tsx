@@ -13,7 +13,7 @@ export function FriendAttendancesStack({ attendances, totalAttendances }: Props)
 
   const visible = attendances.slice(0, MAX_VISIBLE)
   const friendCount = attendances.length
-  const others = totalAttendances - friendCount
+  const others = Math.max(0, totalAttendances - friendCount)
 
   const summary =
     friendCount === 1

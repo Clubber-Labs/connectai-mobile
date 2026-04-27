@@ -8,7 +8,6 @@ import {
   BRAZIL_CENTER,
   BRAZIL_ZOOM,
   MAP_STYLE_URL,
-  MARKERS_ZOOM_THRESHOLD,
   MAX_ZOOM,
   USER_ZOOM,
   ZOOM_STEP,
@@ -16,6 +15,7 @@ import {
 import { useMapEvents } from '@/features/map/hooks/useMapEvents'
 import { useMapCamera } from '@/features/map/hooks/useMapCamera'
 import { useUserLocation } from '@/features/map/hooks/useUserLocation'
+import { useMapZoomState } from '@/features/map/hooks/useMapZoomState'
 import { computeClusterZoom } from '@/features/map/utils/clusterZoom'
 import { EventCategoriesFilter } from '@/features/map/components/EventCategoriesFilter'
 import { MapZoomControls } from '@/features/map/components/MapZoomControls'
@@ -23,22 +23,21 @@ import { EventClustersLayer } from '@/features/map/components/EventClustersLayer
 import { EventMarkers } from '@/features/map/components/EventMarkers'
 import { EventClusterList } from '@/features/map/components/EventClusterList'
 import { EventPreviewCard } from '@/features/map/components/EventPreviewCard'
+import { MapStatusBanner } from '@/features/map/components/MapStatusBanner'
 
 export default function MapScreen() {
   const router = useRouter()
-  const userCoords = useUserLocation()
+  const { coords: userCoords } = useUserLocation()
   const { cameraRef, mapRef, flyTo, adjustZoom, focusOnEvent } = useMapCamera()
+  const { showMarkers, onCameraZoomChange, getZoom } = useMapZoomState()
 
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES)
-  const [zoomLevel, setZoomLevel] = useState<number>(BRAZIL_ZOOM)
   const [selectedEvent, setSelectedEvent] = useState<FeedEvent | null>(null)
   const [clusterEvents, setClusterEvents] = useState<FeedEvent[] | null>(null)
 
   const shapeSourceRef = useRef<Mapbox.ShapeSource>(null)
-  const { categories, filteredEvents, eventsGeoJson, isLoading } =
+  const { categories, filteredEvents, eventsGeoJson, isLoading, error } =
     useMapEvents(activeCategory)
-
-  const showMarkers = zoomLevel >= MARKERS_ZOOM_THRESHOLD
 
   useEffect(() => {
     setClusterEvents(null)
@@ -58,6 +57,7 @@ export default function MapScreen() {
     const source = shapeSourceRef.current
     if (!source) return
     const [lng, lat] = feature.geometry.coordinates
+    const currentZoom = getZoom()
     try {
       const leaves = (await source.getClusterLeaves(
         feature,
@@ -77,9 +77,9 @@ export default function MapScreen() {
 
       setSelectedEvent(null)
       setClusterEvents(found)
-      flyTo([lng, lat], computeClusterZoom(found, [lng, lat], zoomLevel), 600)
+      flyTo([lng, lat], computeClusterZoom(found, [lng, lat], currentZoom), 600)
     } catch {
-      flyTo([lng, lat], Math.min(zoomLevel + 2, MAX_ZOOM), 500)
+      flyTo([lng, lat], Math.min(currentZoom + 2, MAX_ZOOM), 500)
     }
   }
 
@@ -119,7 +119,7 @@ export default function MapScreen() {
         scaleBarEnabled={false}
         compassEnabled={false}
         onPress={dismissOverlays}
-        onCameraChanged={state => setZoomLevel(state.properties.zoom)}
+        onCameraChanged={state => onCameraZoomChange(state.properties.zoom)}
       >
         <Mapbox.Camera
           ref={cameraRef}
@@ -151,10 +151,17 @@ export default function MapScreen() {
         />
       </View>
 
-      {isLoading && (
+      {isLoading && !error && (
         <View className="absolute top-16 self-center bg-zinc-900/90 px-3 py-1.5 rounded-full border border-zinc-800">
           <ActivityIndicator size="small" color="#8b5cf6" />
         </View>
+      )}
+
+      {error && (
+        <MapStatusBanner
+          variant="error"
+          message="Não foi possível carregar os eventos."
+        />
       )}
 
       <MapZoomControls

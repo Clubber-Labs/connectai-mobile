@@ -22,12 +22,6 @@ export type FeedAuthor = {
   username: string
 }
 
-export type FeedAttendee = {
-  id: string
-  name: string
-  username: string
-}
-
 export type FriendAttendance = {
   user: FeedAuthor
 }

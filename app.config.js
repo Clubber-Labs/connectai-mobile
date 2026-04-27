@@ -23,7 +23,7 @@ export default {
         RNMAPBOX_MAPS_DOWNLOAD_TOKEN: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN
       }],
       ["expo-location", {
-        locationAlwaysAndWhenInUsePermission: "Use sua localização para mostrar eventos próximos no mapa."
+        locationWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa."
       }]
     ],
     extra: {

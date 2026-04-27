@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native'
+import { Text, Pressable } from 'react-native'
 import Mapbox from '@rnmapbox/maps'
 import type { FeedEvent } from '@/shared/types'
 import { VIOLET_400, VIOLET_600 } from '../constants'
@@ -21,8 +21,11 @@ export function EventMarkers({ events, selectedId, onPress }: Props) {
             coordinate={[event.longitude, event.latitude]}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View
-              onTouchEnd={() => onPress(event)}
+            <Pressable
+              onPress={() => onPress(event)}
+              accessibilityRole="button"
+              accessibilityLabel={`Ver evento ${event.title}`}
+              hitSlop={6}
               style={{
                 backgroundColor: isSelected ? VIOLET_400 : VIOLET_600,
                 paddingHorizontal: 12,
@@ -39,7 +42,7 @@ export function EventMarkers({ events, selectedId, onPress }: Props) {
               >
                 📅 {event.title}
               </Text>
-            </View>
+            </Pressable>
           </Mapbox.MarkerView>
         )
       })}

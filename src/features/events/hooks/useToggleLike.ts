@@ -90,6 +90,7 @@ export function useToggleLike(eventId: string) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: feedKey })
       queryClient.invalidateQueries({ queryKey: detailKey })
+      queryClient.invalidateQueries({ queryKey: ['events', 'list'] as const })
     },
   })
 }
