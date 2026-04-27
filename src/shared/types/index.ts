@@ -22,10 +22,8 @@ export type FeedAuthor = {
   username: string
 }
 
-export type FeedAttendee = {
-  id: string
-  name: string
-  username: string
+export type FriendAttendance = {
+  user: FeedAuthor
 }
 
 export type AttendanceType = 'INTERESTED' | 'CONFIRMED' | 'NOT_INTERESTED'
@@ -50,8 +48,12 @@ export type FeedEvent = {
   isPublic: boolean
   createdAt: string
   date: string
+  latitude: number
+  longitude: number
+  address?: string
+  category: string
   author: FeedAuthor
-  attendances: FeedAttendee[]
+  friendAttendances: FriendAttendance[]
   recentComments: EventComment[]
   userReaction: ReactionType | null
   userAttendance: AttendanceType | null

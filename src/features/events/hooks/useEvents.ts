@@ -8,3 +8,11 @@ export function useEvent(id: string) {
     enabled: !!id,
   })
 }
+
+export function useEventsList(limit = 50) {
+  return useQuery({
+    queryKey: ['events', 'list', limit],
+    queryFn: () => eventsService.list({ limit }),
+    staleTime: 1000 * 60,
+  })
+}

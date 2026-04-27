@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsService } from '../services/eventsService'
 import type { AttendanceType } from '@/shared/types'
+import { invalidateEventViews } from './cacheKeys'
 
 export function useSetAttendance(eventId: string) {
   const queryClient = useQueryClient()
@@ -8,10 +9,7 @@ export function useSetAttendance(eventId: string) {
   return useMutation({
     mutationFn: (type: AttendanceType) =>
       eventsService.setAttendance(eventId, type),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events', eventId] })
-      queryClient.invalidateQueries({ queryKey: ['feed'] })
-    },
+    onSuccess: () => invalidateEventViews(queryClient, eventId),
   })
 }
 
@@ -20,9 +18,6 @@ export function useCancelAttendance(eventId: string) {
 
   return useMutation({
     mutationFn: () => eventsService.cancelAttendance(eventId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events', eventId] })
-      queryClient.invalidateQueries({ queryKey: ['feed'] })
-    },
+    onSuccess: () => invalidateEventViews(queryClient, eventId),
   })
 }
