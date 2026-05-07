@@ -1,33 +1,30 @@
 import type { FeedEvent } from '@/shared/types'
 
-const COINCIDENT_THRESHOLD = 0.0001
+const COINCIDENT_GRID = 0.0001
 
 /**
- * Agrupa eventos que estão no mesmo (ou quase mesmo) local.
- * Eventos isolados aparecem em grupos de tamanho 1.
+ * Agrupa eventos coincidentes via bucket por coordenada quantizada.
+ * Complexidade O(n). Eventos isolados aparecem em grupos de tamanho 1.
+ *
+ * Edge case conhecido: dois pontos em lados opostos de uma fronteira de
+ * grid acabam em buckets diferentes. Não ocorre com geocoding real porque
+ * o mesmo endereço gera coordenadas idênticas.
  */
 export function groupCoincidentEvents(events: FeedEvent[]): FeedEvent[][] {
-  const groups: FeedEvent[][] = []
-  const consumed = new Set<string>()
-
+  const buckets = new Map<string, FeedEvent[]>()
   for (const event of events) {
-    if (consumed.has(event.id)) continue
-    const group: FeedEvent[] = [event]
-    consumed.add(event.id)
-
-    for (const other of events) {
-      if (consumed.has(other.id)) continue
-      if (
-        Math.abs(other.longitude - event.longitude) < COINCIDENT_THRESHOLD &&
-        Math.abs(other.latitude - event.latitude) < COINCIDENT_THRESHOLD
-      ) {
-        group.push(other)
-        consumed.add(other.id)
-      }
-    }
-    groups.push(group)
+    const key = bucketKey(event.longitude, event.latitude)
+    const bucket = buckets.get(key)
+    if (bucket) bucket.push(event)
+    else buckets.set(key, [event])
   }
-  return groups
+  return Array.from(buckets.values())
+}
+
+function bucketKey(lng: number, lat: number): string {
+  const x = Math.round(lng / COINCIDENT_GRID)
+  const y = Math.round(lat / COINCIDENT_GRID)
+  return `${x}|${y}`
 }
 
 /**
@@ -45,4 +42,17 @@ export function fanoutOffset(
     x: Math.cos(angle) * radius,
     y: Math.sin(angle) * radius,
   }
+}
+
+/**
+ * Raio mínimo do círculo de fanout pra evitar sobreposição entre N pins.
+ * Garante distância mínima de (pinSize + gap) entre centros adjacentes.
+ */
+export function fanoutRadius(
+  total: number,
+  pinSize: number,
+  gap: number,
+): number {
+  if (total <= 1) return 0
+  return (pinSize + gap) / (2 * Math.sin(Math.PI / total))
 }

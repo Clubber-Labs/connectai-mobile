@@ -21,7 +21,6 @@ import { EventCategoriesFilter } from '@/features/map/components/EventCategories
 import { MapZoomControls } from '@/features/map/components/MapZoomControls'
 import { EventClustersLayer } from '@/features/map/components/EventClustersLayer'
 import { EventMarkers } from '@/features/map/components/EventMarkers'
-import { EventClusterList } from '@/features/map/components/EventClusterList'
 import { EventPreviewCard } from '@/features/map/components/EventPreviewCard'
 import { MapStatusBanner } from '@/features/map/components/MapStatusBanner'
 
@@ -35,15 +34,10 @@ export default function MapScreen() {
 
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES)
   const [selectedEvent, setSelectedEvent] = useState<FeedEvent | null>(null)
-  const [clusterEvents, setClusterEvents] = useState<FeedEvent[] | null>(null)
 
   const shapeSourceRef = useRef<Mapbox.ShapeSource>(null)
   const { categories, filteredEvents, eventsGeoJson, isLoading, error } =
     useMapEvents(activeCategory)
-
-  useEffect(() => {
-    setClusterEvents(null)
-  }, [activeCategory])
 
   useEffect(() => {
     if (userCoords) flyTo(userCoords, USER_ZOOM, 800)
@@ -54,7 +48,7 @@ export default function MapScreen() {
     focusOnEvent([event.longitude, event.latitude])
   }
 
-  async function openClusterList(feature: GeoJSON.Feature) {
+  async function expandCluster(feature: GeoJSON.Feature) {
     if (feature.geometry.type !== 'Point') return
     const source = shapeSourceRef.current
     if (!source) return
@@ -63,9 +57,8 @@ export default function MapScreen() {
     try {
       const expansionZoom = await source.getClusterExpansionZoom(feature)
       setSelectedEvent(null)
-      setClusterEvents(null)
-      // se o supercluster não consegue separar dentro do nível de cluster,
-      // os eventos são coincidentes — vai pra zoom mais alto pra dar destaque
+      // expansionZoom acima do nível de cluster = eventos coincidentes —
+      // o fanout em EventMarkers cuida da separação visual
       const targetZoom =
         expansionZoom > CLUSTER_MAX_ZOOM
           ? COINCIDENT_FOCUS_ZOOM
@@ -81,26 +74,12 @@ export default function MapScreen() {
     if (!feature) return
     const props = feature.properties as Record<string, unknown> | null
     if (props?.cluster) {
-      openClusterList(feature)
+      expandCluster(feature)
       return
     }
     const eventId = props?.eventId as string | undefined
     const found = filteredEvents.find(e => e.id === eventId)
-    if (found) {
-      setClusterEvents(null)
-      handleMarkerPress(found)
-    }
-  }
-
-  function handleClusterItemPress(event: FeedEvent) {
-    setClusterEvents(null)
-    focusOnEvent([event.longitude, event.latitude])
-    router.push(`/events/${event.id}`)
-  }
-
-  function dismissOverlays() {
-    setSelectedEvent(null)
-    setClusterEvents(null)
+    if (found) handleMarkerPress(found)
   }
 
   return (
@@ -111,7 +90,7 @@ export default function MapScreen() {
         styleURL={MAP_STYLE_URL}
         scaleBarEnabled={false}
         compassEnabled={false}
-        onPress={dismissOverlays}
+        onPress={() => setSelectedEvent(null)}
         onCameraChanged={state => onCameraZoomChange(state.properties.zoom)}
       >
         <Mapbox.Camera
@@ -164,15 +143,7 @@ export default function MapScreen() {
         showRecenter={!!userCoords}
       />
 
-      {clusterEvents && (
-        <EventClusterList
-          events={clusterEvents}
-          onClose={() => setClusterEvents(null)}
-          onSelect={handleClusterItemPress}
-        />
-      )}
-
-      {selectedEvent && !clusterEvents && (
+      {selectedEvent && (
         <EventPreviewCard
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}

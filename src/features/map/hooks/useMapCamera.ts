@@ -45,7 +45,14 @@ export function useMapCamera() {
   }, [])
 
   const focusOnEvent = useCallback(
-    (coords: Coords) => flyTo(coords, FOCUS_ZOOM, 500),
+    async (coords: Coords) => {
+      const map = mapRef.current
+      const current = map ? await map.getZoom() : 0
+      // mantém o zoom atual se já estiver acima do limiar — ao tocar num pin
+      // já visível em zoom alto não devemos zoom out
+      const target = Math.max(current, FOCUS_ZOOM)
+      flyTo(coords, target, 500)
+    },
     [flyTo],
   )
 

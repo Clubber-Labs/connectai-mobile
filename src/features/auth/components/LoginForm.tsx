@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginInput } from '../schemas/loginSchema'
 import { useLogin } from '../hooks/useLogin'
 import { Button } from '@/shared/components/Button'
+import { isUnauthorizedError } from '@/shared/lib/apiError'
 
 export function LoginForm() {
   const { mutate: login, isPending, error } = useLogin()
@@ -54,7 +55,7 @@ export function LoginForm() {
         <Text className="text-red-500 text-sm">{errors.password.message}</Text>
       )}
 
-      {error && (
+      {isUnauthorizedError(error) && (
         <Text className="text-red-500 text-sm text-center">
           E-mail ou senha incorretos.
         </Text>
