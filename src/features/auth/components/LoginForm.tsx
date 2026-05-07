@@ -6,7 +6,7 @@ import { useLogin } from '../hooks/useLogin'
 import { Button } from '@/shared/components/Button'
 
 export function LoginForm() {
-  const { mutate: login, isPending } = useLogin()
+  const { mutate: login, isPending, error } = useLogin()
   const {
     control,
     handleSubmit,
@@ -52,6 +52,12 @@ export function LoginForm() {
       />
       {errors.password && (
         <Text className="text-red-500 text-sm">{errors.password.message}</Text>
+      )}
+
+      {error && (
+        <Text className="text-red-500 text-sm text-center">
+          E-mail ou senha incorretos.
+        </Text>
       )}
 
       <Button

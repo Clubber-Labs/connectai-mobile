@@ -1,20 +1,35 @@
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'expo-router'
 import { authService } from '../services/authService'
 import { useAuthStore } from '../store/authStore'
-import { saveToken } from '@/shared/lib/secureStore'
+import {
+  saveToken,
+  saveUserId,
+  clearAuthSession,
+} from '@/shared/lib/secureStore'
 import type { LoginInput } from '../schemas/loginSchema'
 
 export function useLogin() {
   const setUser = useAuthStore(s => s.setUser)
-  const router = useRouter()
 
   return useMutation({
-    mutationFn: (data: LoginInput) => authService.login(data),
-    onSuccess: async response => {
-      await saveToken(response.token)
-      setUser(response.userId)
-      router.replace('/(tabs)/feed')
+    mutationFn: async (data: LoginInput) => {
+      const response = await authService.login(data)
+      const token = response.token as string
+      await saveToken(token)
+
+      try {
+        const userId =
+          (response.userId as string | undefined) ??
+          (await authService.me()).id
+        await saveUserId(userId)
+        return { token, userId }
+      } catch (err) {
+        await clearAuthSession()
+        throw err
+      }
+    },
+    onSuccess: ({ userId }) => {
+      setUser(userId)
     },
   })
 }

@@ -13,7 +13,7 @@ import { Toaster } from 'sonner-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { queryClient } from '@/shared/lib/queryClient'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import { getToken, deleteToken } from '@/shared/lib/secureStore'
+import { getToken, getUserId, clearAuthSession } from '@/shared/lib/secureStore'
 import { authService } from '@/features/auth/services/authService'
 import { GlobalHeader } from '@/shared/components/GlobalHeader'
 
@@ -28,15 +28,16 @@ function AuthGuard() {
 
   useEffect(() => {
     async function restoreSession() {
-      const token = await getToken()
-      if (token) {
-        try {
-          const me = await authService.me()
-          setUser(me.id)
-        } catch {
-          await deleteToken()
-          logout()
-        }
+      const [token, userId] = await Promise.all([getToken(), getUserId()])
+      if (token && userId) {
+        setUser(userId)
+        authService.me().catch(async err => {
+          const status = (err as { response?: { status?: number } })?.response?.status
+          if (status === 401) {
+            await clearAuthSession()
+            logout()
+          }
+        })
       }
       setHydrated()
     }

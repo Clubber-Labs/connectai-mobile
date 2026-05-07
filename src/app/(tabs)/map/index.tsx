@@ -7,6 +7,7 @@ import {
   ALL_CATEGORIES,
   BRAZIL_CENTER,
   BRAZIL_ZOOM,
+  CLUSTER_MAX_ZOOM,
   MAP_STYLE_URL,
   MAX_ZOOM,
   USER_ZOOM,
@@ -16,7 +17,6 @@ import { useMapEvents } from '@/features/map/hooks/useMapEvents'
 import { useMapCamera } from '@/features/map/hooks/useMapCamera'
 import { useUserLocation } from '@/features/map/hooks/useUserLocation'
 import { useMapZoomState } from '@/features/map/hooks/useMapZoomState'
-import { computeClusterZoom } from '@/features/map/utils/clusterZoom'
 import { EventCategoriesFilter } from '@/features/map/components/EventCategoriesFilter'
 import { MapZoomControls } from '@/features/map/components/MapZoomControls'
 import { EventClustersLayer } from '@/features/map/components/EventClustersLayer'
@@ -25,11 +25,13 @@ import { EventClusterList } from '@/features/map/components/EventClusterList'
 import { EventPreviewCard } from '@/features/map/components/EventPreviewCard'
 import { MapStatusBanner } from '@/features/map/components/MapStatusBanner'
 
+const COINCIDENT_FOCUS_ZOOM = 20
+
 export default function MapScreen() {
   const router = useRouter()
   const { coords: userCoords } = useUserLocation()
   const { cameraRef, mapRef, flyTo, adjustZoom, focusOnEvent } = useMapCamera()
-  const { showMarkers, onCameraZoomChange, getZoom } = useMapZoomState()
+  const { showMarkers, onCameraZoomChange } = useMapZoomState()
 
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES)
   const [selectedEvent, setSelectedEvent] = useState<FeedEvent | null>(null)
@@ -57,29 +59,20 @@ export default function MapScreen() {
     const source = shapeSourceRef.current
     if (!source) return
     const [lng, lat] = feature.geometry.coordinates
-    const currentZoom = getZoom()
-    try {
-      const leaves = (await source.getClusterLeaves(
-        feature,
-        100,
-        0,
-      )) as GeoJSON.FeatureCollection
-      const ids = (leaves.features ?? [])
-        .map(
-          (f: GeoJSON.Feature) =>
-            (f.properties as { eventId?: string } | null)?.eventId,
-        )
-        .filter((id: string | undefined): id is string => !!id)
-      const found = ids
-        .map((id: string) => filteredEvents.find(e => e.id === id))
-        .filter((e: FeedEvent | undefined): e is FeedEvent => !!e)
-      if (found.length === 0) return
 
+    try {
+      const expansionZoom = await source.getClusterExpansionZoom(feature)
       setSelectedEvent(null)
-      setClusterEvents(found)
-      flyTo([lng, lat], computeClusterZoom(found, [lng, lat], currentZoom), 600)
+      setClusterEvents(null)
+      // se o supercluster não consegue separar dentro do nível de cluster,
+      // os eventos são coincidentes — vai pra zoom mais alto pra dar destaque
+      const targetZoom =
+        expansionZoom > CLUSTER_MAX_ZOOM
+          ? COINCIDENT_FOCUS_ZOOM
+          : Math.min(expansionZoom + 0.5, MAX_ZOOM)
+      flyTo([lng, lat], targetZoom, 600)
     } catch {
-      flyTo([lng, lat], Math.min(currentZoom + 2, MAX_ZOOM), 500)
+      focusOnEvent([lng, lat])
     }
   }
 
