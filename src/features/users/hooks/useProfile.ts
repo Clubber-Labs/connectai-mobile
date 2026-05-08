@@ -18,15 +18,25 @@ export function useUserProfile(id: string) {
   })
 }
 
+/** Mescla a resposta parcial do backend com o cache atual — preserva campos
+ * (ex: eventsCount, followersCount) que algumas rotas não retornam.
+ */
+function mergeProfileCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  updated: UserProfile,
+) {
+  const merge = (prev: UserProfile | undefined): UserProfile =>
+    prev ? { ...prev, ...updated } : updated
+  queryClient.setQueryData<UserProfile>(userKeys.me, merge)
+  queryClient.setQueryData<UserProfile>(userKeys.profile(updated.id), merge)
+}
+
 export function useUpdateProfile(userId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (data: UpdateMePayload) => usersService.update(userId, data),
-    onSuccess: (updated: UserProfile) => {
-      queryClient.setQueryData(userKeys.me, updated)
-      queryClient.setQueryData(userKeys.profile(updated.id), updated)
-    },
+    onSuccess: updated => mergeProfileCache(queryClient, updated),
   })
 }
 
@@ -35,9 +45,6 @@ export function useUploadAvatar() {
 
   return useMutation({
     mutationFn: usersService.uploadAvatar,
-    onSuccess: (updated: UserProfile) => {
-      queryClient.setQueryData(userKeys.me, updated)
-      queryClient.setQueryData(userKeys.profile(updated.id), updated)
-    },
+    onSuccess: updated => mergeProfileCache(queryClient, updated),
   })
 }
