@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { View, Text, TextInput, Switch, Pressable } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,6 +8,8 @@ import {
 } from '../schemas/editProfileSchema'
 import { Button } from '@/shared/components/Button'
 import { DatePicker } from '@/shared/components/DatePicker'
+import { FormError } from '@/shared/components/FormError'
+import { parseLocalDate } from '@/shared/utils/dateFormat'
 import type { UserProfile } from '@/shared/types'
 
 type Props = {
@@ -31,7 +33,7 @@ function defaultsFromProfile(profile: UserProfile): EditProfileInput {
     phone: profile.phone ?? '',
     bio: profile.bio ?? '',
     isPrivate: profile.isPrivate,
-    birthdate: profile.birthdate ? new Date(profile.birthdate) : new Date(),
+    birthdate: profile.birthdate ? parseLocalDate(profile.birthdate) : new Date(),
   }
 }
 
@@ -185,9 +187,7 @@ export function EditProfileForm({
         )}
       />
 
-      {inlineError && (
-        <Text className="text-red-500 text-sm text-center">{inlineError}</Text>
-      )}
+      <FormError message={inlineError} />
 
       <View className="flex-row gap-3 mt-2">
         <View className="flex-1">
@@ -213,7 +213,7 @@ function Field({
 }: {
   label: string
   error?: string
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <View className="gap-1.5">

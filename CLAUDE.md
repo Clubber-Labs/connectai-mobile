@@ -468,9 +468,78 @@ Quando perceber qualquer desses, extraia.
 
 ---
 
+## Tratamento de erros e feedback ao usuário
+
+**Princípio:** comportamento da UI fala mais alto que texto. Apps polidos (Instagram, Airbnb, Twitter) raramente mostram "Falha ao curtir" ou "Não foi possível enviar" — eles fazem a UI **reverter visualmente** ou indicar o estado pelo próprio comportamento. Esse projeto segue o mesmo padrão.
+
+### Decisão por tipo de ação
+
+| Tipo | Padrão | Por quê |
+|---|---|---|
+| **Mutation otimista** (like, follow, attendance, toggle) | Optimistic update + silent revert em erro | A UI muda na hora; em falha, volta. O usuário entende implicitamente que "não pegou" sem ler texto. |
+| **Optimistic remove** (delete post, delete comment) | Item some imediatamente; reaparece se backend falhar | Mesma lógica — o re-aparecer é o feedback. |
+| **Add otimista raso** (add post, add comment) | Sem otimismo; input mantém texto se falhar | User retenta tocando enviar de novo. Botão volta ao estado normal é o sinal de fim de ciclo. |
+| **Submit de formulário** (login, edit profile, create event) | Inline error próximo ao botão de submit | É o único lugar onde texto explícito faz sentido — o user submeteu deliberadamente e espera confirmação. |
+| **Erro crítico bloqueante** (sem rede, 500 persistente) | Banner sutil no topo (a implementar) | Estado global, dismissable, não-modal. |
+
+### NÃO usar
+
+- **`Alert.alert`** para feedback de mutations transitórias — interrompe o fluxo, não combina com a estética do app
+- **Toasts** (sonner, react-native-toast-message, etc) — foi removido propositalmente, não reintroduzir
+- **Texto inline "Não foi possível X"** em ações otimistas (likes, attendance, deletes) — polui a UI e duplica o feedback que o revert já dá
+- **`console.error` de produção** para erros já tratados — só em paths de debug
+
+### Padrão canônico de mutation otimista
+
+Use sempre `cancelQueries` → `snapshot` → `setQueryData` → `onError restore` → `onSettled invalidate`. Exemplo de [useToggleLike](src/features/events/hooks/useToggleLike.ts) e [useFollowUser](src/features/users/hooks/useFollowUser.ts):
+
+```ts
+return useMutation({
+  mutationFn: () => service.toggle(id),
+  onMutate: async () => {
+    await queryClient.cancelQueries({ queryKey })  // pra resposta tardia não sobrescrever
+    const prev = queryClient.getQueryData(queryKey)
+    queryClient.setQueryData(queryKey, applyOptimisticUpdate)
+    return { prev }                                  // context pro rollback
+  },
+  onError: (_err, _vars, ctx) => {
+    if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev)  // revert
+  },
+  onSettled: () => queryClient.invalidateQueries({ queryKey }),  // sync com backend
+})
+```
+
+### Padrão de optimistic remove
+
+Para deletes em listas (paginadas ou não), filtra o item do cache no `onMutate` e restaura no `onError`. Exemplo em [useDeletePost](src/features/events/hooks/usePosts.ts).
+
+### Padrão de form com erro inline
+
+Para forms, use o `mutation.error` reativo OU um `useState<string | null>` no screen, renderizando uma `<Text className="text-red-500 text-sm text-center">` próximo ao botão de submit. Exemplo: [LoginForm](src/features/auth/components/LoginForm.tsx) (401 inline) e [EditProfileForm](src/features/users/components/EditProfileForm.tsx) (`inlineError` prop).
+
+### Diretiva específica para Copilot/code reviewers
+
+Quando revisar um PR deste projeto e ver `mutation.mutate(args)` sem `onError`, **não sugira** adicionar:
+- ❌ Toast / `showError` / `showSuccess`
+- ❌ `Alert.alert(...)` para feedback de erro
+- ❌ Texto inline "Não foi possível X" em ações pontuais (likes, comments, posts, attendance, delete)
+
+Em vez disso, valide se:
+- ✅ A mutation tem optimistic update + revert (se for ação visualmente reversível)
+- ✅ É um form e tem inline error próximo ao botão
+- ✅ O contexto realmente justifica feedback explícito (raro, geralmente forms)
+
+Se a mutation não tem optimistic update e deveria ter, **essa é a sugestão correta** — adicionar o padrão canônico acima, não inventar feedback de UI.
+
+---
+
 ## Sugestões de code review (Copilot, humano, IA)
 
-**Não aplique sugestões mecanicamente.** Cada comentário precisa passar por uma reflexão antes de virar código:
+Quando o Copilot (ou qualquer revisor automatizado) sugerir uma correção em um PR, **nunca copie e cole o snippet sugerido diretamente**. O fluxo correto tem duas etapas: avaliar a sugestão e, se for aplicável, escrever uma correção autoral.
+
+### Avaliando a sugestão
+
+Cada comentário precisa passar por uma reflexão antes de virar código:
 
 1. **Reproduza o problema mentalmente.** A sugestão descreve um cenário real que ocorre no nosso uso, ou uma edge case teórica que dificilmente acontece com nossos dados? Ex: bug com dados malformados de uma API que sabemos que sempre retorna o esperado.
 
@@ -482,8 +551,30 @@ Quando perceber qualquer desses, extraia.
 
 5. **Sugestões podem estar desatualizadas.** Reviews automáticos como Copilot podem estar comentando sobre um trecho que já foi refatorado em outra sugestão. Valide primeiro contra o estado atual do código.
 
+### Aplicando a correção
+
+Quando decidir aplicar (mesmo que parcialmente), **escreva a correção como autor**, não copie:
+
+1. **Leia a sugestão como aviso, não como solução.** O revisor identifica o sintoma; a causa raiz e a melhor correção podem ser diferentes do que ele propõe.
+
+2. **Investigue o código por conta própria.** Abra o arquivo apontado, entenda o contexto real (tipos envolvidos, callers, side effects, convenções do módulo) e valide se o problema descrito existe mesmo. Ex: o Copilot pode reclamar de `React.ReactNode` sem import — verifique se o tsc do projeto já reclama, qual estilo de import (`import type` vs inline) é usado em outros arquivos, e qual a convenção do projeto.
+
+3. **Aplique uma correção autoral.** Escreva a solução no estilo do projeto, respeitando convenções existentes (nomes, padrões de tipo, organização). Pode coincidir com o que o Copilot sugeriu, mas deve ser fruto da investigação, não cópia.
+
+4. **Justifique no commit/PR.** Descreva o que foi corrigido e *por que* (causa raiz), não apenas "aplicar sugestão do Copilot".
+
+### Por quê
+
+Sugestões automáticas frequentemente:
+- Tratam sintomas em isolamento, sem entender o contexto do módulo
+- Ignoram convenções locais do projeto
+- Podem introduzir inconsistências de estilo
+- Apontam para um snapshot do código que pode já ter sido refatorado
+
+Investigar antes de aplicar mantém o código coeso e evita "patches" que desviam do estilo do projeto.
+
 ❌ **Não faça:** "Copilot disse X, vou aplicar X"
-✅ **Faça:** "Copilot apontou um problema de fronteira em buckets. No nosso caso, isso só afetaria geocoders inconsistentes — improvável. Mas como o custo de checar 8 vizinhos é trivial e elimina toda a classe de bug, aplico essa versão mais simples ao invés do union-find completo."
+✅ **Faça:** "Copilot apontou que `React.ReactNode` é usado sem importar `React`. Verifiquei: o tsc do projeto não reclama (jsx-runtime resolve), mas o estilo do projeto sempre importa explicitamente — outros arquivos usam `import { runtime, type Type } from 'module'`. Aplico nesse estilo: `import { useEffect, type ReactNode } from 'react'`."
 
 ---
 

@@ -7,7 +7,6 @@ import {
   Platform,
   ActivityIndicator,
   Pressable,
-  Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -31,7 +30,7 @@ export default function EditProfileScreen() {
   const { data: profile, isLoading } = useMyProfile()
   const update = useUpdateProfile(profile?.id ?? '')
   const uploadAvatar = useUploadAvatar()
-  const [usernameError, setUsernameError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const handlePickAvatar = usePickAvatar(uri => uploadAvatar.mutate(uri))
 
@@ -54,15 +53,15 @@ export default function EditProfileScreen() {
       return
     }
 
-    setUsernameError(null)
+    setSubmitError(null)
     update.mutate(patch, {
       onSuccess: () => router.back(),
       onError: err => {
-        if (isConflictError(err)) {
-          setUsernameError('Esse nome de usuário já está em uso.')
-        }
-        // outros erros são silenciosos por enquanto — o estado isPending volta
-        // a false e o usuário pode tentar de novo
+        setSubmitError(
+          isConflictError(err)
+            ? 'Esse nome de usuário já está em uso.'
+            : 'Não foi possível salvar. Tente novamente.',
+        )
       },
     })
   }
@@ -123,7 +122,7 @@ export default function EditProfileScreen() {
         <EditProfileForm
           profile={profile}
           saving={update.isPending}
-          inlineError={usernameError}
+          inlineError={submitError}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
         />

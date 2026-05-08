@@ -1,3 +1,4 @@
+import { toLocalIsoDate } from '@/shared/utils/dateFormat'
 import type { UserProfile } from '@/shared/types'
 import type { UpdateMePayload } from '../services/usersService'
 import type { EditProfileInput } from '../schemas/editProfileSchema'
@@ -20,7 +21,7 @@ export function buildProfilePatch(
   if (form.bio !== (profile.bio ?? '')) patch.bio = form.bio
   if (form.isPrivate !== profile.isPrivate) patch.isPrivate = form.isPrivate
 
-  const formDate = toIsoDate(form.birthdate)
+  const formDate = toLocalIsoDate(form.birthdate)
   const profileDate = profile.birthdate ? profile.birthdate.split('T')[0] : ''
   if (formDate !== profileDate) patch.birthdate = formDate
 
@@ -29,8 +30,4 @@ export function buildProfilePatch(
 
 export function isPatchEmpty(patch: UpdateMePayload): boolean {
   return Object.keys(patch).length === 0
-}
-
-function toIsoDate(date: Date): string {
-  return date.toISOString().split('T')[0]
 }
