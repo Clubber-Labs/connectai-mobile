@@ -10,7 +10,6 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useAddPost } from '../hooks/usePosts'
 import { useMe } from '@/features/auth/hooks/useMe'
-import { showError } from '@/shared/lib/toast'
 
 type Props = {
   eventId: string
@@ -29,7 +28,6 @@ export function CreatePostInput({ eventId, disabled, disabledReason }: Props) {
     Keyboard.dismiss()
     addPost.mutate(content, {
       onSuccess: () => setText(''),
-      onError: showError,
     })
   }
 

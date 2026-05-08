@@ -1,23 +1,146 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { InfiniteData } from '@tanstack/react-query'
 import { eventsService } from '../services/eventsService'
-import type { AttendanceType } from '@/shared/types'
 import { invalidateEventViews } from './cacheKeys'
+import type {
+  AttendanceType,
+  CursorPaginatedResponse,
+  EventDetail,
+  FeedEvent,
+} from '@/shared/types'
+
+type FeedCache = InfiniteData<CursorPaginatedResponse<FeedEvent>>
+type Snapshot = {
+  prevFeed: FeedCache | undefined
+  prevDetail: EventDetail | undefined
+}
+
+const feedKey = ['feed'] as const
+
+/** Conta como "presença" apenas CONFIRMED e INTERESTED (NOT_INTERESTED não conta). */
+function countDelta(
+  prev: AttendanceType | null,
+  next: AttendanceType | null,
+): number {
+  const wasCounting = prev === 'CONFIRMED' || prev === 'INTERESTED'
+  const isCounting = next === 'CONFIRMED' || next === 'INTERESTED'
+  if (wasCounting && !isCounting) return -1
+  if (!wasCounting && isCounting) return 1
+  return 0
+}
+
+function patchEventInFeed(
+  cache: FeedCache | undefined,
+  eventId: string,
+  patch: (event: FeedEvent) => FeedEvent,
+): FeedCache | undefined {
+  if (!cache) return cache
+  return {
+    ...cache,
+    pages: cache.pages.map(page => ({
+      ...page,
+      data: page.data.map(event =>
+        event.id === eventId ? patch(event) : event,
+      ),
+    })),
+  }
+}
+
+function findInFeed(
+  cache: FeedCache | undefined,
+  eventId: string,
+): FeedEvent | undefined {
+  return cache?.pages
+    .flatMap(p => p.data)
+    .find(e => e.id === eventId)
+}
+
+function applyAttendance(
+  queryClient: ReturnType<typeof useQueryClient>,
+  eventId: string,
+  next: AttendanceType | null,
+  delta: number,
+) {
+  queryClient.setQueryData<FeedCache>(feedKey, old =>
+    patchEventInFeed(old, eventId, e => ({
+      ...e,
+      userAttendance: next,
+      _count: { ...e._count, attendances: e._count.attendances + delta },
+    })),
+  )
+  queryClient.setQueryData<EventDetail>(['events', eventId], old =>
+    old
+      ? {
+          ...old,
+          userAttendance: next,
+          _count: {
+            ...old._count,
+            attendances: old._count.attendances + delta,
+          },
+        }
+      : old,
+  )
+}
+
+function restore(
+  queryClient: ReturnType<typeof useQueryClient>,
+  eventId: string,
+  snapshot: Snapshot,
+) {
+  if (snapshot.prevFeed) queryClient.setQueryData(feedKey, snapshot.prevFeed)
+  if (snapshot.prevDetail)
+    queryClient.setQueryData(['events', eventId], snapshot.prevDetail)
+}
+
+function useAttendanceSnapshot(eventId: string) {
+  const queryClient = useQueryClient()
+  const detailKey = ['events', eventId]
+
+  async function snapshot(): Promise<{
+    snap: Snapshot
+    current: AttendanceType | null
+  }> {
+    await queryClient.cancelQueries({ queryKey: feedKey })
+    await queryClient.cancelQueries({ queryKey: detailKey })
+    const prevFeed = queryClient.getQueryData<FeedCache>(feedKey)
+    const prevDetail = queryClient.getQueryData<EventDetail>(detailKey)
+    const current =
+      prevDetail?.userAttendance ??
+      findInFeed(prevFeed, eventId)?.userAttendance ??
+      null
+    return { snap: { prevFeed, prevDetail }, current }
+  }
+
+  return { snapshot, queryClient }
+}
 
 export function useSetAttendance(eventId: string) {
-  const queryClient = useQueryClient()
+  const { snapshot, queryClient } = useAttendanceSnapshot(eventId)
 
   return useMutation({
     mutationFn: (type: AttendanceType) =>
       eventsService.setAttendance(eventId, type),
-    onSuccess: () => invalidateEventViews(queryClient, eventId),
+    onMutate: async type => {
+      const { snap, current } = await snapshot()
+      applyAttendance(queryClient, eventId, type, countDelta(current, type))
+      return snap
+    },
+    onError: (_err, _vars, ctx) => ctx && restore(queryClient, eventId, ctx),
+    onSettled: () => invalidateEventViews(queryClient, eventId),
   })
 }
 
 export function useCancelAttendance(eventId: string) {
-  const queryClient = useQueryClient()
+  const { snapshot, queryClient } = useAttendanceSnapshot(eventId)
 
   return useMutation({
     mutationFn: () => eventsService.cancelAttendance(eventId),
-    onSuccess: () => invalidateEventViews(queryClient, eventId),
+    onMutate: async () => {
+      const { snap, current } = await snapshot()
+      applyAttendance(queryClient, eventId, null, countDelta(current, null))
+      return snap
+    },
+    onError: (_err, _vars, ctx) => ctx && restore(queryClient, eventId, ctx),
+    onSettled: () => invalidateEventViews(queryClient, eventId),
   })
 }

@@ -1,7 +1,6 @@
 import { View, Text, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSetAttendance, useCancelAttendance } from '../hooks/useAttendance'
-import { showError } from '@/shared/lib/toast'
 import type { AttendanceType } from '@/shared/types'
 import type { ComponentProps } from 'react'
 
@@ -24,10 +23,10 @@ export function EventAttendanceButton({ eventId, current }: Props) {
 
   function handlePress(type: AttendanceType) {
     if (current === type) {
-      cancelAttendance.mutate(undefined, { onError: showError })
+      cancelAttendance.mutate()
       return
     }
-    setAttendance.mutate(type, { onError: showError })
+    setAttendance.mutate(type)
   }
 
   return (

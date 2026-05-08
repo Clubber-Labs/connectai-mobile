@@ -9,7 +9,6 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useComments, useAddComment } from '../hooks/useComments'
 import { CommentItem } from './CommentItem'
-import { showError } from '@/shared/lib/toast'
 
 type Props = {
   eventId: string
@@ -28,7 +27,6 @@ export function InlineCommentsSection({ eventId }: Props) {
     if (!content) return
     addComment.mutate(content, {
       onSuccess: () => setText(''),
-      onError: showError,
     })
   }
 

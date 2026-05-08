@@ -9,7 +9,6 @@ import { StatusBar } from 'expo-status-bar'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { Ionicons } from '@expo/vector-icons'
-import { Toaster } from 'sonner-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { queryClient } from '@/shared/lib/queryClient'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -63,7 +62,6 @@ export default function RootLayout() {
             </View>
           </SafeAreaView>
           <AuthGuard />
-          <Toaster position="top-center" theme="dark" richColors />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

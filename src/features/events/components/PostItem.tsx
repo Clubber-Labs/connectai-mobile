@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { UserAvatar } from '@/shared/components/UserAvatar'
 import { useDeletePost } from '../hooks/usePosts'
-import { showError } from '@/shared/lib/toast'
 import { formatRelative } from '@/shared/utils/dateFormat'
 import type { EventPost } from '@/shared/types'
 
@@ -24,7 +23,7 @@ export function PostItem({ eventId, post }: Props) {
       {
         text: 'Excluir',
         style: 'destructive',
-        onPress: () => deletePost.mutate(post.id, { onError: showError }),
+        onPress: () => deletePost.mutate(post.id),
       },
     ])
   }

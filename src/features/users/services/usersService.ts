@@ -41,8 +41,11 @@ export const usersService = {
   getById: (id: string): Promise<UserProfile> =>
     api.get(`/users/${id}`).then(r => r.data),
 
-  updateMe: (data: UpdateMePayload): Promise<UserProfile> =>
-    api.put('/users/me', data).then(r => r.data),
+  // Workaround: a rota PUT /users/me existe no backend, mas é registrada DEPOIS
+  // de PUT /users/:id no Fastify, então "me" cai no handler de :id e falha na
+  // validação UUID (400). Passamos o id real até o backend reordenar as rotas.
+  update: (id: string, data: UpdateMePayload): Promise<UserProfile> =>
+    api.put(`/users/${id}`, data).then(r => r.data),
 
   uploadAvatar: (uri: string): Promise<UserProfile> => {
     const form = new FormData()

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { View, Text, Alert, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
 import { useMyProfile, useUploadAvatar } from '@/features/users/hooks/useProfile'
 import { useUserEvents } from '@/features/users/hooks/useUserEvents'
 import { usePickAvatar } from '@/features/users/hooks/usePickAvatar'
@@ -11,14 +12,12 @@ import { ProfileEventsList } from '@/features/users/components/ProfileEventsList
 import { ProfileLoading } from '@/features/users/components/ProfileLoading'
 import { ProfileEmpty } from '@/features/users/components/ProfileEmpty'
 
-const NOT_IMPLEMENTED_TITLE = 'Em breve'
-const NOT_IMPLEMENTED_BODY = 'Funcionalidade ainda não implementada.'
-
 function notifyComingSoon() {
-  Alert.alert(NOT_IMPLEMENTED_TITLE, NOT_IMPLEMENTED_BODY)
+  Alert.alert('Em breve', 'Funcionalidade ainda não implementada.')
 }
 
 export default function ProfileScreen() {
+  const router = useRouter()
   const { data: profile, isLoading: profileLoading } = useMyProfile()
   const userId = profile?.id ?? ''
 
@@ -62,7 +61,7 @@ export default function ProfileScreen() {
               isOwnProfile
               avatarUploading={uploadAvatar.isPending}
               onAvatarPress={handlePickAvatar}
-              onEditPress={notifyComingSoon}
+              onEditPress={() => router.push('/profile/edit')}
             />
             <ProfileStats
               eventsCount={profile.eventsCount}

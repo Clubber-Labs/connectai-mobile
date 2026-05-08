@@ -4,12 +4,18 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { eventsService } from '../services/eventsService'
-import type { CursorPaginatedResponse, FeedEvent } from '@/shared/types'
+import { removeFromInfiniteList } from '@/shared/utils/infiniteList'
+import type {
+  CursorPaginatedResponse,
+  EventComment,
+  FeedEvent,
+} from '@/shared/types'
 import type { InfiniteData } from '@tanstack/react-query'
 
 const commentsKey = (eventId: string) => ['events', eventId, 'comments']
 
 type FeedCache = InfiniteData<CursorPaginatedResponse<FeedEvent>>
+type CommentsCache = InfiniteData<CursorPaginatedResponse<EventComment>>
 
 export function useComments(eventId: string) {
   return useInfiniteQuery({
@@ -61,12 +67,25 @@ export function useAddComment(eventId: string) {
 
 export function useDeleteComment(eventId: string) {
   const queryClient = useQueryClient()
+  const key = commentsKey(eventId)
 
   return useMutation({
     mutationFn: (commentId: string) =>
       eventsService.deleteComment(eventId, commentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commentsKey(eventId) })
+    onMutate: async commentId => {
+      // optimistic remove: comentário some imediatamente, reaparece se falhar
+      await queryClient.cancelQueries({ queryKey: key })
+      const prev = queryClient.getQueryData<CommentsCache>(key)
+      queryClient.setQueryData<CommentsCache>(key, old =>
+        removeFromInfiniteList(old, commentId),
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(key, ctx.prev)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: key })
       queryClient.invalidateQueries({ queryKey: ['events', eventId] })
       queryClient.invalidateQueries({ queryKey: ['feed'] })
     },

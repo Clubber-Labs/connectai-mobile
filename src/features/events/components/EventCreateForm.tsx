@@ -16,10 +16,10 @@ import {
 } from '../schemas/createEventSchema'
 import { useCreateEvent } from '../hooks/useCreateEvent'
 import { Button } from '@/shared/components/Button'
+import { FormError } from '@/shared/components/FormError'
 import { DatePicker } from '@/shared/components/DatePicker'
 import { LocationPicker } from './LocationPicker'
 import { AddressAutocomplete } from './AddressAutocomplete'
-import { showError, showSuccess } from '@/shared/lib/toast'
 
 const CATEGORIES = [
   'Música',
@@ -32,7 +32,7 @@ const CATEGORIES = [
 
 export function EventCreateForm() {
   const router = useRouter()
-  const { mutate, isPending } = useCreateEvent()
+  const { mutate, isPending, error } = useCreateEvent()
 
   const {
     control,
@@ -52,11 +52,7 @@ export function EventCreateForm() {
 
   function onSubmit(data: CreateEventInput) {
     mutate(data, {
-      onSuccess: created => {
-        showSuccess('Evento criado!')
-        router.replace(`/events/${created.id}`)
-      },
-      onError: showError,
+      onSuccess: created => router.replace(`/events/${created.id}`),
     })
   }
 
@@ -244,6 +240,12 @@ export function EventCreateForm() {
             )}
           />
         </View>
+
+        <FormError
+          message={
+            error ? 'Não foi possível criar o evento. Tente novamente.' : null
+          }
+        />
 
         <Button
           label={isPending ? 'Criando...' : 'Criar evento'}
