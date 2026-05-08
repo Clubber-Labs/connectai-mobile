@@ -16,6 +16,7 @@ import {
 } from '../schemas/createEventSchema'
 import { useCreateEvent } from '../hooks/useCreateEvent'
 import { Button } from '@/shared/components/Button'
+import { FormError } from '@/shared/components/FormError'
 import { DatePicker } from '@/shared/components/DatePicker'
 import { LocationPicker } from './LocationPicker'
 import { AddressAutocomplete } from './AddressAutocomplete'
@@ -31,7 +32,7 @@ const CATEGORIES = [
 
 export function EventCreateForm() {
   const router = useRouter()
-  const { mutate, isPending } = useCreateEvent()
+  const { mutate, isPending, error } = useCreateEvent()
 
   const {
     control,
@@ -239,6 +240,12 @@ export function EventCreateForm() {
             )}
           />
         </View>
+
+        <FormError
+          message={
+            error ? 'Não foi possível criar o evento. Tente novamente.' : null
+          }
+        />
 
         <Button
           label={isPending ? 'Criando...' : 'Criar evento'}

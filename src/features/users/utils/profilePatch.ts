@@ -21,9 +21,16 @@ export function buildProfilePatch(
   if (form.bio !== (profile.bio ?? '')) patch.bio = form.bio
   if (form.isPrivate !== profile.isPrivate) patch.isPrivate = form.isPrivate
 
-  const formDate = toLocalIsoDate(form.birthdate)
-  const profileDate = profile.birthdate ? profile.birthdate.split('T')[0] : ''
-  if (formDate !== profileDate) patch.birthdate = formDate
+  // só envia birthdate se o usuário selecionou data E ela difere da atual.
+  // se ele não tocou no campo (form.birthdate === undefined), nunca enviamos —
+  // evita sobrescrever silenciosamente quando o perfil não tinha valor.
+  if (form.birthdate) {
+    const formDate = toLocalIsoDate(form.birthdate)
+    const profileDate = profile.birthdate
+      ? profile.birthdate.split('T')[0]
+      : ''
+    if (formDate !== profileDate) patch.birthdate = formDate
+  }
 
   return patch
 }

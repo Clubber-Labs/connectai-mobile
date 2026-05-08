@@ -58,7 +58,11 @@ export function LoginForm() {
 
       <FormError
         message={
-          isUnauthorizedError(error) ? 'E-mail ou senha incorretos.' : null
+          error
+            ? isUnauthorizedError(error)
+              ? 'E-mail ou senha incorretos.'
+              : 'Não foi possível entrar. Tente novamente.'
+            : null
         }
       />
 

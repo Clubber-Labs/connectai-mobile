@@ -24,7 +24,7 @@ export const editProfileSchema = z.object({
     .regex(/^\d+$/, 'Apenas números'),
   bio: z.string().max(255, 'Máximo 255 caracteres'),
   isPrivate: z.boolean(),
-  birthdate: z.date({ error: 'Data de nascimento é obrigatória' }),
+  birthdate: z.date().optional(),
 })
 
 export type EditProfileInput = z.infer<typeof editProfileSchema>
