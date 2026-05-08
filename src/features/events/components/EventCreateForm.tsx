@@ -19,7 +19,6 @@ import { Button } from '@/shared/components/Button'
 import { DatePicker } from '@/shared/components/DatePicker'
 import { LocationPicker } from './LocationPicker'
 import { AddressAutocomplete } from './AddressAutocomplete'
-import { showError, showSuccess } from '@/shared/lib/toast'
 
 const CATEGORIES = [
   'Música',
@@ -52,11 +51,7 @@ export function EventCreateForm() {
 
   function onSubmit(data: CreateEventInput) {
     mutate(data, {
-      onSuccess: created => {
-        showSuccess('Evento criado!')
-        router.replace(`/events/${created.id}`)
-      },
-      onError: showError,
+      onSuccess: created => router.replace(`/events/${created.id}`),
     })
   }
 

@@ -41,8 +41,10 @@ export const usersService = {
   getById: (id: string): Promise<UserProfile> =>
     api.get(`/users/${id}`).then(r => r.data),
 
-  updateMe: (data: UpdateMePayload): Promise<UserProfile> =>
-    api.put('/users/me', data).then(r => r.data),
+  // PUT /users/me não existe no backend — :id é validado como UUID,
+  // então passamos o id real do usuário autenticado.
+  update: (id: string, data: UpdateMePayload): Promise<UserProfile> =>
+    api.put(`/users/${id}`, data).then(r => r.data),
 
   uploadAvatar: (uri: string): Promise<UserProfile> => {
     const form = new FormData()

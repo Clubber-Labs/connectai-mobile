@@ -9,7 +9,6 @@ import { FeedReasonBanner } from './FeedReasonBanner'
 import { computeFeedReason } from '../utils/feedReason'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { UserAvatar } from '@/shared/components/UserAvatar'
-import { showError } from '@/shared/lib/toast'
 import { formatRelative } from '@/shared/utils/dateFormat'
 import type { FeedEvent } from '@/shared/types'
 
@@ -29,7 +28,7 @@ export function EventCard({ event, onPress }: Props) {
     !!reason && event.userAttendance === null && event.userReaction === null
 
   function handleLike() {
-    toggleLike.mutate(event.userReaction, { onError: showError })
+    toggleLike.mutate(event.userReaction)
   }
 
   return (

@@ -6,8 +6,6 @@ import {
   saveUserId,
   clearAuthSession,
 } from '@/shared/lib/secureStore'
-import { isUnauthorizedError } from '@/shared/lib/apiError'
-import { showError } from '@/shared/lib/toast'
 import type { LoginInput } from '../schemas/loginSchema'
 
 export function useLogin() {
@@ -33,10 +31,7 @@ export function useLogin() {
     onSuccess: ({ userId }) => {
       setUser(userId)
     },
-    onError: err => {
-      // 401 (credenciais inválidas) é exibido inline pelo formulário —
-      // demais falhas (rede, 5xx) viram toast genérico
-      if (!isUnauthorizedError(err)) showError(err)
-    },
+    // erros (incluindo 401) ficam disponíveis em `mutation.error` —
+    // o LoginForm exibe a mensagem inline pra credenciais inválidas
   })
 }
