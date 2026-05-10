@@ -24,17 +24,19 @@ export default {
       }],
       ["expo-location", {
         locationWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa.",
-        // expo-location sempre adiciona as 3 keys; só usamos foreground, mas
-        // passamos textos PT-BR específicos pras de "Always" pra App Review
-        // não exigir justificativa de string genérica.
+        // expo-location força as 3 keys de location no plist; só usamos
+        // foreground, mas passamos texto PT-BR específico nas de "Always"
+        // pra App Review não receber strings genéricas em inglês.
         locationAlwaysAndWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa.",
         locationAlwaysPermission: "Usamos sua localização para mostrar eventos próximos no mapa."
       }],
       ["expo-image-picker", {
         photosPermission: "Precisamos de acesso às suas fotos para alterar a foto de perfil.",
-        // image-picker sobrescreve a key NSCameraUsageDescription do
-        // vision-camera; passamos a mesma string pra não perder o texto.
+        // image-picker é o último plugin a tocar NSCameraUsageDescription;
+        // sem isso, sobrescreveria o texto do vision-camera com placeholder
+        // genérico em inglês.
         cameraPermission: "Precisamos da câmera para fotos de perfil e eventos",
+        // Não usamos áudio em nenhum lugar; remove NSMicrophoneUsageDescription.
         microphonePermission: false
       }]
     ],
