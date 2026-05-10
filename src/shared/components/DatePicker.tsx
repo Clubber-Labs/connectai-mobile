@@ -35,7 +35,7 @@ export function DatePicker({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<'date' | 'time'>('date')
-  const pickerValue = value ?? maximumDate ?? new Date()
+  const pickerValue = value ?? minimumDate ?? maximumDate ?? new Date()
 
   function handleClose() {
     setOpen(false)
