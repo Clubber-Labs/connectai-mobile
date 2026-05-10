@@ -10,6 +10,7 @@ type Props = {
   hasNextPage: boolean
   isFetchingNextPage: boolean
   onLoadMore: () => void
+  emptyMessage?: string
 }
 
 export function ProfileEventsList({
@@ -18,6 +19,7 @@ export function ProfileEventsList({
   hasNextPage,
   isFetchingNextPage,
   onLoadMore,
+  emptyMessage = 'Nenhum evento ainda.',
 }: Props) {
   const router = useRouter()
 
@@ -34,9 +36,7 @@ export function ProfileEventsList({
         />
       )}
       ListEmptyComponent={
-        <Text className="text-zinc-500 text-center mt-8">
-          Nenhum evento ainda.
-        </Text>
+        <Text className="text-zinc-500 text-center mt-8">{emptyMessage}</Text>
       }
       ListFooterComponent={
         isFetchingNextPage ? (

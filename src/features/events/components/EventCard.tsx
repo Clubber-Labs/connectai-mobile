@@ -8,6 +8,7 @@ import { AttendanceStatusBadge } from './AttendanceStatusBadge'
 import { FeedReasonBanner } from './FeedReasonBanner'
 import { computeFeedReason } from '../utils/feedReason'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { useNavigateToProfile } from '@/features/users/hooks/useNavigateToProfile'
 import { UserAvatar } from '@/shared/components/UserAvatar'
 import { formatRelative } from '@/shared/utils/dateFormat'
 import type { FeedEvent } from '@/shared/types'
@@ -21,6 +22,7 @@ export function EventCard({ event, onPress }: Props) {
   const [expanded, setExpanded] = useState(false)
   const toggleLike = useToggleLike(event.id)
   const userId = useAuthStore(s => s.userId)
+  const navigateToProfile = useNavigateToProfile()
 
   const liked = event.userReaction === 'LIKE'
   const reason = computeFeedReason(event, userId)
@@ -36,7 +38,11 @@ export function EventCard({ event, onPress }: Props) {
       {showReason && <FeedReasonBanner reason={reason} />}
       <Pressable onPress={onPress}>
         <View className="flex-row items-center justify-between px-4 pt-4">
-          <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => navigateToProfile(event.author.id)}
+            className="flex-row items-center gap-2"
+            accessibilityLabel={`Ver perfil de ${event.author.username}`}
+          >
             <UserAvatar name={event.author.name} avatarUrl={event.author.avatarUrl} />
             <View>
               <Text className="text-sm font-semibold text-white">
@@ -46,7 +52,7 @@ export function EventCard({ event, onPress }: Props) {
                 {formatRelative(event.createdAt)}
               </Text>
             </View>
-          </View>
+          </Pressable>
           <View className="flex-row items-center gap-1.5">
             <AttendanceStatusBadge attendance={event.userAttendance} />
             {!event.isPublic && (

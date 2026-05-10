@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { Alert } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 
 export function usePickAvatar(onPicked: (uri: string) => void) {
@@ -15,7 +14,8 @@ export function usePickAvatar(onPicked: (uri: string) => void) {
         onPicked(result.assets[0].uri)
       }
     } catch {
-      Alert.alert('Erro', 'Não foi possível abrir a galeria.')
+      // falha silenciosa — o sistema já mostra prompt de permissão quando
+      // necessário e o usuário pode tentar de novo
     }
   }, [onPicked])
 }

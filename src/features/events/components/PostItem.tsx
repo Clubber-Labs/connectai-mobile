@@ -1,7 +1,9 @@
-import { View, Text, Pressable, Alert } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { useNavigateToProfile } from '@/features/users/hooks/useNavigateToProfile'
 import { UserAvatar } from '@/shared/components/UserAvatar'
+import { useConfirm } from '@/shared/lib/confirm'
 import { useDeletePost } from '../hooks/usePosts'
 import { formatRelative } from '@/shared/utils/dateFormat'
 import type { EventPost } from '@/shared/types'
@@ -14,24 +16,29 @@ type Props = {
 export function PostItem({ eventId, post }: Props) {
   const userId = useAuthStore(s => s.userId)
   const deletePost = useDeletePost(eventId)
+  const navigateToProfile = useNavigateToProfile()
+  const confirm = useConfirm()
 
   const isAuthor = userId === post.authorId
 
-  function handleDelete() {
-    Alert.alert('Excluir post', 'Tem certeza que deseja excluir este post?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: () => deletePost.mutate(post.id),
-      },
-    ])
+  async function handleDelete() {
+    const ok = await confirm({
+      title: 'Excluir post',
+      message: 'Tem certeza que deseja excluir este post?',
+      confirmLabel: 'Excluir',
+      destructive: true,
+    })
+    if (ok) deletePost.mutate(post.id)
   }
 
   return (
     <View className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 gap-3">
       <View className="flex-row items-start justify-between">
-        <View className="flex-row items-center gap-2 flex-1">
+        <Pressable
+          onPress={() => navigateToProfile(post.author.id)}
+          className="flex-row items-center gap-2 flex-1"
+          accessibilityLabel={`Ver perfil de ${post.author.username}`}
+        >
           <UserAvatar name={post.author.name} avatarUrl={post.author.avatarUrl} />
           <View className="flex-1">
             <Text className="text-sm font-semibold text-white">
@@ -41,7 +48,7 @@ export function PostItem({ eventId, post }: Props) {
               @{post.author.username} · {formatRelative(post.createdAt)}
             </Text>
           </View>
-        </View>
+        </Pressable>
 
         {isAuthor && (
           <Pressable
