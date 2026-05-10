@@ -38,6 +38,7 @@ export function EventCreateForm() {
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateEventInput>({
     resolver: zodResolver(createEventSchema),
@@ -49,6 +50,8 @@ export function EventCreateForm() {
       isPublic: true,
     },
   })
+
+  const startDate = watch('date')
 
   function onSubmit(data: CreateEventInput) {
     mutate(data, {
@@ -127,6 +130,32 @@ export function EventCreateForm() {
           />
           {errors.date && (
             <Text className="text-red-500 text-xs">{errors.date.message}</Text>
+          )}
+        </View>
+
+        <View className="gap-1">
+          <Text className="text-sm font-medium text-zinc-300">
+            Horário de término{' '}
+            <Text className="text-zinc-500 text-xs">(opcional)</Text>
+          </Text>
+          <Controller
+            control={control}
+            name="endDate"
+            render={({ field: { onChange, value } }) => (
+              <DatePicker
+                value={value}
+                onChange={onChange}
+                mode="datetime"
+                placeholder="Quando termina"
+                minimumDate={startDate ?? new Date()}
+                hasError={!!errors.endDate}
+              />
+            )}
+          />
+          {errors.endDate && (
+            <Text className="text-red-500 text-xs">
+              {errors.endDate.message}
+            </Text>
           )}
         </View>
 

@@ -10,10 +10,12 @@ export function useCreateEvent() {
 
   return useMutation({
     mutationFn: (data: CreateEventInput) => {
+      const { endDate, ...rest } = data
       const payload: CreateEventPayload = {
-        ...data,
+        ...rest,
         date: data.date.toISOString(),
         description: data.description?.trim() || undefined,
+        ...(endDate ? { endDate: endDate.toISOString() } : {}),
       }
       return eventsService.create(payload)
     },
