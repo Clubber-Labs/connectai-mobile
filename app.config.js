@@ -23,10 +23,21 @@ export default {
         RNMAPBOX_MAPS_DOWNLOAD_TOKEN: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN
       }],
       ["expo-location", {
-        locationWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa."
+        locationWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa.",
+        // expo-location força as 3 keys de location no plist; só usamos
+        // foreground, mas passamos texto PT-BR específico nas de "Always"
+        // pra App Review não receber strings genéricas em inglês.
+        locationAlwaysAndWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa.",
+        locationAlwaysPermission: "Usamos sua localização para mostrar eventos próximos no mapa."
       }],
       ["expo-image-picker", {
-        photosPermission: "Precisamos de acesso às suas fotos para alterar a foto de perfil."
+        photosPermission: "Precisamos de acesso às suas fotos para alterar a foto de perfil.",
+        // image-picker é o último plugin a tocar NSCameraUsageDescription;
+        // sem isso, sobrescreveria o texto do vision-camera com placeholder
+        // genérico em inglês.
+        cameraPermission: "Precisamos da câmera para fotos de perfil e eventos",
+        // Não usamos áudio em nenhum lugar; remove NSMicrophoneUsageDescription.
+        microphonePermission: false
       }]
     ],
     extra: {

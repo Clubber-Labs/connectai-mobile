@@ -61,12 +61,15 @@ export default function MapScreen() {
     heatmapMode,
   )
 
-  // Debounce do bbox: arrastar o mapa não pode floodar o backend. Quando o
-  // user para de mover por 300ms, atualiza o bbox e a queryKey muda.
-  async function scheduleBboxUpdate() {
-    if (!heatmapMode) return
-    if (bboxTimerRef.current) clearTimeout(bboxTimerRef.current)
-    bboxTimerRef.current = setTimeout(async () => {
+  function clearBboxTimer() {
+    if (bboxTimerRef.current) {
+      clearTimeout(bboxTimerRef.current)
+      bboxTimerRef.current = null
+    }
+  }
+
+  async function captureBbox() {
+    try {
       const bounds = await mapRef.current?.getVisibleBounds()
       if (!bounds) return
       const [[east, north], [west, south]] = bounds
@@ -76,28 +79,37 @@ export default function MapScreen() {
         bboxEast: east,
         bboxWest: west,
       })
-    }, HEATMAP_BBOX_DEBOUNCE_MS)
+    } catch {
+      // MapView ainda não montou ou falha nativa — ignora silenciosamente
+    }
+  }
+
+  // Debounce do bbox: arrastar o mapa não pode floodar o backend. Quando o
+  // user para de mover por 300ms, atualiza o bbox e a queryKey muda.
+  function scheduleBboxUpdate() {
+    if (!heatmapMode) return
+    clearBboxTimer()
+    bboxTimerRef.current = setTimeout(captureBbox, HEATMAP_BBOX_DEBOUNCE_MS)
   }
 
   function toggleHeatmap() {
     setHeatmapMode(prev => {
       const next = !prev
       if (next) {
-        // Ativando: dispara captura imediata do bbox atual (sem debounce)
-        mapRef.current?.getVisibleBounds().then(bounds => {
-          if (!bounds) return
-          const [[east, north], [west, south]] = bounds
-          setHeatmapBbox({
-            bboxNorth: north,
-            bboxSouth: south,
-            bboxEast: east,
-            bboxWest: west,
-          })
-        })
+        // Ativando: captura imediata sem debounce
+        captureBbox()
+      } else {
+        // Desativando: cancela qualquer fetch pendente pra não disparar
+        // setState após o user já ter saído do modo heatmap
+        clearBboxTimer()
+        setHeatmapBbox(null)
       }
       return next
     })
   }
+
+  // Garante limpeza do timer no unmount
+  useEffect(() => clearBboxTimer, [])
 
   useEffect(() => {
     if (userCoords) flyTo(userCoords, USER_ZOOM, 800)
