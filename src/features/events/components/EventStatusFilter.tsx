@@ -42,6 +42,9 @@ export function EventStatusFilter({ value, onChange }: Props) {
           <Pressable
             key={option.value}
             onPress={() => toggle(option.value)}
+            accessibilityRole="button"
+            accessibilityLabel={`Filtrar por ${option.label}`}
+            accessibilityState={{ selected: active }}
             className={`px-4 py-2 rounded-full ${active ? 'bg-violet-600' : 'bg-zinc-900 border border-zinc-800'}`}
           >
             <Text
