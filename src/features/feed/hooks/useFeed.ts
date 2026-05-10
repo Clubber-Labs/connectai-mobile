@@ -14,7 +14,8 @@ type Filters = {
 
 export function useFeed(filters: Filters = {}) {
   // Normaliza pra que {} e {status: undefined} compartilhem a mesma queryKey
-  // (sem normalizar, geram hashes distintos → cache duplicado).
+  // (sem normalizar, geram hashes distintos → cache duplicado). Memoiza pra
+  // estabilizar referência entre renders quando o filtro lógico não muda.
   const normalized = useMemo(() => normalizeFilters(filters), [filters])
 
   return useInfiniteQuery({
