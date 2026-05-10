@@ -23,6 +23,7 @@ import { EventClustersLayer } from '@/features/map/components/EventClustersLayer
 import { EventMarkers } from '@/features/map/components/EventMarkers'
 import { EventPreviewCard } from '@/features/map/components/EventPreviewCard'
 import { MapStatusBanner } from '@/features/map/components/MapStatusBanner'
+import { FloatingCreateButton } from '@/features/events/components/FloatingCreateButton'
 
 const COINCIDENT_FOCUS_ZOOM = 20
 
@@ -89,6 +90,8 @@ export default function MapScreen() {
         styleURL={MAP_STYLE_URL}
         scaleBarEnabled={false}
         compassEnabled={false}
+        logoEnabled={false}
+        attributionEnabled={false}
         onPress={() => setSelectedEvent(null)}
         onCameraChanged={state => onCameraZoomChange(state.properties.zoom)}
       >
@@ -141,6 +144,8 @@ export default function MapScreen() {
         onRecenter={() => userCoords && flyTo(userCoords, USER_ZOOM, 600)}
         showRecenter={!!userCoords}
       />
+
+      {!selectedEvent && <FloatingCreateButton />}
 
       {selectedEvent && (
         <EventPreviewCard

@@ -20,7 +20,13 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
 
   const confirm = useCallback<ConfirmFn>(options => {
     return new Promise(resolve => {
-      setPending({ options, resolve })
+      setPending(prev => {
+        // resolve a confirmação anterior (se existir) como cancelada — evita
+        // que o caller antigo fique travado em await infinito quando uma nova
+        // confirmação substitui a pendente (ex: double tap, ações concorrentes)
+        prev?.resolve(false)
+        return { options, resolve }
+      })
     })
   }, [])
 

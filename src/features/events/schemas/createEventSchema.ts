@@ -37,3 +37,13 @@ export type CreateEventPayload = Omit<
   endDate?: string
   description?: string
 }
+
+export function toEventPayload(data: CreateEventInput): CreateEventPayload {
+  const { endDate, ...rest } = data
+  return {
+    ...rest,
+    date: data.date.toISOString(),
+    description: data.description?.trim() || undefined,
+    ...(endDate ? { endDate: endDate.toISOString() } : {}),
+  }
+}
