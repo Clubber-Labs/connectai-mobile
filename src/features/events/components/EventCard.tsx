@@ -27,8 +27,8 @@ export function EventCard({ event, onPress }: Props) {
 
   const liked = event.userReaction === 'LIKE'
   const reason = computeFeedReason(event, userId)
-  const showReason =
-    !!reason && event.userAttendance === null && event.userReaction === null
+  // self_created duplica o autor já exibido no card
+  const showReason = !!reason && reason.kind !== 'self_created'
 
   function handleLike() {
     toggleLike.mutate(event.userReaction)
