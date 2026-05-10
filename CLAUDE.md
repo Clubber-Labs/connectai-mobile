@@ -484,10 +484,27 @@ Quando perceber qualquer desses, extraia.
 
 ### NÃO usar
 
-- **`Alert.alert`** para feedback de mutations transitórias — interrompe o fluxo, não combina com a estética do app
+- **`Alert.alert`** — banido em todo o app, tanto pra feedback de erro quanto pra confirmações. Não combina com a estética do tema dark e quebra o fluxo visual.
 - **Toasts** (sonner, react-native-toast-message, etc) — foi removido propositalmente, não reintroduzir
 - **Texto inline "Não foi possível X"** em ações otimistas (likes, attendance, deletes) — polui a UI e duplica o feedback que o revert já dá
 - **`console.error` de produção** para erros já tratados — só em paths de debug
+
+### Confirmações destrutivas
+
+Pra qualquer ação destrutiva (logout, deletar post, deixar de seguir, remover seguidor), use o `useConfirm` em [shared/lib/confirm.tsx](src/shared/lib/confirm.tsx) — modal custom dark-theme imperativo:
+
+```ts
+const confirm = useConfirm()
+const ok = await confirm({
+  title: 'Excluir post',
+  message: 'Tem certeza?',
+  confirmLabel: 'Excluir',
+  destructive: true,  // botão fica vermelho
+})
+if (ok) deletePost.mutate(id)
+```
+
+Resolve `true` no confirmar, `false` no cancelar/fechar. Provider está montado em `_layout.tsx`.
 
 ### Padrão canônico de mutation otimista
 

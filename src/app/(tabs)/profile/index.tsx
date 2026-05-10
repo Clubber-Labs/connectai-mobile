@@ -1,20 +1,20 @@
 import { useMemo } from 'react'
-import { View, Text, Alert, Pressable } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import { useMyProfile, useUploadAvatar } from '@/features/users/hooks/useProfile'
+import {
+  useMyProfile,
+  useUploadAvatar,
+} from '@/features/users/hooks/useProfile'
 import { useUserEvents } from '@/features/users/hooks/useUserEvents'
 import { usePickAvatar } from '@/features/users/hooks/usePickAvatar'
 import { useLogout } from '@/features/auth/hooks/useLogout'
+import { useConfirm } from '@/shared/lib/confirm'
 import { ProfileHeader } from '@/features/users/components/ProfileHeader'
 import { ProfileStats } from '@/features/users/components/ProfileStats'
 import { ProfileEventsList } from '@/features/users/components/ProfileEventsList'
 import { ProfileLoading } from '@/features/users/components/ProfileLoading'
 import { ProfileEmpty } from '@/features/users/components/ProfileEmpty'
-
-function notifyComingSoon() {
-  Alert.alert('Em breve', 'Funcionalidade ainda não implementada.')
-}
 
 export default function ProfileScreen() {
   const router = useRouter()
@@ -29,6 +29,7 @@ export default function ProfileScreen() {
   } = useUserEvents(userId)
   const uploadAvatar = useUploadAvatar()
   const performLogout = useLogout()
+  const confirm = useConfirm()
 
   const events = useMemo(
     () => eventsData?.pages.flatMap(p => p.data) ?? [],
@@ -37,15 +38,19 @@ export default function ProfileScreen() {
 
   const handlePickAvatar = usePickAvatar(uri => uploadAvatar.mutate(uri))
 
-  function handleLogout() {
-    Alert.alert('Sair', 'Tem certeza que deseja sair?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => performLogout() },
-    ])
+  async function handleLogout() {
+    const ok = await confirm({
+      title: 'Sair',
+      message: 'Tem certeza que deseja sair?',
+      confirmLabel: 'Sair',
+      destructive: true,
+    })
+    if (ok) performLogout()
   }
 
   if (profileLoading) return <ProfileLoading />
-  if (!profile) return <ProfileEmpty message="Não foi possível carregar o perfil." />
+  if (!profile)
+    return <ProfileEmpty message="Não foi possível carregar o perfil." />
 
   return (
     <View className="flex-1 bg-black">
@@ -67,8 +72,12 @@ export default function ProfileScreen() {
               eventsCount={profile.eventsCount}
               followersCount={profile.followersCount}
               followingCount={profile.followingCount}
-              onFollowersPress={notifyComingSoon}
-              onFollowingPress={notifyComingSoon}
+              onFollowersPress={() =>
+                router.push(`/users/${profile.id}/followers`)
+              }
+              onFollowingPress={() =>
+                router.push(`/users/${profile.id}/following`)
+              }
             />
             <View className="flex-row items-center justify-between mt-4 mb-3">
               <Text className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">

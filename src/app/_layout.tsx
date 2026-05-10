@@ -11,6 +11,7 @@ import { useFonts } from 'expo-font'
 import { Ionicons } from '@expo/vector-icons'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { queryClient } from '@/shared/lib/queryClient'
+import { ConfirmProvider } from '@/shared/lib/confirm'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useRestoreSession } from '@/features/auth/hooks/useRestoreSession'
 import { GlobalHeader } from '@/shared/components/GlobalHeader'
@@ -46,22 +47,24 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="light" />
-          <SafeAreaView
-            style={{ flex: 1, backgroundColor: '#000000' }}
-            edges={['top']}
-          >
-            {hydrated && isAuthenticated && <GlobalHeader />}
-            <View className="flex-1 bg-black">
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: '#000000' },
-                }}
-              />
-            </View>
-          </SafeAreaView>
-          <AuthGuard />
+          <ConfirmProvider>
+            <StatusBar style="light" />
+            <SafeAreaView
+              style={{ flex: 1, backgroundColor: '#000000' }}
+              edges={['top']}
+            >
+              {hydrated && isAuthenticated && <GlobalHeader />}
+              <View className="flex-1 bg-black">
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: '#000000' },
+                  }}
+                />
+              </View>
+            </SafeAreaView>
+            <AuthGuard />
+          </ConfirmProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

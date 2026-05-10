@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
-import { View, Text, Alert } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
+import { useEffect, useMemo } from 'react'
+import { View, Text } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useUserProfile } from '@/features/users/hooks/useProfile'
 import { useUserEvents } from '@/features/users/hooks/useUserEvents'
@@ -11,40 +11,46 @@ import { FollowButton } from '@/features/users/components/FollowButton'
 import { ProfileEventsList } from '@/features/users/components/ProfileEventsList'
 import { ProfileLoading } from '@/features/users/components/ProfileLoading'
 import { ProfileEmpty } from '@/features/users/components/ProfileEmpty'
-
-function notifyComingSoon() {
-  Alert.alert('Em breve', 'Funcionalidade ainda não implementada.')
-}
+import { isForbiddenError } from '@/shared/lib/apiError'
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
+  const router = useRouter()
   const viewerId = useAuthStore(s => s.userId)
   const isOwnProfile = viewerId === id
 
+  // edge case: deep link pro próprio perfil → redireciona pra "Meu Perfil"
+  // (a tela alheia não tem campos privados como email/phone)
+  useEffect(() => {
+    if (isOwnProfile) router.replace('/(tabs)/profile')
+  }, [isOwnProfile, router])
+
   const { data: profile, isLoading: profileLoading } = useUserProfile(id)
-  const {
-    data: eventsData,
-    fetchNextPage,
-    hasNextPage = false,
-    isFetchingNextPage,
-  } = useUserEvents(id)
+  const eventsQuery = useUserEvents(id)
   const { follow, unfollow } = useFollowUser(id)
 
   const events = useMemo(
-    () => eventsData?.pages.flatMap(p => p.data) ?? [],
-    [eventsData],
+    () => eventsQuery.data?.pages.flatMap(p => p.data) ?? [],
+    [eventsQuery.data],
   )
 
   if (profileLoading) return <ProfileLoading />
   if (!profile) return <ProfileEmpty message="Usuário não encontrado." />
 
+  const eventsBlocked = isForbiddenError(eventsQuery.error)
+
   return (
     <View className="flex-1 bg-black">
       <ProfileEventsList
         events={events}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        onLoadMore={fetchNextPage}
+        hasNextPage={eventsQuery.hasNextPage ?? false}
+        isFetchingNextPage={eventsQuery.isFetchingNextPage}
+        onLoadMore={eventsQuery.fetchNextPage}
+        emptyMessage={
+          eventsBlocked
+            ? 'Este perfil é privado. Siga para ver os eventos.'
+            : 'Nenhum evento ainda.'
+        }
         header={
           <>
             <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
@@ -62,8 +68,12 @@ export default function UserProfileScreen() {
               eventsCount={profile.eventsCount}
               followersCount={profile.followersCount}
               followingCount={profile.followingCount}
-              onFollowersPress={notifyComingSoon}
-              onFollowingPress={notifyComingSoon}
+              onFollowersPress={() =>
+                router.push(`/users/${profile.id}/followers`)
+              }
+              onFollowingPress={() =>
+                router.push(`/users/${profile.id}/following`)
+              }
             />
             <Text className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mt-4 mb-3">
               Eventos
