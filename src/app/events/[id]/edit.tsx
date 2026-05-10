@@ -1,6 +1,5 @@
-import { useEffect } from 'react'
 import { View, Text, ActivityIndicator, Pressable } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { EventForm } from '@/features/events/components/EventForm'
 import { useEvent } from '@/features/events/hooks/useEvents'
 import { useUpdateEvent } from '@/features/events/hooks/useUpdateEvent'
@@ -29,18 +28,16 @@ export default function EditEventScreen() {
   const { data: event, isLoading, isError } = useEvent(id)
   const { mutate, isPending, error } = useUpdateEvent(id)
 
-  // Não-autor não pode editar — redireciona pro detail.
-  // Backend já bloqueia, mas evitamos UI inconsistente.
-  useEffect(() => {
-    if (event && userId && event.authorId !== userId) {
-      router.replace(`/events/${id}`)
-    }
-  }, [event, userId, id, router])
-
   function handleSubmit(data: CreateEventInput) {
     mutate(data, {
       onSuccess: () => router.replace(`/events/${id}`),
     })
+  }
+
+  // Gate em render: não-autor é redirecionado sem montar o form (evita flash
+  // de UI inconsistente). Backend já bloqueia o PUT.
+  if (event && userId && event.authorId !== userId) {
+    return <Redirect href={`/events/${id}`} />
   }
 
   if (isLoading) {

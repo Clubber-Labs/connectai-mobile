@@ -14,7 +14,9 @@ type LinkRowProps = {
 function LinkRow({ label, url, showBorder }: LinkRowProps) {
   return (
     <Pressable
-      onPress={() => Linking.openURL(url)}
+      onPress={() => {
+        void Linking.openURL(url).catch(() => {})
+      }}
       className={`flex-row items-center justify-between py-3 ${showBorder ? 'border-t border-zinc-800' : ''}`}
     >
       <Text className="text-zinc-200 text-base">{label}</Text>

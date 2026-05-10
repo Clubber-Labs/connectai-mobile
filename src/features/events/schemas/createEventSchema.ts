@@ -43,7 +43,9 @@ export function toEventPayload(data: CreateEventInput): CreateEventPayload {
   return {
     ...rest,
     date: data.date.toISOString(),
-    description: data.description?.trim() || undefined,
+    // Sempre envia string (vazia inclusive) pra que o PUT consiga limpar
+    // a descrição — campo omitido seria interpretado como "manter".
+    description: data.description?.trim() ?? '',
     ...(endDate ? { endDate: endDate.toISOString() } : {}),
   }
 }
