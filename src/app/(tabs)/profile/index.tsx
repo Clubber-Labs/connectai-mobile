@@ -83,14 +83,30 @@ export default function ProfileScreen() {
               <Text className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">
                 Eventos
               </Text>
-              <Pressable
-                onPress={handleLogout}
-                className="flex-row items-center gap-1 py-1"
-                accessibilityLabel="Sair da conta"
-              >
-                <Ionicons name="log-out-outline" size={16} color="#a1a1aa" />
-                <Text className="text-zinc-400 text-xs font-medium">Sair</Text>
-              </Pressable>
+              <View className="flex-row items-center gap-4">
+                <Pressable
+                  onPress={() => router.push('/about')}
+                  className="flex-row items-center gap-1 py-1"
+                  accessibilityLabel="Sobre o app"
+                >
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={16}
+                    color="#a1a1aa"
+                  />
+                  <Text className="text-zinc-400 text-xs font-medium">
+                    Sobre
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleLogout}
+                  className="flex-row items-center gap-1 py-1"
+                  accessibilityLabel="Sair da conta"
+                >
+                  <Ionicons name="log-out-outline" size={16} color="#a1a1aa" />
+                  <Text className="text-zinc-400 text-xs font-medium">Sair</Text>
+                </Pressable>
+              </View>
             </View>
           </>
         }

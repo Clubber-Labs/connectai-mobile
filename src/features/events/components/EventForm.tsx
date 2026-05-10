@@ -9,12 +9,10 @@ import {
 } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'expo-router'
 import {
   createEventSchema,
   type CreateEventInput,
 } from '../schemas/createEventSchema'
-import { useCreateEvent } from '../hooks/useCreateEvent'
 import { Button } from '@/shared/components/Button'
 import { FormError } from '@/shared/components/FormError'
 import { DatePicker } from '@/shared/components/DatePicker'
@@ -30,10 +28,33 @@ const CATEGORIES = [
   'Outro',
 ]
 
-export function EventCreateForm() {
-  const router = useRouter()
-  const { mutate, isPending, error } = useCreateEvent()
+const DEFAULTS: Partial<CreateEventInput> = {
+  title: '',
+  description: '',
+  address: '',
+  category: '',
+  isPublic: true,
+}
 
+type Props = {
+  defaultValues?: Partial<CreateEventInput>
+  onSubmit: (data: CreateEventInput) => void
+  submitting: boolean
+  submitError: boolean
+  submitLabel: string
+  submittingLabel: string
+  errorMessage: string
+}
+
+export function EventForm({
+  defaultValues,
+  onSubmit,
+  submitting,
+  submitError,
+  submitLabel,
+  submittingLabel,
+  errorMessage,
+}: Props) {
   const {
     control,
     handleSubmit,
@@ -42,22 +63,10 @@ export function EventCreateForm() {
     formState: { errors },
   } = useForm<CreateEventInput>({
     resolver: zodResolver(createEventSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      address: '',
-      category: '',
-      isPublic: true,
-    },
+    defaultValues: { ...DEFAULTS, ...defaultValues },
   })
 
   const startDate = watch('date')
-
-  function onSubmit(data: CreateEventInput) {
-    mutate(data, {
-      onSuccess: created => router.replace(`/events/${created.id}`),
-    })
-  }
 
   return (
     <KeyboardAvoidingView
@@ -270,16 +279,12 @@ export function EventCreateForm() {
           />
         </View>
 
-        <FormError
-          message={
-            error ? 'Não foi possível criar o evento. Tente novamente.' : null
-          }
-        />
+        <FormError message={submitError ? errorMessage : null} />
 
         <Button
-          label={isPending ? 'Criando...' : 'Criar evento'}
+          label={submitting ? submittingLabel : submitLabel}
           onPress={handleSubmit(onSubmit)}
-          loading={isPending}
+          loading={submitting}
         />
       </ScrollView>
     </KeyboardAvoidingView>

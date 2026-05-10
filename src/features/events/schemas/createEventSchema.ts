@@ -37,3 +37,15 @@ export type CreateEventPayload = Omit<
   endDate?: string
   description?: string
 }
+
+export function toEventPayload(data: CreateEventInput): CreateEventPayload {
+  const { endDate, ...rest } = data
+  return {
+    ...rest,
+    date: data.date.toISOString(),
+    // Sempre envia string (vazia inclusive) pra que o PUT consiga limpar
+    // a descrição — campo omitido seria interpretado como "manter".
+    description: data.description?.trim() ?? '',
+    ...(endDate ? { endDate: endDate.toISOString() } : {}),
+  }
+}

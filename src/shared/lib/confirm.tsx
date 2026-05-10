@@ -1,5 +1,5 @@
 // Substitui Alert.alert (banido). Ver CLAUDE.md → "Confirmações destrutivas".
-import { createContext, useCallback, useContext, useState } from 'react'
+import { createContext, useCallback, useContext, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   ConfirmDialog,
@@ -17,20 +17,31 @@ const ConfirmContext = createContext<ConfirmFn | null>(null)
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<Pending>(null)
+  // Ref espelha o pending pra resolver o anterior fora do updater de
+  // setState (que precisa ser puro — ver StrictMode/render replays).
+  const pendingRef = useRef<Pending>(null)
 
   const confirm = useCallback<ConfirmFn>(options => {
     return new Promise(resolve => {
-      setPending({ options, resolve })
+      // Supersede: resolve a confirmação anterior como cancelada antes de
+      // substituí-la pra não deixar o caller travado em await infinito
+      // (ex: double tap, ações concorrentes).
+      pendingRef.current?.resolve(false)
+      const next: Pending = { options, resolve }
+      pendingRef.current = next
+      setPending(next)
     })
   }, [])
 
   function handleCancel() {
-    pending?.resolve(false)
+    pendingRef.current?.resolve(false)
+    pendingRef.current = null
     setPending(null)
   }
 
   function handleConfirm() {
-    pending?.resolve(true)
+    pendingRef.current?.resolve(true)
+    pendingRef.current = null
     setPending(null)
   }
 

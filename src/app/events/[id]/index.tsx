@@ -9,22 +9,32 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import type { EventDetail } from '@/shared/types'
 import { useEvent } from '@/features/events/hooks/useEvents'
+import { useAuthStore } from '@/features/auth/store/authStore'
 import { EventHeader } from '@/features/events/components/EventHeader'
 import { EventMap } from '@/features/events/components/EventMap'
 import { EventAttendanceButton } from '@/features/events/components/EventAttendanceButton'
 import { EventPostsFeed } from '@/features/events/components/EventPostsFeed'
+import { EventActionsButton } from '@/features/events/components/EventActionsButton'
 
 type HeaderProps = {
   event: EventDetail
+  isAuthor: boolean
 }
 
-function DetailHeader({ event }: HeaderProps) {
+function DetailHeader({ event, isAuthor }: HeaderProps) {
   const allowAttendance =
     event.status !== 'PAST' && event.status !== 'CANCELED'
 
   return (
     <View>
-      <EventHeader event={event} />
+      <View className="relative">
+        <EventHeader event={event} />
+        {isAuthor && (
+          <View className="absolute top-3 right-3">
+            <EventActionsButton eventId={event.id} />
+          </View>
+        )}
+      </View>
       <View className="pt-4 pb-5 gap-5">
         {allowAttendance && (
           <EventAttendanceButton
@@ -42,6 +52,7 @@ function DetailHeader({ event }: HeaderProps) {
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
+  const userId = useAuthStore(state => state.userId)
   const { data: event, isLoading, isError } = useEvent(id)
 
   if (isLoading) {
@@ -73,7 +84,9 @@ export default function EventDetailScreen() {
       <EventPostsFeed
         eventId={event.id}
         myAttendance={event.userAttendance}
-        ListHeaderComponent={<DetailHeader event={event} />}
+        ListHeaderComponent={
+          <DetailHeader event={event} isAuthor={event.authorId === userId} />
+        }
       />
     </KeyboardAvoidingView>
   )

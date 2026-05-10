@@ -1,0 +1,61 @@
+import { useState } from 'react'
+import { Pressable } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
+import { useConfirm } from '@/shared/lib/confirm'
+import { useDeleteEvent } from '../hooks/useDeleteEvent'
+import { EventActionsMenu, type EventAction } from './EventActionsMenu'
+
+type Props = {
+  eventId: string
+}
+
+export function EventActionsButton({ eventId }: Props) {
+  const [open, setOpen] = useState(false)
+  const router = useRouter()
+  const confirm = useConfirm()
+  const { mutate: deleteEvent } = useDeleteEvent(eventId)
+
+  async function handleDelete() {
+    const ok = await confirm({
+      title: 'Excluir evento',
+      message:
+        'Tem certeza? Esta ação remove o evento e todas as interações associadas.',
+      confirmLabel: 'Excluir',
+      destructive: true,
+    })
+    if (!ok) return
+    deleteEvent(undefined, {
+      onSuccess: () => router.back(),
+    })
+  }
+
+  const actions: EventAction[] = [
+    {
+      label: 'Editar',
+      onPress: () => router.push(`/events/${eventId}/edit`),
+    },
+    {
+      label: 'Excluir evento',
+      onPress: handleDelete,
+      destructive: true,
+    },
+  ]
+
+  return (
+    <>
+      <Pressable
+        onPress={() => setOpen(true)}
+        className="w-10 h-10 items-center justify-center rounded-full bg-black/50"
+        hitSlop={8}
+      >
+        <Ionicons name="ellipsis-horizontal" size={22} color="#ffffff" />
+      </Pressable>
+      <EventActionsMenu
+        visible={open}
+        actions={actions}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  )
+}
