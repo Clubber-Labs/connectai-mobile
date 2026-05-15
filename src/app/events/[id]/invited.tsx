@@ -7,15 +7,36 @@ import {
 import { useLocalSearchParams } from 'expo-router'
 import { useEventInvites } from '@/features/events/hooks/useInvites'
 import { UserListItem } from '@/features/users/components/UserListItem'
+import { isForbiddenError } from '@/shared/lib/apiError'
 
 export default function InvitedScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { data: invited, isLoading } = useEventInvites(id)
+  const { data: invited, isLoading, error } = useEventInvites(id)
 
   if (isLoading) {
     return (
       <View className="flex-1 bg-black items-center justify-center">
         <ActivityIndicator color="#7c3aed" />
+      </View>
+    )
+  }
+
+  if (isForbiddenError(error)) {
+    return (
+      <View className="flex-1 bg-black items-center justify-center px-6">
+        <Text className="text-zinc-400 text-center text-sm">
+          Apenas o autor do evento pode ver os convidados.
+        </Text>
+      </View>
+    )
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-black items-center justify-center px-6">
+        <Text className="text-zinc-400 text-center text-sm">
+          Não foi possível carregar os convidados.
+        </Text>
       </View>
     )
   }

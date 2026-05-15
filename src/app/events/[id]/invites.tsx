@@ -17,14 +17,18 @@ import { Button } from '@/shared/components/Button'
 export default function InvitesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { data: event } = useEvent(id)
+  const {
+    data: event,
+    isLoading: eventLoading,
+    error: eventError,
+  } = useEvent(id)
   const authorId = event?.authorId ?? ''
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading,
+    isLoading: followersLoading,
   } = useFollowers(authorId)
   const invite = useInviteUsers(id)
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -56,10 +60,20 @@ export default function InvitesScreen() {
     })
   }
 
-  if (isLoading) {
+  if (eventLoading || (event && followersLoading)) {
     return (
       <View className="flex-1 bg-black items-center justify-center">
         <ActivityIndicator color="#7c3aed" />
+      </View>
+    )
+  }
+
+  if (eventError || !event) {
+    return (
+      <View className="flex-1 bg-black items-center justify-center px-6">
+        <Text className="text-zinc-400 text-center text-sm">
+          Não foi possível carregar o evento.
+        </Text>
       </View>
     )
   }
