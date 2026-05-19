@@ -3,11 +3,22 @@
 import { useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { authService } from '../services/authService'
-import { getToken, getUserId, saveUserId } from '@/shared/lib/secureStore'
+import {
+  getToken,
+  getUserId,
+  saveUserId,
+  getProfileIncomplete,
+  saveProfileIncomplete,
+} from '@/shared/lib/secureStore'
 import type { UserProfile } from '@/shared/types'
 
 type SessionResult =
-  | { kind: 'authenticated'; userId: string; profile: UserProfile | null }
+  | {
+      kind: 'authenticated'
+      userId: string
+      profile: UserProfile | null
+      persistedIncomplete: boolean | null
+    }
   | { kind: 'unauthenticated' }
 
 // 401 é tratado globalmente pelo interceptor em shared/lib/api.ts.
@@ -16,22 +27,38 @@ async function loadSession(): Promise<SessionResult> {
   if (!token) return { kind: 'unauthenticated' }
 
   const storedUserId = await getUserId()
+  const persistedIncomplete = await getProfileIncomplete()
+
   if (storedUserId) {
     // Tentar buscar o profile pra detectar profileIncomplete; se falhar
-    // (offline, 500), seguimos autenticado e o complete-profile só aparece
-    // quando o me() reconectar.
+    // (offline, 500), seguimos autenticado com o valor persistido (se houver).
     try {
       const profile = await authService.me()
-      return { kind: 'authenticated', userId: storedUserId, profile }
+      return {
+        kind: 'authenticated',
+        userId: storedUserId,
+        profile,
+        persistedIncomplete,
+      }
     } catch {
-      return { kind: 'authenticated', userId: storedUserId, profile: null }
+      return {
+        kind: 'authenticated',
+        userId: storedUserId,
+        profile: null,
+        persistedIncomplete,
+      }
     }
   }
 
   try {
     const profile = await authService.me()
     await saveUserId(profile.id)
-    return { kind: 'authenticated', userId: profile.id, profile }
+    return {
+      kind: 'authenticated',
+      userId: profile.id,
+      profile,
+      persistedIncomplete,
+    }
   } catch {
     return { kind: 'unauthenticated' }
   }
@@ -51,16 +78,26 @@ export function useRestoreSession() {
       const session = await loadSession()
       if (session.kind === 'authenticated') {
         if (session.profile) {
-          setProfileIncomplete(isProfileIncomplete(session.profile))
-        } else {
-          // me() falhou (offline/500). Não queremos travar a UI esperando,
-          // mas tampouco liberar o feed se o perfil estiver incompleto.
-          // Retry em background — quando resolver, AuthGuard reage.
+          // me() retornou — fonte de verdade. Atualiza memória + persiste.
+          const incomplete = isProfileIncomplete(session.profile)
+          setProfileIncomplete(incomplete)
+          await saveProfileIncomplete(incomplete)
+        } else if (session.persistedIncomplete !== null) {
+          // me() falhou, mas temos o último valor persistido — usa ele pra
+          // não bypassar a tela de completar perfil quando offline.
+          setProfileIncomplete(session.persistedIncomplete)
+          // Retry em background: quando reconectar, valor real prevalece.
           authService
             .me()
-            .then(profile => setProfileIncomplete(isProfileIncomplete(profile)))
+            .then(profile => {
+              const incomplete = isProfileIncomplete(profile)
+              setProfileIncomplete(incomplete)
+              return saveProfileIncomplete(incomplete)
+            })
             .catch(() => {})
         }
+        // Sem persisted e sem profile: cai no default false do store. Cenário
+        // raro (user pré-update sem flag persistida + offline). Aceitável.
         setUser(session.userId)
       }
       setHydrated()

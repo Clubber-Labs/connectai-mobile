@@ -7,6 +7,7 @@ import { signInWithFacebook } from '../lib/facebookLogin'
 import {
   saveToken,
   saveUserId,
+  saveProfileIncomplete,
   clearAuthSession,
 } from '@/shared/lib/secureStore'
 import { useBanner } from '@/shared/lib/banner'
@@ -95,6 +96,9 @@ export function useSocialLogin(provider: SocialProvider) {
 
       await saveToken(response.token)
       await saveUserId(response.user.id)
+      // Persistir profileIncomplete pra o restore sobreviver a kill/restart sem
+      // depender de me() ter sucesso (offline = me() falha, flag persistido vence).
+      await saveProfileIncomplete(response.profileIncomplete)
 
       // Seed do cache do useMe pra evitar refetch imediato e pré-popular o form
       // de completar perfil sem flash de loading.

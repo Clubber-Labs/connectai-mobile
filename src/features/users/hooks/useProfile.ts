@@ -20,7 +20,7 @@ export function useUserProfile(id: string) {
 
 // Algumas rotas (ex: PATCH /users/me/avatar) retornam só os campos
 // alterados — o spread preserva o resto (eventsCount, followersCount, etc).
-function mergeProfileCache(
+export function mergeProfileCache(
   queryClient: ReturnType<typeof useQueryClient>,
   updated: UserProfile,
 ) {
