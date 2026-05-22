@@ -62,7 +62,7 @@ export function GlobalHeader({
           >
             <Ionicons name="menu" size={26} color="#f4f4f5" />
             {hasPendingRequests && (
-              <View className="absolute top-1 right-1 w-2 h-2 bg-violet-500 rounded-full" />
+              <View className="absolute top-1.5 right-1 w-2 h-2 bg-red-500 rounded-full" />
             )}
           </Pressable>
         )}
