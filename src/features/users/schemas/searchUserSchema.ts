@@ -26,6 +26,8 @@ export type SearchUserItemReduced = {
 
 export type SearchUserItem = SearchUserItemFull | SearchUserItemReduced
 
+// Discrimina via `followersCount` (presente sempre no Full, ausente no Reduced).
+// `'bio' in u` falharia se o backend serializasse omitindo a chave quando bio=null.
 export function hasFullProfile(u: SearchUserItem): u is SearchUserItemFull {
-  return 'bio' in u
+  return 'followersCount' in u
 }

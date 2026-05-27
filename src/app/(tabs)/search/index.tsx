@@ -1,6 +1,11 @@
-import { useCallback, useRef, useState } from 'react'
-import { View, ActivityIndicator, FlatList, type TextInput } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { useState } from 'react'
+import {
+  View,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Keyboard,
+} from 'react-native'
 import { useSearchUsers } from '@/features/users/hooks/useSearchUsers'
 import { UserSearchInput } from '@/features/users/components/UserSearchInput'
 import { UserSearchCard } from '@/features/users/components/UserSearchCard'
@@ -8,45 +13,44 @@ import { UserSearchEmpty } from '@/features/users/components/UserSearchEmpty'
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('')
-  const inputRef = useRef<TextInput>(null)
   const {
     users,
+    debouncedQuery,
     isLoading,
+    isError,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
   } = useSearchUsers(query)
 
-  // Foca o input toda vez que a aba ganha foco — autoFocus do TextInput só
-  // dispara no mount inicial, e a aba persiste entre navegações.
-  useFocusEffect(
-    useCallback(() => {
-      inputRef.current?.focus()
-    }, []),
-  )
-
-  const trimmed = query.trim()
-  const showIdle = trimmed.length < 2
+  const showIdle = debouncedQuery.length < 2
   const showSpinner = !showIdle && isLoading
-  const showNoResults = !showIdle && !isLoading && users.length === 0
+  const showNoResults =
+    !showIdle && !isLoading && !isError && users.length === 0
 
   return (
     <View className="flex-1 bg-black">
       <UserSearchInput
-        ref={inputRef}
         value={query}
         onChange={setQuery}
         loading={!showIdle && isLoading}
       />
 
       {showIdle ? (
-        <UserSearchEmpty kind="idle" />
+        <Pressable className="flex-1" onPress={Keyboard.dismiss}>
+          <UserSearchEmpty kind="idle" />
+        </Pressable>
       ) : showSpinner ? (
-        <View className="items-center py-12">
+        <Pressable
+          className="flex-1 items-center py-12"
+          onPress={Keyboard.dismiss}
+        >
           <ActivityIndicator color="#8b5cf6" />
-        </View>
+        </Pressable>
       ) : showNoResults ? (
-        <UserSearchEmpty kind="no-results" />
+        <Pressable className="flex-1" onPress={Keyboard.dismiss}>
+          <UserSearchEmpty kind="no-results" />
+        </Pressable>
       ) : (
         <FlatList
           data={users}
@@ -68,6 +72,7 @@ export default function SearchScreen() {
             ) : null
           }
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         />
       )}
     </View>

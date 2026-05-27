@@ -44,6 +44,10 @@ export function useSearchUsers(query: string) {
 
   return {
     users,
+    // `debouncedQuery` é o termo que efetivamente foi pra rede — usar pra
+    // showIdle/showNoResults evita falso "Nenhum encontrado" durante os
+    // 300ms entre keystroke e o debounce disparar.
+    debouncedQuery: trimmed,
     isLoading: result.isLoading,
     isError: result.isError,
     hasNextPage: result.hasNextPage,
