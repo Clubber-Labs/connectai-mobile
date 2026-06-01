@@ -14,6 +14,8 @@ permissions:
   pull-requests: write
   issues: write
   id-token: write
+  # Permite ao review ler o status de CI (silencia o aviso do github_ci MCP).
+  actions: read
 
 jobs:
   review:
@@ -22,6 +24,10 @@ jobs:
       github.event.pull_request.draft == false &&
       github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    # O token (CLAUDE_CODE_OAUTH_TOKEN) é um Environment secret do environment
+    # 'claude'. Sem declarar o environment aqui, o secret chega vazio e o action
+    # aborta com "Environment variable validation failed".
+    environment: claude
     timeout-minutes: 20
 
     steps:
@@ -33,7 +39,7 @@ jobs:
       - name: Revisão automática com Claude
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Posta os comentários direto no PR (inline + resumo)
           track_progress: true
           prompt: |
