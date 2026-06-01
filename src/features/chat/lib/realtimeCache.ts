@@ -112,6 +112,43 @@ export function applyMessageToInbox(
   })
 }
 
+function replaceMessageInCache(cache: MsgCache, message: Message): MsgCache {
+  let found = false
+  const pages = cache.pages.map(page => ({
+    ...page,
+    data: page.data.map(m => {
+      if (m.id !== message.id) return m
+      found = true
+      // Preserva campos só-do-cliente (clientId/clientStatus) se houver.
+      return { ...m, ...message }
+    }),
+  }))
+  return found ? { ...cache, pages } : cache
+}
+
+// Edição/deleção de mensagem existente vinda do socket: substitui por id no
+// cache da conversa e atualiza o preview do inbox se for a última mensagem.
+export function applyMessageUpdate(queryClient: QueryClient, message: Message) {
+  queryClient.setQueryData<MsgCache>(
+    chatKeys.messages(message.conversationId),
+    prev => (prev ? replaceMessageInCache(prev, message) : prev),
+  )
+  queryClient.setQueryData<InboxCache>(chatKeys.inbox, prev => {
+    if (!prev) return prev
+    return {
+      ...prev,
+      pages: prev.pages.map(page => ({
+        ...page,
+        data: page.data.map(c =>
+          c.id === message.conversationId && c.lastMessage?.id === message.id
+            ? { ...c, lastMessage: message }
+            : c,
+        ),
+      })),
+    }
+  })
+}
+
 const EMPTY_MSG_CACHE: MsgCache = {
   pages: [{ data: [], nextCursor: null }],
   pageParams: [undefined],

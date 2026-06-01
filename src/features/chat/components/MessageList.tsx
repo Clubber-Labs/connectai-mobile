@@ -23,6 +23,8 @@ type Props = {
   onLongPressMessage: (message: ChatMessage) => void
   onPressImage: (url: string) => void
   onRetry: (message: ChatMessage) => void
+  onEditMessage: (message: ChatMessage) => void
+  onDeleteMessage: (message: ChatMessage) => void
 }
 
 export function MessageList({
@@ -33,6 +35,8 @@ export function MessageList({
   onLongPressMessage,
   onPressImage,
   onRetry,
+  onEditMessage,
+  onDeleteMessage,
 }: Props) {
   const { messages, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useMessages(conversationId)
@@ -113,6 +117,8 @@ export function MessageList({
               onLongPress={() => onLongPressMessage(item)}
               onPressImage={onPressImage}
               onRetry={() => onRetry(item)}
+              onEdit={() => onEditMessage(item)}
+              onDelete={() => onDeleteMessage(item)}
             />
           </View>
         )

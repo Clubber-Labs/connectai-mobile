@@ -1,10 +1,17 @@
 import Constants from 'expo-constants'
-import { isMessageFrame, type MessageFrame } from '../types'
+import {
+  isMessageFrame,
+  isMessageUpdateFrame,
+  type MessageFrame,
+  type MessageUpdateFrame,
+} from '../types'
 import type { ConnectionStatus } from '../store/chatRealtimeStore'
 
 type Handlers = {
   onStatus: (status: ConnectionStatus) => void
   onMessageFrame: (frame: MessageFrame) => void
+  // Edição/deleção de mensagem existente (atualiza in-place por id).
+  onMessageUpdate: (frame: MessageUpdateFrame) => void
   // Disparado após uma RECONEXÃO bem-sucedida (não na 1ª conexão) — o socket
   // não faz replay do que se perdeu offline, então o consumidor rebusca via REST.
   onReconnect: () => void
@@ -114,6 +121,8 @@ class ChatSocket {
       }
       // Tipos desconhecidos (typing/presence futuros) são ignorados.
       if (isMessageFrame(parsed)) this.handlers?.onMessageFrame(parsed)
+      else if (isMessageUpdateFrame(parsed))
+        this.handlers?.onMessageUpdate(parsed)
     }
 
     ws.onerror = () => {

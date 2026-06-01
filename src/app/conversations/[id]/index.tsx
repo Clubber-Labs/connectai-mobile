@@ -66,7 +66,7 @@ export default function ConversationScreen() {
       avatarUrl: null,
     }
 
-  const { send, sendImage, deleteMessage } = useMessagesMutations(id, me)
+  const { send, sendImage, deleteMessage, edit } = useMessagesMutations(id, me)
 
   const [blockedByServer, setBlockedByServer] = useState(false)
   const iBlocked = other ? blocks.some(b => b.blocked.id === other.user.id) : false
@@ -77,6 +77,7 @@ export default function ConversationScreen() {
   const [actionsFor, setActionsFor] = useState<ChatMessage | null>(null)
   const [reportFor, setReportFor] = useState<ChatMessage | null>(null)
   const [viewerUrl, setViewerUrl] = useState<string | null>(null)
+  const [editing, setEditing] = useState<ChatMessage | null>(null)
 
   // Marca a conversa como ativa (controla unread/read) e a marca lida ao focar.
   const readRef = useRef(read)
@@ -155,15 +156,32 @@ export default function ConversationScreen() {
     if (actionsFor?.content) await Clipboard.setStringAsync(actionsFor.content)
   }
 
-  async function doDelete() {
-    if (!actionsFor) return
+  async function confirmDelete(message: ChatMessage) {
     const ok = await confirm({
       title: 'Apagar mensagem',
       message: 'Esta mensagem será removida para todos.',
       confirmLabel: 'Apagar',
       destructive: true,
     })
-    if (ok) deleteMessage.mutate(actionsFor.id)
+    if (ok) deleteMessage.mutate(message.id)
+  }
+
+  function doDelete() {
+    if (actionsFor) confirmDelete(actionsFor)
+  }
+
+  function startEdit(message: ChatMessage) {
+    setActionsFor(null)
+    setEditing(message)
+  }
+
+  function submitEdit(text: string) {
+    if (!editing) return
+    edit.mutate(
+      { messageId: editing.id, content: text },
+      { onError: handleSendError },
+    )
+    setEditing(null)
   }
 
   function submitReport(reason: ReportReason, details?: string) {
@@ -212,6 +230,8 @@ export default function ConversationScreen() {
           onLongPressMessage={openActions}
           onPressImage={setViewerUrl}
           onRetry={onRetry}
+          onEditMessage={startEdit}
+          onDeleteMessage={confirmDelete}
         />
       </View>
 
@@ -228,6 +248,11 @@ export default function ConversationScreen() {
           onSendText={sendText}
           onAttach={() => setAttachOpen(true)}
           disabled={cooldown}
+          editing={
+            editing ? { id: editing.id, content: editing.content ?? '' } : null
+          }
+          onSubmitEdit={submitEdit}
+          onCancelEdit={() => setEditing(null)}
         />
       )}
 

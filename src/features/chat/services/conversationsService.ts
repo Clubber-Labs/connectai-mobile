@@ -29,6 +29,9 @@ export const conversationsService = {
   rename: (id: string, title: string): Promise<Conversation> =>
     api.patch(`/conversations/${id}`, { title }).then(r => r.data),
 
+  remove: (id: string): Promise<void> =>
+    api.delete(`/conversations/${id}`).then(() => undefined),
+
   listMessages: (
     id: string,
     params: ListParams = {},
@@ -39,6 +42,15 @@ export const conversationsService = {
 
   sendMessage: (id: string, content: string): Promise<Message> =>
     api.post(`/conversations/${id}/messages`, { content }).then(r => r.data),
+
+  editMessage: (
+    id: string,
+    messageId: string,
+    content: string,
+  ): Promise<Message> =>
+    api
+      .patch(`/conversations/${id}/messages/${messageId}`, { content })
+      .then(r => r.data),
 
   sendImage: (id: string, uri: string): Promise<Message> => {
     const form = new FormData()

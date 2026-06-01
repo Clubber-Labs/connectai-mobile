@@ -6,13 +6,14 @@ import { chatSocket } from '../lib/chatSocket'
 import {
   applyIncomingMessage,
   applyMessageToInbox,
+  applyMessageUpdate,
   inboxHasConversation,
   resetInboxUnread,
 } from '../lib/realtimeCache'
 import { conversationsService } from '../services/conversationsService'
 import { useChatRealtimeStore } from '../store/chatRealtimeStore'
 import { chatKeys } from './cacheKeys'
-import type { MessageFrame } from '../types'
+import type { MessageFrame, MessageUpdateFrame } from '../types'
 
 // Liga o socket ao ciclo de vida (foreground/background) e roteia os frames
 // recebidos para o cache do TanStack Query. `myId` e `onAuthError` vêm da camada
@@ -45,6 +46,10 @@ export function useChatRealtime(myId: string, onAuthError: () => void) {
           conversationsService.markRead(conversationId).catch(() => {})
           resetInboxUnread(queryClient, conversationId)
         }
+      },
+      onMessageUpdate: ({ message }: MessageUpdateFrame) => {
+        // Edição/deleção de mensagem já existente — atualiza in-place por id.
+        applyMessageUpdate(queryClient, message)
       },
       onReconnect: () => {
         // Sem replay no socket — rebusca inbox e a conversa ativa.
