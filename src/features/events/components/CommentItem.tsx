@@ -39,6 +39,7 @@ export function CommentItem({ comment, eventId }: Props) {
       <Text className="text-sm text-zinc-200">{comment.content}</Text>
       <Pressable
         onPress={handleLike}
+        disabled={toggleLike.isPending}
         className="flex-row items-center gap-1 mt-2 self-start"
         accessibilityLabel={comment.userLiked ? 'Descurtir' : 'Curtir'}
       >
