@@ -114,6 +114,7 @@ export function EventCard({ event, onPress, showReason = true }: Props) {
       <View className="flex-row items-center gap-1 px-2 pt-2">
         <Pressable
           onPress={handleLike}
+          disabled={toggleLike.isPending}
           className="flex-row items-center gap-1 px-3 py-2 rounded-full"
         >
           <Ionicons
