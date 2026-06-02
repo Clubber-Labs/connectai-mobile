@@ -30,6 +30,9 @@ export type Message = {
   content: string | null
   attachments: Attachment[]
   createdAt: string
+  // Preenchido quando a mensagem foi editada — opcional no backend; a UI só
+  // mostra "editada" quando presente (degrada se ausente).
+  editedAt?: string | null
   deletedAt: string | null
 }
 
@@ -86,6 +89,27 @@ export function isMessageFrame(value: unknown): value is MessageFrame {
   const frame = value as Record<string, unknown>
   return (
     frame.type === 'message' &&
+    typeof frame.conversationId === 'string' &&
+    typeof frame.message === 'object' &&
+    frame.message !== null
+  )
+}
+
+// Atualização de mensagem JÁ existente (edição ou deleção). Carrega o Message
+// atualizado — o consumidor substitui in-place por id, em vez de inserir.
+export type MessageUpdateFrame = {
+  type: 'messageEdited' | 'messageDeleted'
+  conversationId: string
+  message: Message
+}
+
+export function isMessageUpdateFrame(
+  value: unknown,
+): value is MessageUpdateFrame {
+  if (typeof value !== 'object' || value === null) return false
+  const frame = value as Record<string, unknown>
+  return (
+    (frame.type === 'messageEdited' || frame.type === 'messageDeleted') &&
     typeof frame.conversationId === 'string' &&
     typeof frame.message === 'object' &&
     frame.message !== null

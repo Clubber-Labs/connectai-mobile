@@ -26,7 +26,7 @@ export function ConversationRow({ item, myId, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center gap-3 px-4 py-3 active:bg-zinc-900"
+      className="flex-row items-center gap-3 px-4 py-3 bg-black active:bg-zinc-900"
       accessibilityLabel={`Conversa: ${title}${unread ? `, ${item.unreadCount} não lidas` : ''}`}
     >
       <ConversationAvatar

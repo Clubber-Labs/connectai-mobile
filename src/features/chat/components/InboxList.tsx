@@ -7,7 +7,10 @@ import {
   RefreshControl,
 } from 'react-native'
 import { useInbox } from '../hooks/useInbox'
+import { useDeleteConversation } from '../hooks/useDeleteConversation'
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh'
+import { useConfirm } from '@/shared/lib/confirm'
+import { SwipeableRow } from '@/shared/components/SwipeableRow'
 import { ConversationRow } from './ConversationRow'
 import { InboxSkeleton } from './InboxSkeleton'
 import { InboxEmpty } from './InboxEmpty'
@@ -30,6 +33,18 @@ export function InboxList({ myId, onOpen, onNew }: Props) {
     isFetchingNextPage,
   } = useInbox()
   const { refreshing, onRefresh } = usePullRefresh(refetch)
+  const confirm = useConfirm()
+  const del = useDeleteConversation()
+
+  async function askDelete(item: InboxItem) {
+    const ok = await confirm({
+      title: 'Apagar conversa',
+      message: 'Esta conversa será removida da sua lista de mensagens.',
+      confirmLabel: 'Apagar',
+      destructive: true,
+    })
+    if (ok) del.mutate(item.id)
+  }
 
   if (isLoading) return <InboxSkeleton />
 
@@ -58,11 +73,17 @@ export function InboxList({ myId, onOpen, onNew }: Props) {
       data={conversations}
       keyExtractor={(item: InboxItem) => item.id}
       renderItem={({ item }) => (
-        <ConversationRow
-          item={item}
-          myId={myId}
-          onPress={() => onOpen(item.id)}
-        />
+        <SwipeableRow
+          rightActions={[
+            { icon: 'trash', label: 'Apagar', onPress: () => askDelete(item) },
+          ]}
+        >
+          <ConversationRow
+            item={item}
+            myId={myId}
+            onPress={() => onOpen(item.id)}
+          />
+        </SwipeableRow>
       )}
       ItemSeparatorComponent={() => <View className="h-px bg-zinc-900 ml-20" />}
       refreshControl={
