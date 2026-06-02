@@ -79,6 +79,11 @@ export default function ProfileScreen() {
         ]
       : []),
     {
+      label: 'Privacidade e LGPD',
+      icon: 'shield-checkmark-outline',
+      onPress: () => router.push('/privacy'),
+    },
+    {
       label: 'Sobre o app',
       icon: 'information-circle-outline',
       onPress: () => router.push('/about'),

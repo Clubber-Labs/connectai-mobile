@@ -2,21 +2,42 @@ import { useEffect, useState } from 'react'
 import * as Location from 'expo-location'
 
 type Coords = [number, number]
-export type LocationStatus = 'loading' | 'denied' | 'error' | 'ready'
+export type LocationStatus =
+  | 'loading'
+  | 'disabled'
+  | 'denied'
+  | 'error'
+  | 'ready'
+
+type Options = {
+  enabled?: boolean
+}
 
 type Result = {
   coords: Coords | null
   status: LocationStatus
 }
 
-export function useUserLocation(): Result {
+export function useUserLocation({ enabled = true }: Options = {}): Result {
   const [coords, setCoords] = useState<Coords | null>(null)
-  const [status, setStatus] = useState<LocationStatus>('loading')
+  const [status, setStatus] = useState<LocationStatus>(
+    enabled ? 'loading' : 'disabled',
+  )
 
   useEffect(() => {
     let cancelled = false
+
+    if (!enabled) {
+      setCoords(null)
+      setStatus('disabled')
+      return () => {
+        cancelled = true
+      }
+    }
+
     async function load() {
       try {
+        setStatus('loading')
         const permission = await Location.requestForegroundPermissionsAsync()
         if (cancelled) return
         if (permission.status !== 'granted') {
@@ -35,7 +56,7 @@ export function useUserLocation(): Result {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [enabled])
 
   return { coords, status }
 }

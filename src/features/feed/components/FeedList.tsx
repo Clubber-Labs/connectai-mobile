@@ -12,16 +12,23 @@ import { EventCard } from '@/features/events/components/EventCard'
 import { EventStatusFilter } from '@/features/events/components/EventStatusFilter'
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh'
 import { useUserLocation } from '@/shared/hooks/useUserLocation'
+import { usePrivacyConsentStatus } from '@/features/privacy/hooks/usePrivacyConsents'
 import { flattenInfiniteList } from '@/shared/utils/infiniteList'
 import type { EventStatus, FeedEvent } from '@/shared/types'
 
 export function FeedList() {
   const router = useRouter()
   const [statusFilter, setStatusFilter] = useState<EventStatus[]>([])
+  const {
+    granted: locationConsent,
+    isLoading: privacyLoading,
+  } = usePrivacyConsentStatus('location_precise_nearby')
   // coords vêm como [lng, lat] (convenção Mapbox). Só envia near com permissão
   // concedida; negado/erro → feed sem proximidade (descoberta só por categoria).
-  const { coords, status: locationStatus } = useUserLocation()
-  const locationResolved = locationStatus !== 'loading'
+  const { coords, status: locationStatus } = useUserLocation({
+    enabled: locationConsent,
+  })
+  const locationResolved = !privacyLoading && locationStatus !== 'loading'
   const near =
     locationStatus === 'ready' && coords
       ? { nearLat: coords[1], nearLng: coords[0] }

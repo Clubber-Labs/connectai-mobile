@@ -16,13 +16,16 @@ import { StepPersonal } from './steps/StepPersonal'
 import { StepAccount } from './steps/StepAccount'
 import { StepPassword } from './steps/StepPassword'
 import { StepProfile } from './steps/StepProfile'
+import { StepPrivacy } from './steps/StepPrivacy'
 import { getApiError, isConflictError } from '@/shared/lib/apiError'
+import { DEFAULT_CONSENT_FORM_STATE } from '@/features/privacy/types'
 
 const STEPS: (keyof RegisterInput)[][] = [
   ['name', 'lastname', 'birthdate'],
   ['username', 'email', 'phone'],
   ['password', 'confirmPassword'],
   ['bio', 'isPrivate', 'preferredCategories'],
+  ['consents'],
 ]
 
 const FIELD_TO_STEP: Partial<Record<keyof RegisterInput, number>> = {
@@ -37,6 +40,7 @@ const FIELD_TO_STEP: Partial<Record<keyof RegisterInput, number>> = {
   bio: 3,
   isPrivate: 3,
   preferredCategories: 3,
+  consents: 4,
 }
 
 const CONFLICT_FIELD_MAP: {
@@ -81,7 +85,11 @@ export function RegisterForm() {
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     mode: 'onTouched',
-    defaultValues: { isPrivate: false, preferredCategories: [] },
+    defaultValues: {
+      isPrivate: false,
+      preferredCategories: [],
+      consents: { ...DEFAULT_CONSENT_FORM_STATE },
+    },
   })
 
   const totalSteps = STEPS.length
@@ -143,6 +151,7 @@ export function RegisterForm() {
     <StepAccount control={control} errors={errors} />,
     <StepPassword control={control} errors={errors} />,
     <StepProfile control={control} errors={errors} />,
+    <StepPrivacy control={control} errors={errors} />,
   ]
 
   return (

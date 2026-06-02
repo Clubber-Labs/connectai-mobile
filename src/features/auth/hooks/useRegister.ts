@@ -7,6 +7,7 @@ import {
   clearAuthSession,
 } from '@/shared/lib/secureStore'
 import type { RegisterInput, RegisterPayload } from '../schemas/registerSchema'
+import { toConsentInputList } from '@/features/privacy/types'
 
 function toPayload(data: RegisterInput): RegisterPayload {
   return {
@@ -19,6 +20,7 @@ function toPayload(data: RegisterInput): RegisterPayload {
     birthdate: data.birthdate.toISOString(),
     bio: data.bio,
     isPrivate: data.isPrivate,
+    consents: toConsentInputList(data.consents),
     // Campo opcional: só envia quando há seleção (vazio → omite).
     ...(data.preferredCategories?.length
       ? { preferredCategories: data.preferredCategories }

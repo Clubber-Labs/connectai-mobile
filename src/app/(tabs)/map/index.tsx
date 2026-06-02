@@ -16,6 +16,7 @@ import {
 import { useMapEvents } from '@/features/map/hooks/useMapEvents'
 import { useMapCamera } from '@/features/map/hooks/useMapCamera'
 import { useUserLocation } from '@/shared/hooks/useUserLocation'
+import { useHasPrivacyConsent } from '@/features/privacy/hooks/usePrivacyConsents'
 import { useMapZoomState } from '@/features/map/hooks/useMapZoomState'
 import { useHeatmap } from '@/features/map/hooks/useHeatmap'
 import type { Bbox } from '@/features/map/services/mapService'
@@ -35,7 +36,10 @@ const COINCIDENT_FOCUS_ZOOM = 20
 
 export default function MapScreen() {
   const router = useRouter()
-  const { coords: userCoords } = useUserLocation()
+  const locationConsent = useHasPrivacyConsent('location_precise_nearby')
+  const { coords: userCoords } = useUserLocation({
+    enabled: locationConsent,
+  })
   const { cameraRef, mapRef, flyTo, adjustZoom, focusOnEvent } = useMapCamera()
   const { showMarkers, onCameraZoomChange } = useMapZoomState()
 
