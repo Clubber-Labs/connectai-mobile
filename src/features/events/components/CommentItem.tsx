@@ -3,14 +3,17 @@ import { Ionicons } from '@expo/vector-icons'
 import { useToggleCommentLike } from '../hooks/useComments'
 import { useNavigateToProfile } from '@/features/users/hooks/useNavigateToProfile'
 import { formatRelative } from '@/shared/utils/dateFormat'
+import { SwipeableRow } from '@/shared/components/SwipeableRow'
 import type { EventComment } from '@/shared/types'
 
 type Props = {
   comment: EventComment
   eventId: string
+  // Presente só quando o usuário pode apagar (é o autor) — habilita swipe-apagar.
+  onDelete?: () => void
 }
 
-export function CommentItem({ comment, eventId }: Props) {
+export function CommentItem({ comment, eventId, onDelete }: Props) {
   const navigateToProfile = useNavigateToProfile()
   const toggleLike = useToggleCommentLike(eventId)
 
@@ -21,7 +24,7 @@ export function CommentItem({ comment, eventId }: Props) {
     })
   }
 
-  return (
+  const card = (
     <View className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800">
       <View className="flex-row items-center justify-between mb-1">
         <Pressable
@@ -57,5 +60,15 @@ export function CommentItem({ comment, eventId }: Props) {
         )}
       </Pressable>
     </View>
+  )
+
+  if (!onDelete) return card
+
+  return (
+    <SwipeableRow
+      rightActions={[{ icon: 'trash', label: 'Apagar', onPress: onDelete }]}
+    >
+      {card}
+    </SwipeableRow>
   )
 }

@@ -7,7 +7,9 @@ import {
   Pressable,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useComments, useAddComment } from '../hooks/useComments'
+import { useComments, useAddComment, useDeleteComment } from '../hooks/useComments'
+import { useAuthStore } from '@/features/auth/store/authStore'
+import { useConfirm } from '@/shared/lib/confirm'
 import { CommentItem } from './CommentItem'
 
 type Props = {
@@ -16,11 +18,24 @@ type Props = {
 
 export function InlineCommentsSection({ eventId }: Props) {
   const [text, setText] = useState('')
+  const myId = useAuthStore(s => s.userId)
+  const confirm = useConfirm()
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useComments(eventId)
   const addComment = useAddComment(eventId)
+  const deleteComment = useDeleteComment(eventId)
 
   const comments = data?.pages.flatMap(page => page.data) ?? []
+
+  async function askDelete(commentId: string) {
+    const ok = await confirm({
+      title: 'Apagar comentário',
+      message: 'Tem certeza que deseja apagar este comentário?',
+      confirmLabel: 'Apagar',
+      destructive: true,
+    })
+    if (ok) deleteComment.mutate(commentId)
+  }
 
   function handleSend() {
     const content = text.trim()
@@ -46,6 +61,11 @@ export function InlineCommentsSection({ eventId }: Props) {
                 key={comment.id}
                 comment={comment}
                 eventId={eventId}
+                onDelete={
+                  comment.author.id === myId
+                    ? () => askDelete(comment.id)
+                    : undefined
+                }
               />
             ))
           )}

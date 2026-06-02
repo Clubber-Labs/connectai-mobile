@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { UserAvatar } from '@/shared/components/UserAvatar'
+import { SwipeableRow, type SwipeAction } from '@/shared/components/SwipeableRow'
 import { SenderLabel } from './SenderLabel'
 import { ImageMessage } from './ImageMessage'
 import { formatMessageTime } from '../utils/messageTime'
@@ -16,6 +17,9 @@ type Props = {
   onLongPress: () => void
   onPressImage: (url: string) => void
   onRetry: () => void
+  // Ações de swipe na própria mensagem (só quando já persistida).
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
 export function MessageBubble({
@@ -26,6 +30,8 @@ export function MessageBubble({
   onLongPress,
   onPressImage,
   onRetry,
+  onEdit,
+  onDelete,
 }: Props) {
   const { isMine } = meta
   const topMargin = meta.startsRun ? 'mt-3' : 'mt-0.5'
@@ -44,6 +50,7 @@ export function MessageBubble({
   const imageOnly = !!image && !message.content
   const sending = message.clientStatus === 'sending'
   const failed = message.clientStatus === 'failed'
+  const edited = !!message.editedAt && !message.deletedAt
 
   const bubble = (
     <Pressable
@@ -68,7 +75,7 @@ export function MessageBubble({
             {message.content}
           </Text>
         ) : null}
-        {meta.showTime && (
+        {(meta.showTime || edited) && (
           <View
             className={`flex-row items-center justify-end gap-1 mt-0.5 ${imageOnly ? 'px-1 pb-0.5' : ''}`}
           >
@@ -81,6 +88,7 @@ export function MessageBubble({
             <Text
               className={`text-[11px] ${isMine ? 'text-violet-200' : 'text-zinc-500'}`}
             >
+              {edited ? 'editada · ' : ''}
               {formatMessageTime(message.createdAt)}
             </Text>
           </View>
@@ -105,7 +113,21 @@ export function MessageBubble({
   )
 
   if (isMine) {
-    return <View className={`px-3 ${topMargin} items-end`}>{bubble}</View>
+    const row = (
+      <View className={`px-3 ${topMargin} items-end bg-black`}>{bubble}</View>
+    )
+
+    const persisted = !message.clientStatus
+    const actions: SwipeAction[] = []
+    if (persisted && message.content && onEdit) {
+      actions.push({ icon: 'pencil', label: 'Editar', onPress: onEdit })
+    }
+    if (persisted && onDelete) {
+      actions.push({ icon: 'trash', label: 'Apagar', onPress: onDelete })
+    }
+
+    if (actions.length === 0) return row
+    return <SwipeableRow rightActions={actions}>{row}</SwipeableRow>
   }
 
   // Mensagem de outro: gutter de avatar (grupo) + nome no topo do run.
