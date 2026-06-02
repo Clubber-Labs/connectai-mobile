@@ -70,10 +70,11 @@ export default function MapScreen() {
     focusOnEvent([event.longitude, event.latitude])
   }
 
-  // Centraliza no usuário; sem coords, orienta conforme o estado da permissão.
+  // Centraliza na posição ATUAL (live), com fallback pro fix inicial; sem coords,
+  // orienta conforme o estado da permissão.
   function recenter() {
-    if (userCoords) {
-      flyTo(userCoords, USER_ZOOM, 600)
+    if (myPos) {
+      flyTo(myPos, USER_ZOOM, 600)
     } else if (locationStatus === 'denied') {
       showBanner('Ative a localização nos ajustes para ver você no mapa.')
       Linking.openSettings()

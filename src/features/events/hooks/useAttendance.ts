@@ -80,9 +80,7 @@ function findInFeeds(
 function currentUser(
   queryClient: ReturnType<typeof useQueryClient>,
 ): FeedAuthor | null {
-  const me =
-    queryClient.getQueryData<MeMini>(['me']) ??
-    queryClient.getQueryData<MeMini>(['users', 'me'])
+  const me = queryClient.getQueryData<MeMini>(['users', 'me'])
   if (!me) return null
   return {
     id: me.id,
