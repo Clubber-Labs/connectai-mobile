@@ -7,13 +7,30 @@ import {
   applyIncomingMessage,
   applyMessageToInbox,
   applyMessageUpdate,
+  applyReceipt,
   inboxHasConversation,
   resetInboxUnread,
 } from '../lib/realtimeCache'
 import { conversationsService } from '../services/conversationsService'
 import { useChatRealtimeStore } from '../store/chatRealtimeStore'
 import { chatKeys } from './cacheKeys'
-import type { MessageFrame, MessageUpdateFrame } from '../types'
+import type { MessageFrame, MessageUpdateFrame, ReceiptFrame } from '../types'
+
+// Ack de entrega é best-effort: o backend já marca "delivered" server-side ao
+// entregar a mensagem no socket (e emite o frame de volta), então este POST é só
+// fallback. Um throttle por conversa evita N requests redundantes numa rajada de
+// mensagens recebidas com a conversa fechada — sem efeito visível, já que o status
+// real chega pelo caminho server-side.
+const DELIVERED_ACK_THROTTLE_MS = 3000
+const lastDeliveredAck = new Map<string, number>()
+
+function ackDelivered(conversationId: string) {
+  const now = Date.now()
+  const last = lastDeliveredAck.get(conversationId) ?? 0
+  if (now - last < DELIVERED_ACK_THROTTLE_MS) return
+  lastDeliveredAck.set(conversationId, now)
+  conversationsService.markDelivered(conversationId).catch(() => {})
+}
 
 // Liga o socket ao ciclo de vida (foreground/background) e roteia os frames
 // recebidos para o cache do TanStack Query. `myId` e `onAuthError` vêm da camada
@@ -41,15 +58,24 @@ export function useChatRealtime(myId: string, onAuthError: () => void) {
           queryClient.invalidateQueries({ queryKey: chatKeys.inbox })
         }
 
-        // Tela aberta + mensagem de outro → marca lida.
-        if (isActive && message.senderId !== myId) {
-          conversationsService.markRead(conversationId).catch(() => {})
-          resetInboxUnread(queryClient, conversationId)
+        // Mensagem de outro: tela aberta → marca LIDA; fechada → confirma só a
+        // ENTREGA. (markRead no backend também avança o watermark de entrega.)
+        if (message.senderId !== myId) {
+          if (isActive) {
+            conversationsService.markRead(conversationId).catch(() => {})
+            resetInboxUnread(queryClient, conversationId)
+          } else {
+            ackDelivered(conversationId)
+          }
         }
       },
       onMessageUpdate: ({ message }: MessageUpdateFrame) => {
         // Edição/deleção de mensagem já existente — atualiza in-place por id.
         applyMessageUpdate(queryClient, message)
+      },
+      onReceipt: (frame: ReceiptFrame) => {
+        // Entrega/leitura de um participante → avança watermark na conversa.
+        applyReceipt(queryClient, frame)
       },
       onReconnect: () => {
         // Sem replay no socket — rebusca inbox e a conversa ativa.
