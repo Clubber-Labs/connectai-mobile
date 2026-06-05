@@ -176,12 +176,14 @@ export default function ConversationScreen() {
     setReplyingToId(null)
   }
 
-  function sendImageUri(uri: string) {
+  function sendImageUri(uri: string, width?: number, height?: number) {
     hapticLight()
     sendImage.mutate(
       {
         uri,
         clientId: newClientId(),
+        width,
+        height,
         replyTo: replyingTo ? toReplyPreview(replyingTo) : null,
       },
       { onError: handleSendError },
@@ -244,7 +246,7 @@ export default function ConversationScreen() {
     if (res.canceled || !res.assets[0]) return
     const asset = res.assets[0]
     if (asset.type === 'video') sendVideoUri(asset)
-    else sendImageUri(asset.uri)
+    else sendImageUri(asset.uri, asset.width, asset.height)
   }
 
   async function pickFromCamera() {
@@ -261,7 +263,7 @@ export default function ConversationScreen() {
     if (res.canceled || !res.assets[0]) return
     const asset = res.assets[0]
     if (asset.type === 'video') sendVideoUri(asset)
-    else sendImageUri(asset.uri)
+    else sendImageUri(asset.uri, asset.width, asset.height)
   }
 
   function onRetry(message: ChatMessage) {
@@ -302,6 +304,8 @@ export default function ConversationScreen() {
         {
           uri: attachment.url,
           clientId: message.clientId,
+          width: attachment.width,
+          height: attachment.height,
           replyTo,
         },
         { onError: handleSendError },
