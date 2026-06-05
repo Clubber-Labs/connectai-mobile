@@ -18,7 +18,14 @@ import {
   type ConsentFields,
 } from '@/features/privacy/services/consentService'
 
-const ORDERED_CATEGORIES = ['location', 'social', 'notifications', 'marketing', 'analytics'] as const
+const ORDERED_CATEGORIES = [
+  'location',
+  'social',
+  'notifications',
+  'marketing',
+  'analytics',
+  'research',
+] as const
 
 const EMPTY_CONSENT: ConsentFields = {
   locationPrecise:   false,

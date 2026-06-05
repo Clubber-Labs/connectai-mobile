@@ -14,7 +14,12 @@ import { queryClient } from '@/shared/lib/queryClient'
 import { ConfirmProvider } from '@/shared/lib/confirm'
 import { BannerProvider } from '@/shared/lib/banner'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import { useConsentStore, selectNeedsConsent, selectNeedsVersionBump, selectConsentHydrated } from '@/features/privacy/store/consentStore'
+import {
+  useConsentStore,
+  selectNeedsConsent,
+  selectNeedsVersionBump,
+  selectConsentHydrated,
+} from '@/features/privacy/store/consentStore'
 import { CONSENT_VERSION } from '@/features/privacy/services/consentService'
 import { useRestoreSession } from '@/features/auth/hooks/useRestoreSession'
 import { endSession } from '@/features/auth/lib/session'
@@ -32,15 +37,19 @@ function AuthGuard() {
   const segments = useSegments()
   const router = useRouter()
 
-  const needsConsent      = useConsentStore(selectNeedsConsent)
-  const needsVersionBump  = useConsentStore(s => selectNeedsVersionBump(s, CONSENT_VERSION))
+  const needsConsent = useConsentStore(selectNeedsConsent)
+  const needsVersionBump = useConsentStore(s =>
+    selectNeedsVersionBump(s, CONSENT_VERSION),
+  )
 
   useEffect(() => {
     if (status === 'loading' || status === 'offline') return
 
-    const inAuthGroup      = segments[0] === '(auth)'
-    const onCompleteProfile = inAuthGroup && (segments as string[])[1] === 'complete-profile'
-    const onConsentScreen   = inAuthGroup && (segments as string[])[1] === 'consent'
+    const inAuthGroup = segments[0] === '(auth)'
+    const onCompleteProfile =
+      inAuthGroup && (segments as string[])[1] === 'complete-profile'
+    const onConsentScreen =
+      inAuthGroup && (segments as string[])[1] === 'consent'
 
     if (status === 'unauthenticated' && !inAuthGroup) {
       router.replace('/(auth)/login')
@@ -74,7 +83,14 @@ function AuthGuard() {
     ) {
       router.replace('/(tabs)/feed')
     }
-  }, [status, profileIncomplete, needsConsent, needsVersionBump, segments, router])
+  }, [
+    status,
+    profileIncomplete,
+    needsConsent,
+    needsVersionBump,
+    segments,
+    router,
+  ])
 
   return null
 }
@@ -102,7 +118,12 @@ export default function RootLayout() {
   // Esconde GlobalHeader durante o fluxo de completar perfil — a tela
   // ainda está em (auth), mas isAuthenticated já é true.
   const consentHydrated = useConsentStore(selectConsentHydrated)
-  const onConsentFlow = !consentHydrated || useConsentStore(selectNeedsConsent) || useConsentStore(s => selectNeedsVersionBump(s, CONSENT_VERSION))
+  const needsConsentRoot = useConsentStore(selectNeedsConsent)
+  const needsVersionBumpRoot = useConsentStore(s =>
+    selectNeedsVersionBump(s, CONSENT_VERSION),
+  )
+  const onConsentFlow =
+    !consentHydrated || needsConsentRoot || needsVersionBumpRoot
   const showHeader = isAuthenticated && !profileIncomplete && !onConsentFlow
   const chatActive = isAuthenticated && !profileIncomplete && !!userId
 

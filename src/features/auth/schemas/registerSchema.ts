@@ -1,4 +1,25 @@
 import { z } from 'zod'
+import type { ConsentFields } from '@/features/privacy/services/consentService'
+
+export const DEFAULT_REGISTER_CONSENTS: ConsentFields = {
+  locationPrecise: false,
+  socialFeed: false,
+  socialVisibility: false,
+  pushNotifications: false,
+  marketing: false,
+  analytics: false,
+  surveys: false,
+}
+
+const consentFieldsSchema = z.object({
+  locationPrecise: z.boolean(),
+  socialFeed: z.boolean(),
+  socialVisibility: z.boolean(),
+  pushNotifications: z.boolean(),
+  marketing: z.boolean(),
+  analytics: z.boolean(),
+  surveys: z.boolean(),
+}) satisfies z.ZodType<ConsentFields>
 
 export const registerSchema = z
   .object({
@@ -31,17 +52,24 @@ export const registerSchema = z
       .array(z.string())
       .max(10, 'No máximo 10 categorias')
       .optional(),
+    termsAccepted: z.boolean(),
+    consents: consentFieldsSchema,
   })
   .refine(data => data.password === data.confirmPassword, {
     message: 'As senhas não coincidem',
     path: ['confirmPassword'],
+  })
+  .refine(data => data.termsAccepted, {
+    message:
+      'É necessário aceitar os Termos de Uso e a Política de Privacidade.',
+    path: ['termsAccepted'],
   })
 
 export type RegisterInput = z.infer<typeof registerSchema>
 
 export type RegisterPayload = Omit<
   RegisterInput,
-  'confirmPassword' | 'birthdate'
+  'confirmPassword' | 'birthdate' | 'termsAccepted' | 'consents'
 > & {
   birthdate: string
 }
