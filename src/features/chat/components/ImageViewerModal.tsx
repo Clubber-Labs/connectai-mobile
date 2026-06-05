@@ -3,6 +3,7 @@ import { Modal, View, Pressable, Dimensions } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -14,6 +15,8 @@ type Props = {
 }
 
 const { width, height } = Dimensions.get('window')
+// Distância vertical pra confirmar o "arrastar pra fechar".
+const CLOSE_THRESHOLD = 120
 
 export function ImageViewerModal({ url, onClose }: Props) {
   const scale = useSharedValue(1)
@@ -22,6 +25,8 @@ export function ImageViewerModal({ url, onClose }: Props) {
   const ty = useSharedValue(0)
   const savedTx = useSharedValue(0)
   const savedTy = useSharedValue(0)
+  // Opacidade do fundo preto — some conforme arrasta pra fechar.
+  const bgOpacity = useSharedValue(1)
 
   // Reseta o transform a cada imagem aberta.
   useEffect(() => {
@@ -31,7 +36,8 @@ export function ImageViewerModal({ url, onClose }: Props) {
     ty.value = 0
     savedTx.value = 0
     savedTy.value = 0
-  }, [url, scale, savedScale, tx, ty, savedTx, savedTy])
+    bgOpacity.value = 1
+  }, [url, scale, savedScale, tx, ty, savedTx, savedTy, bgOpacity])
 
   const pinch = Gesture.Pinch()
     .onUpdate(e => {
@@ -43,12 +49,32 @@ export function ImageViewerModal({ url, onClose }: Props) {
 
   const pan = Gesture.Pan()
     .onUpdate(e => {
-      tx.value = savedTx.value + e.translationX
-      ty.value = savedTy.value + e.translationY
+      if (scale.value > 1) {
+        // Imagem ampliada: arrastar move dentro do enquadramento.
+        tx.value = savedTx.value + e.translationX
+        ty.value = savedTy.value + e.translationY
+      } else {
+        // Sem zoom: arrastar = fechar. Segue o dedo e some o fundo gradualmente.
+        tx.value = e.translationX
+        ty.value = e.translationY
+        bgOpacity.value = Math.max(0, 1 - Math.abs(e.translationY) / (height * 0.6))
+      }
     })
-    .onEnd(() => {
-      savedTx.value = tx.value
-      savedTy.value = ty.value
+    .onEnd(e => {
+      if (scale.value > 1) {
+        savedTx.value = tx.value
+        savedTy.value = ty.value
+        return
+      }
+      if (Math.abs(e.translationY) > CLOSE_THRESHOLD) {
+        // Passou do limiar → fecha (o Modal faz o fade de saída).
+        runOnJS(onClose)()
+      } else {
+        // Não passou → volta ao centro e restaura o fundo.
+        tx.value = withTiming(0)
+        ty.value = withTiming(0)
+        bgOpacity.value = withTiming(1)
+      }
     })
 
   const doubleTap = Gesture.Tap()
@@ -72,11 +98,18 @@ export function ImageViewerModal({ url, onClose }: Props) {
     ],
   }))
 
+  const bgStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }))
+
   if (!url) return null
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 bg-black">
+      <View className="flex-1">
+        <Animated.View
+          className="absolute inset-0 bg-black"
+          style={bgStyle}
+          pointerEvents="none"
+        />
         <GestureDetector gesture={composed}>
           <Animated.View className="flex-1 items-center justify-center">
             <Animated.Image
