@@ -24,8 +24,13 @@ export function useSendImage(conversationId: string, me: UserMini) {
   const key = chatKeys.messages(conversationId)
 
   return useMutation({
-    mutationFn: ({ uri, replyTo }: SendImageVars) =>
-      conversationsService.sendImage(conversationId, uri, replyTo?.id),
+    mutationFn: ({ uri, clientId, replyTo }: SendImageVars) =>
+      conversationsService.sendImage(
+        conversationId,
+        uri,
+        clientId,
+        replyTo?.id,
+      ),
     onMutate: ({ uri, clientId, replyTo }: SendImageVars) => {
       const optimistic: ChatMessage = {
         id: clientId,
