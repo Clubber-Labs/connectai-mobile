@@ -17,6 +17,8 @@ type Props = {
 const { width, height } = Dimensions.get('window')
 // Distância vertical pra confirmar o "arrastar pra fechar".
 const CLOSE_THRESHOLD = 120
+// Distância de arraste em que o fundo chega à opacidade 0.
+const FADE_DISTANCE = height * 0.6
 
 export function ImageViewerModal({ url, onClose }: Props) {
   const scale = useSharedValue(1)
@@ -54,10 +56,11 @@ export function ImageViewerModal({ url, onClose }: Props) {
         tx.value = savedTx.value + e.translationX
         ty.value = savedTy.value + e.translationY
       } else {
-        // Sem zoom: arrastar = fechar. Segue o dedo e some o fundo gradualmente.
-        tx.value = e.translationX
+        // Sem zoom: dismiss vertical. Trava o eixo X (gesto previsível) e só o
+        // Y arrasta a imagem / esmaece o fundo.
+        tx.value = 0
         ty.value = e.translationY
-        bgOpacity.value = Math.max(0, 1 - Math.abs(e.translationY) / (height * 0.6))
+        bgOpacity.value = Math.max(0, 1 - Math.abs(e.translationY) / FADE_DISTANCE)
       }
     })
     .onEnd(e => {
