@@ -110,9 +110,7 @@ export default function UserProfileScreen() {
                     />
                   </View>
                 ) : (
-                  <>
-                    {followButton}
-                  </>
+                  followButton
                 )}
               </View>
             )}

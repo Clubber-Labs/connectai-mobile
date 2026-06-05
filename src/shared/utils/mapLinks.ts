@@ -33,7 +33,7 @@ export function appleMapsUrl(target: MapTarget): string {
     (hasCoords(target) ? `${target.latitude},${target.longitude}` : '')
   const parts = [`q=${encodeURIComponent(label)}`]
   if (hasCoords(target)) parts.push(`ll=${target.latitude},${target.longitude}`)
-  return `http://maps.apple.com/?${parts.join('&')}`
+  return `https://maps.apple.com/?${parts.join('&')}`
 }
 
 // Link universal do Waze: abre o app se instalado, senão a web. Usa coordenada
