@@ -19,6 +19,7 @@ import { MessageButton } from '@/features/users/components/MessageButton'
 import { ProfileEventsList } from '@/features/users/components/ProfileEventsList'
 import { ProfileLoading } from '@/features/users/components/ProfileLoading'
 import { ProfileEmpty } from '@/features/users/components/ProfileEmpty'
+import { ReportButton } from '@/features/reports/components/ReportButton'
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -100,18 +101,18 @@ export default function UserProfileScreen() {
           <>
             <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
             {!isOwnProfile && (
-              <View className="mt-3 mb-1">
-                {canMessage ? (
-                  <View className="flex-row gap-2">
-                    <View className="flex-1">{followButton}</View>
-                    <MessageButton
-                      onPress={openConversation}
-                      loading={createConversation.isPending}
-                    />
-                  </View>
-                ) : (
-                  followButton
+              <View className="mt-3 mb-1 flex-row items-center gap-2">
+                <View className="flex-1">{followButton}</View>
+                {canMessage && (
+                  <MessageButton
+                    onPress={openConversation}
+                    loading={createConversation.isPending}
+                  />
                 )}
+                <ReportButton
+                  target={{ type: 'user', id: profile.id }}
+                  variant="ghost"
+                />
               </View>
             )}
             <ProfileStats

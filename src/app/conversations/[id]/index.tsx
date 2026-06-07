@@ -12,18 +12,14 @@ import * as Clipboard from 'expo-clipboard'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useBanner } from '@/shared/lib/banner'
 import { useConfirm } from '@/shared/lib/confirm'
-import {
-  getApiError,
-  isConflictError,
-  isForbiddenError,
-} from '@/shared/lib/apiError'
+import { getApiError, isForbiddenError } from '@/shared/lib/apiError'
 import { hapticLight } from '@/shared/lib/haptics'
 import { useConversation } from '@/features/chat/hooks/useConversation'
 import { useMessages } from '@/features/chat/hooks/useMessages'
 import { useMessagesMutations } from '@/features/chat/hooks/useMessagesMutations'
 import { useReadConversation } from '@/features/chat/hooks/useReadConversation'
 import { useBlocks } from '@/features/chat/hooks/useBlocks'
-import { useReportMessage } from '@/features/chat/hooks/useReportMessage'
+import { useReportFlow } from '@/features/reports/hooks/useReportFlow'
 import { newClientId } from '@/features/chat/hooks/useSendMessage'
 import { useChatRealtimeStore } from '@/features/chat/store/chatRealtimeStore'
 import { ensureRecordingPermission } from '@/features/chat/lib/audioRecording'
@@ -36,15 +32,11 @@ import { AudioRecorderBar } from '@/features/chat/components/AudioRecorderBar'
 import { BlockedBanner } from '@/features/chat/components/BlockedBanner'
 import { AttachmentMenu } from '@/features/chat/components/AttachmentMenu'
 import { MessageActionsSheet } from '@/features/chat/components/MessageActionsSheet'
-import { ReportReasonPicker } from '@/features/chat/components/ReportReasonPicker'
+import { ReportReasonSheet } from '@/features/reports/components/ReportReasonSheet'
 import { ImageViewerModal } from '@/features/chat/components/ImageViewerModal'
 import { VideoPlayerModal } from '@/features/chat/components/VideoPlayerModal'
 import type { UserMini } from '@/shared/types'
-import type {
-  ChatMessage,
-  ReplyPreview,
-  ReportReason,
-} from '@/features/chat/types'
+import type { ChatMessage, ReplyPreview } from '@/features/chat/types'
 
 const COOLDOWN_MS = 5000
 // Guarda pré-upload (nicety) — o limite real é do backend (413). Pega só vídeos
@@ -64,7 +56,7 @@ export default function ConversationScreen() {
   const { messages } = useMessages(id)
   const setActive = useChatRealtimeStore(s => s.setActiveConversation)
   const read = useReadConversation()
-  const report = useReportMessage()
+  const report = useReportFlow()
   const { blocks } = useBlocks()
 
   const isGroup = conversation?.type === 'GROUP'
@@ -95,7 +87,6 @@ export default function ConversationScreen() {
   const [recording, setRecording] = useState(false)
   const [attachOpen, setAttachOpen] = useState(false)
   const [actionsFor, setActionsFor] = useState<ChatMessage | null>(null)
-  const [reportFor, setReportFor] = useState<ChatMessage | null>(null)
   const [viewerUrl, setViewerUrl] = useState<string | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [editing, setEditing] = useState<ChatMessage | null>(null)
@@ -361,23 +352,6 @@ export default function ConversationScreen() {
     setEditing(null)
   }
 
-  function submitReport(reason: ReportReason, details?: string) {
-    if (!reportFor) return
-    report.mutate(
-      { messageId: reportFor.id, reason, details },
-      {
-        onSuccess: () => showBanner('Denúncia enviada. Obrigado.'),
-        onError: e =>
-          showBanner(
-            isConflictError(e)
-              ? 'Você já denunciou esta mensagem.'
-              : getApiError(e).message,
-          ),
-      },
-    )
-    setReportFor(null)
-  }
-
   if (isLoading || !conversation) {
     return (
       <View className="flex-1 bg-black items-center justify-center">
@@ -472,13 +446,16 @@ export default function ConversationScreen() {
         onClose={() => setActionsFor(null)}
         onCopy={doCopy}
         onEdit={() => actionsFor && startEdit(actionsFor)}
-        onReport={() => setReportFor(actionsFor)}
+        onReport={() =>
+          actionsFor &&
+          report.requestReport({ type: 'message', id: actionsFor.id })
+        }
         onDelete={doDelete}
       />
-      <ReportReasonPicker
-        visible={!!reportFor}
-        onClose={() => setReportFor(null)}
-        onSubmit={submitReport}
+      <ReportReasonSheet
+        target={report.target}
+        onClose={report.close}
+        onSubmit={report.submit}
       />
       <ImageViewerModal url={viewerUrl} onClose={() => setViewerUrl(null)} />
       <VideoPlayerModal url={videoUrl} onClose={() => setVideoUrl(null)} />

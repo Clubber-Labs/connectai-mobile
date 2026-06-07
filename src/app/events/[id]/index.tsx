@@ -16,6 +16,7 @@ import { EventMap } from '@/features/events/components/EventMap'
 import { EventAttendanceButton } from '@/features/events/components/EventAttendanceButton'
 import { EventPostsFeed } from '@/features/events/components/EventPostsFeed'
 import { EventActionsButton } from '@/features/events/components/EventActionsButton'
+import { ReportButton } from '@/features/reports/components/ReportButton'
 
 type HeaderProps = {
   event: EventDetail
@@ -30,9 +31,16 @@ function DetailHeader({ event, isAuthor }: HeaderProps) {
     <View>
       <View className="relative">
         <EventHeader event={event} />
-        {isAuthor && (
+        {isAuthor ? (
           <View className="absolute top-3 right-3">
             <EventActionsButton eventId={event.id} isPublic={event.isPublic} />
+          </View>
+        ) : (
+          <View className="absolute top-3 right-3">
+            <ReportButton
+              target={{ type: 'event', id: event.id }}
+              variant="overlay"
+            />
           </View>
         )}
       </View>

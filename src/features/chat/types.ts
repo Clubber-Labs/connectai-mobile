@@ -108,13 +108,6 @@ export type Block = {
   blocked: UserMini
 }
 
-export type ReportReason =
-  | 'HATE_SPEECH'
-  | 'SPAM_OR_FRAUD'
-  | 'HARASSMENT'
-  | 'INAPPROPRIATE_CONTENT'
-  | 'OTHER'
-
 // Frame de entrega ao vivo. Só `message` é tratado; outros tipos (typing,
 // presence) são tolerados e ignorados — ver isMessageFrame.
 export type MessageFrame = {

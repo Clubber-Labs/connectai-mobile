@@ -183,6 +183,12 @@ export type EventPost = {
 
 export type FollowStatus = 'PENDING' | 'ACCEPTED' | null
 
+// Papel do usuário na plataforma. Só /users/me expõe `role` — /users/:id (rota
+// pública) NÃO retorna, por isso é opcional em UserProfile e deve ser lido
+// apenas do próprio perfil (useMyProfile / useIsAdmin). Premium NÃO é role — é
+// um campo separado (isPremium) no backend.
+export type UserRole = 'USER' | 'ADMIN'
+
 export type UserProfile = {
   id: string
   name: string
@@ -195,6 +201,8 @@ export type UserProfile = {
   phone?: string
   email?: string
   createdAt: string
+  // Presente só em /users/me. Ausente em perfis de terceiros (/users/:id).
+  role?: UserRole
   followStatus?: FollowStatus
   eventsCount: number
   followersCount: number
