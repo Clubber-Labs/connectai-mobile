@@ -88,7 +88,11 @@ export const useConsentStore = create<ConsentState & ConsentActions>()(
       markUnsynced() { set({ isSynced: false }) },
       markPending() { set({ status: 'pending' }) },
       setHydrated() { set({ hydrated: true }) },
-      reset() { set(initialState) },
+      // Limpa os dados de consentimento (logout/troca de usuário) MAS preserva
+      // `hydrated`: ele indica "o AsyncStorage já foi lido" — um latch de sessão,
+      // não um dado de consentimento. Zerá-lo deixaria onConsentFlow=true (header
+      // some) até reiniciar o app, pois onRehydrateStorage só roda no boot.
+      reset() { set(s => ({ ...initialState, hydrated: s.hydrated })) },
     }),
     {
       name: 'connectai-consent-v1',
