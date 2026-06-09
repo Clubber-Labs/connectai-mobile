@@ -96,6 +96,8 @@ export function MessageBubble({
         {reply && (
           <Pressable
             onPress={onPressReply}
+            onLongPress={onLongPress}
+            delayLongPress={300}
             className={`mb-1 rounded border-l-2 pl-2 py-0.5 ${isMine ? 'border-violet-200 bg-violet-700/50' : 'border-violet-500 bg-black/25'} ${mediaOnly ? 'mx-1 mt-1' : ''}`}
           >
             <Text
@@ -112,12 +114,19 @@ export function MessageBubble({
             </Text>
           </Pressable>
         )}
-        {audio && <VoiceMessage attachment={audio} isMine={isMine} />}
+        {audio && (
+          <VoiceMessage
+            attachment={audio}
+            isMine={isMine}
+            onLongPress={onLongPress}
+          />
+        )}
         {video && (
           <VideoMessage
             attachment={video}
             sending={sending}
             onPress={() => onPressVideo(video.url)}
+            onLongPress={onLongPress}
           />
         )}
         {image && (
@@ -125,6 +134,7 @@ export function MessageBubble({
             attachment={image}
             sending={sending}
             onPress={() => onPressImage(image.url)}
+            onLongPress={onLongPress}
           />
         )}
         {message.content ? (

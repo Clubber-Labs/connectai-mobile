@@ -7,13 +7,21 @@ import type { Attachment } from '../types'
 type Props = {
   attachment: Attachment
   onPress: () => void
+  // Encaminhado da bolha: sem isto, este Pressable engole o gesto e o long-press
+  // (menu de ações / reagir) só dispara fora do vídeo.
+  onLongPress?: () => void
   sending?: boolean
 }
 
 // Bolha de vídeo: poster dimensionado pelo aspect-ratio real (com cap 9:16..16:9),
 // overlay de play e badge de duração. Enquanto envia (sem thumbnail) → caixa
 // escura no aspect-ratio + spinner, mesmo padrão do ImageMessage.
-export function VideoMessage({ attachment, onPress, sending }: Props) {
+export function VideoMessage({
+  attachment,
+  onPress,
+  onLongPress,
+  sending,
+}: Props) {
   const { width, height } = mediaBoxSize(attachment.width, attachment.height, {
     maxWidth: 240,
     maxHeight: 320,
@@ -26,6 +34,8 @@ export function VideoMessage({ attachment, onPress, sending }: Props) {
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={300}
       className="rounded-xl overflow-hidden"
       accessibilityLabel="Vídeo"
     >
