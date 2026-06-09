@@ -16,11 +16,6 @@ export const accountService = {
   deactivate: (): Promise<AccountLifecycleResponse> =>
     api.post('/users/me/deactivate').then(r => r.data),
 
-  // Incluído por completude do contrato; sem UI — a recuperação acontece pelo
-  // login (o backend reativa sozinho na carência).
-  reactivate: (): Promise<AccountLifecycleResponse> =>
-    api.post('/users/me/reactivate').then(r => r.data),
-
   // DELETE com body: envia só as chaves preenchidas. password '' ou chave
   // undefined NÃO vão (conta só-social manda body sem password). skipAuthHandler
   // mantém o 401 'Senha incorreta' inline em vez de encerrar a sessão.

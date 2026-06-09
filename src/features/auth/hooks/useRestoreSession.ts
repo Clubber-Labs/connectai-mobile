@@ -80,7 +80,9 @@ export function useRestoreSession() {
     } else if (session.kind === 'inactive') {
       // Boot com conta inativa: grava o marker (welcome-back no relogin) e vai
       // pro login via setUnauthenticated — NÃO endSession({expired}), pois não é
-      // sessão expirada (não deve mostrar "Sua sessão expirou").
+      // sessão expirada (não deve mostrar "Sua sessão expirou"). O clear é
+      // parcial de propósito (só auth): por ser boot-only, o queryClient já está
+      // vazio e o consentStore reidrata do storage — não precisa do reset deles.
       await setAccountRecovery({
         userId: session.userId,
         status: session.status,

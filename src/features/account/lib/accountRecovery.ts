@@ -11,14 +11,20 @@ export type AccountRecovery = {
   scheduledDeletionAt: string | null
 }
 
+// Best-effort: o marker é só UX (welcome-back). Uma falha de storage nunca pode
+// quebrar o fluxo de saída da conta nem o login.
 export async function setAccountRecovery(rec: AccountRecovery): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(rec))
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(rec))
+  } catch {
+    // ignora — segue sem marker
+  }
 }
 
 export async function getAccountRecovery(): Promise<AccountRecovery | null> {
-  const raw = await AsyncStorage.getItem(KEY)
-  if (!raw) return null
   try {
+    const raw = await AsyncStorage.getItem(KEY)
+    if (!raw) return null
     return JSON.parse(raw) as AccountRecovery
   } catch {
     return null
@@ -26,5 +32,9 @@ export async function getAccountRecovery(): Promise<AccountRecovery | null> {
 }
 
 export async function clearAccountRecovery(): Promise<void> {
-  await AsyncStorage.removeItem(KEY)
+  try {
+    await AsyncStorage.removeItem(KEY)
+  } catch {
+    // ignora
+  }
 }

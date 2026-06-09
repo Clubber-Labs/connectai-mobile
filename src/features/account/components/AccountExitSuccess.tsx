@@ -11,7 +11,7 @@ type Props = {
 }
 
 // Estado de confirmação pós-ação (desativar/excluir). Não referencia o perfil —
-// o cache já pode ter sido limpo pelo finalizeAccountExit.
+// o cache de /me já pode ter sido limpo pelo endSession (no onDone).
 export function AccountExitSuccess({
   title,
   message,

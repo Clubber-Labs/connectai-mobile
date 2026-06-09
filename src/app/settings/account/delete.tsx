@@ -6,13 +6,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import { useRouter, useFocusEffect } from 'expo-router'
+import { Stack, useRouter, useFocusEffect } from 'expo-router'
 import { isAxiosError } from 'axios'
 import { useMyProfile } from '@/features/users/hooks/useProfile'
 import { useDeleteAccount } from '@/features/account/hooks/useDeleteAccount'
 import { useExportConsentData } from '@/features/account/hooks/useExportConsentData'
 import { useConfirm } from '@/shared/lib/confirm'
-import { finalizeAccountExit } from '@/features/account/lib/finalizeAccountExit'
+import { setAccountRecovery } from '@/features/account/lib/accountRecovery'
 import { endSession } from '@/features/auth/lib/session'
 import {
   buildReason,
@@ -26,7 +26,7 @@ import { DeleteReauthStep } from '@/features/account/components/DeleteReauthStep
 import { AccountExitSuccess } from '@/features/account/components/AccountExitSuccess'
 
 type Step = 'reason' | 'warning' | 'reauth'
-type ExitInfo = { userId: string; scheduledDeletionAt: string | null }
+type ExitInfo = { scheduledDeletionAt: string | null }
 
 export default function DeleteAccountScreen() {
   const router = useRouter()
@@ -87,11 +87,17 @@ export default function DeleteAccountScreen() {
       },
       {
         onSuccess: res => {
-          // Captura a data ANTES do finalizeAccountExit limpar o cache.
-          setExitInfo({
+          // Persiste o marker JÁ no sucesso (não só no "Entendi"): se o usuário
+          // sair da tela de sucesso antes de confirmar, o welcome-back e a rede
+          // defensiva no boot continuam funcionando. setAccountRecovery é
+          // best-effort. A data vai pro estado local ANTES do endSession (que
+          // limpa o cache de /me).
+          void setAccountRecovery({
             userId: profile.id,
+            status: 'PENDING_DELETION',
             scheduledDeletionAt: res.scheduledDeletionAt,
           })
+          setExitInfo({ scheduledDeletionAt: res.scheduledDeletionAt })
         },
         onError: handleDeleteError,
         onSettled: () => setPassword(''),
@@ -100,33 +106,32 @@ export default function DeleteAccountScreen() {
   }
 
   async function onExit() {
-    if (!exitInfo) return
     setExiting(true)
-    await finalizeAccountExit({
-      userId: exitInfo.userId,
-      status: 'PENDING_DELETION',
-      scheduledDeletionAt: exitInfo.scheduledDeletionAt,
-    })
+    await endSession()
     router.replace('/(auth)/login')
   }
 
-  // Sucesso vem antes do guard de loading: o finalizeAccountExit limpa o cache de
-  // /me, então `profile` fica undefined enquanto navegamos — não pode cair no guard.
+  // Sucesso vem antes do guard de loading: o endSession (no onExit) limpa o cache
+  // de /me, então `profile` fica undefined enquanto navegamos — não pode cair no
+  // guard. gestureEnabled:false torna a tela terminal (sem swipe-back acidental).
   if (exitInfo) {
     const dateLabel = exitInfo.scheduledDeletionAt
       ? formatShortDate(exitInfo.scheduledDeletionAt)
       : null
     return (
-      <AccountExitSuccess
-        title="Exclusão agendada"
-        message={
-          dateLabel
-            ? `Sua conta será excluída em ${dateLabel}. Faça login antes dessa data para cancelar.`
-            : 'Sua conta foi agendada para exclusão. Faça login dentro do prazo para cancelar.'
-        }
-        loading={exiting}
-        onDone={onExit}
-      />
+      <>
+        <Stack.Screen options={{ gestureEnabled: false }} />
+        <AccountExitSuccess
+          title="Exclusão agendada"
+          message={
+            dateLabel
+              ? `Sua conta será excluída em ${dateLabel}. Faça login antes dessa data para cancelar.`
+              : 'Sua conta foi agendada para exclusão. Faça login dentro do prazo para cancelar.'
+          }
+          loading={exiting}
+          onDone={onExit}
+        />
+      </>
     )
   }
 

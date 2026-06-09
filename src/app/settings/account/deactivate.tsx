@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { View, Text, ScrollView, ActivityIndicator } from 'react-native'
-import { useRouter } from 'expo-router'
+import { Stack, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useMyProfile } from '@/features/users/hooks/useProfile'
 import { useDeactivateAccount } from '@/features/account/hooks/useDeactivateAccount'
 import { useConfirm } from '@/shared/lib/confirm'
-import { finalizeAccountExit } from '@/features/account/lib/finalizeAccountExit'
+import { setAccountRecovery } from '@/features/account/lib/accountRecovery'
+import { endSession } from '@/features/auth/lib/session'
 import { getApiError, isTooManyRequestsError } from '@/shared/lib/apiError'
 import { Button } from '@/shared/components/Button'
 import { FormError } from '@/shared/components/FormError'
@@ -27,17 +28,13 @@ export default function DeactivateAccountScreen() {
   const [inlineError, setInlineError] = useState<string | null>(null)
 
   async function onExit() {
-    if (!profile) return
     setExiting(true)
-    await finalizeAccountExit({
-      userId: profile.id,
-      status: 'DEACTIVATED',
-      scheduledDeletionAt: null,
-    })
+    await endSession()
     router.replace('/(auth)/login')
   }
 
   async function onDeactivate() {
+    if (!profile) return
     const ok = await confirm({
       title: 'Desativar conta',
       message:
@@ -48,7 +45,16 @@ export default function DeactivateAccountScreen() {
     if (!ok) return
     setInlineError(null)
     deactivate.mutate(undefined, {
-      onSuccess: () => setDone(true),
+      onSuccess: () => {
+        // Persiste o marker já no sucesso (não só no "Entendi"), pra sobreviver
+        // a uma saída acidental da tela de sucesso. Best-effort.
+        void setAccountRecovery({
+          userId: profile.id,
+          status: 'DEACTIVATED',
+          scheduledDeletionAt: null,
+        })
+        setDone(true)
+      },
       onError: e =>
         setInlineError(
           isTooManyRequestsError(e)
@@ -60,12 +66,15 @@ export default function DeactivateAccountScreen() {
 
   if (done) {
     return (
-      <AccountExitSuccess
-        title="Conta desativada"
-        message="Seu perfil ficou oculto. Para voltar, é só fazer login novamente — sua conta é reativada na hora."
-        loading={exiting}
-        onDone={onExit}
-      />
+      <>
+        <Stack.Screen options={{ gestureEnabled: false }} />
+        <AccountExitSuccess
+          title="Conta desativada"
+          message="Seu perfil ficou oculto. Para voltar, é só fazer login novamente — sua conta é reativada na hora."
+          loading={exiting}
+          onDone={onExit}
+        />
+      </>
     )
   }
 
