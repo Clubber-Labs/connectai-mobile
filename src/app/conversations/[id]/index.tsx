@@ -346,9 +346,14 @@ export default function ConversationScreen() {
   const canEdit = !!actionsFor && isMineMessage && !!actionsFor.content
   const canDelete = !!actionsFor && (isMineMessage || (!!isGroup && !!amAdmin))
   const canReport = !!actionsFor && !isMineMessage
-  // Reagir não vale em mensagem de sistema nem apagada (o backend devolve 403).
+  // Reagir não vale em mensagem de sistema, apagada nem ainda não persistida (o
+  // id ainda é de cliente). `openActions` já barra clientStatus, mas manter aqui
+  // deixa o predicado completo e robusto a novos pontos de entrada.
   const canReact =
-    !!actionsFor && !actionsFor.deletedAt && actionsFor.type !== 'SYSTEM'
+    !!actionsFor &&
+    !actionsFor.deletedAt &&
+    actionsFor.type !== 'SYSTEM' &&
+    !actionsFor.clientStatus
   const myEmoji = actionsFor ? myReaction(actionsFor.reactions, myId) : null
 
   function reactTo(message: ChatMessage, emoji: string) {

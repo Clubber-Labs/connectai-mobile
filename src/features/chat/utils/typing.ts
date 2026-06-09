@@ -34,6 +34,15 @@ export function activeTypers(
   return Object.keys(map).filter(userId => map[userId] > nowMs)
 }
 
+// Dois mapas têm o mesmo conteúdo? Usado pra evitar churn no store: ao receber
+// uma mensagem chamamos setTyping(false) sempre, e sem este check o estado seria
+// recriado mesmo quando nada mudou (quem enviou já não constava como digitando).
+export function typingMapsEqual(a: TypingMap, b: TypingMap): boolean {
+  const aKeys = Object.keys(a)
+  if (aKeys.length !== Object.keys(b).length) return false
+  return aKeys.every(userId => a[userId] === b[userId])
+}
+
 // "Fulano está digitando…" / "Fulano e Beltrano…" / "Várias pessoas…".
 // Pura — recebe os nomes já resolvidos. Vazio → string vazia (caller não mostra).
 export function typingLabel(names: string[]): string {

@@ -1,5 +1,9 @@
 import { create } from 'zustand'
-import { nextTypingState, type TypingMap } from '../utils/typing'
+import {
+  nextTypingState,
+  typingMapsEqual,
+  type TypingMap,
+} from '../utils/typing'
 
 type TypingState = {
   // conversationId → (userId → expiraEm ms). Efêmero, só do socket.
@@ -19,6 +23,9 @@ export const useTypingStore = create<TypingState>(set => ({
     set(state => {
       const current = state.byConversation[conversationId] ?? {}
       const next = nextTypingState(current, userId, isTyping, Date.now())
+      // Nada mudou (ex.: mensagem recebida de quem já não constava como
+      // digitando) → devolve o MESMO estado pra o zustand não notificar.
+      if (typingMapsEqual(current, next)) return state
       return {
         byConversation: { ...state.byConversation, [conversationId]: next },
       }
