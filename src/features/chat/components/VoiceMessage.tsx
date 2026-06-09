@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { formatDuration } from '@/shared/utils/formatDuration'
 import { Waveform } from './Waveform'
 import { useVoiceMessagePlayer } from '../hooks/useVoiceMessagePlayer'
+import { LONG_PRESS_DELAY_MS } from '../utils/longPress'
 import type { Attachment } from '../types'
 
 type Props = {
@@ -49,7 +50,7 @@ export function VoiceMessage({ attachment, isMine, onLongPress }: Props) {
       <Pressable
         onPress={toggle}
         onLongPress={onLongPress}
-        delayLongPress={300}
+        delayLongPress={LONG_PRESS_DELAY_MS}
         className="w-9 h-9 items-center justify-center"
         accessibilityLabel={playing ? 'Pausar áudio' : 'Tocar áudio'}
       >
@@ -65,7 +66,7 @@ export function VoiceMessage({ attachment, isMine, onLongPress }: Props) {
           }
         }}
         onLongPress={onLongPress}
-        delayLongPress={300}
+        delayLongPress={LONG_PRESS_DELAY_MS}
         accessibilityLabel="Barra de progresso do áudio"
       >
         <Waveform

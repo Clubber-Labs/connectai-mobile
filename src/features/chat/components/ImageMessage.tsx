@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pressable, Image, View, ActivityIndicator } from 'react-native'
 import { mediaBoxSize } from '../utils/mediaBox'
+import { LONG_PRESS_DELAY_MS } from '../utils/longPress'
 import type { Attachment } from '../types'
 
 type Props = {
@@ -31,7 +32,7 @@ export function ImageMessage({
     <Pressable
       onPress={onPress}
       onLongPress={onLongPress}
-      delayLongPress={300}
+      delayLongPress={LONG_PRESS_DELAY_MS}
       className="rounded-xl overflow-hidden"
       accessibilityLabel="Imagem"
     >

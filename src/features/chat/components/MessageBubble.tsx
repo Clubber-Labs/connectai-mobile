@@ -10,6 +10,7 @@ import { MessageStatusIcon } from './MessageStatusIcon'
 import { MessageReactions } from './MessageReactions'
 import { attachmentReplyLabel } from '../utils/attachmentPreview'
 import { formatMessageTime } from '../utils/messageTime'
+import { LONG_PRESS_DELAY_MS } from '../utils/longPress'
 import type { AggregatedReaction } from '../utils/reactions'
 import type { MessageMeta } from '../utils/groupMessages'
 import type { MessageStatus } from '../utils/messageStatus'
@@ -87,7 +88,7 @@ export function MessageBubble({
   const bubble = (
     <Pressable
       onLongPress={onLongPress}
-      delayLongPress={300}
+      delayLongPress={LONG_PRESS_DELAY_MS}
       className="max-w-[80%]"
     >
       <View
@@ -97,7 +98,7 @@ export function MessageBubble({
           <Pressable
             onPress={onPressReply}
             onLongPress={onLongPress}
-            delayLongPress={300}
+            delayLongPress={LONG_PRESS_DELAY_MS}
             className={`mb-1 rounded border-l-2 pl-2 py-0.5 ${isMine ? 'border-violet-200 bg-violet-700/50' : 'border-violet-500 bg-black/25'} ${mediaOnly ? 'mx-1 mt-1' : ''}`}
           >
             <Text
