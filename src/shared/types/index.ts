@@ -43,12 +43,7 @@ export type AttendanceType = 'INTERESTED' | 'CONFIRMED' | 'NOT_INTERESTED'
  * Ciclo de vida do evento, computado pelo backend a cada request.
  * NUNCA calcular no client.
  */
-export type EventStatus =
-  | 'UPCOMING'
-  | 'SOON'
-  | 'ONGOING'
-  | 'PAST'
-  | 'CANCELED'
+export type EventStatus = 'UPCOMING' | 'SOON' | 'ONGOING' | 'PAST' | 'CANCELED'
 
 export type FeedReason =
   | { kind: 'self_created' }
@@ -191,6 +186,8 @@ export type UserProfile = {
   bio?: string | null
   avatarUrl?: string | null
   isPrivate: boolean
+  // Só vem no perfil próprio (GET /users/me) — gates de UI premium e paywall.
+  isPremium?: boolean
   birthdate?: string
   phone?: string
   email?: string

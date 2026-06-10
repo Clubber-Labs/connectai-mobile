@@ -79,6 +79,12 @@ export default function ProfileScreen() {
         ]
       : []),
     {
+      label: profile.isPremium ? 'Assinatura' : 'ConnectAI Premium',
+      icon: 'diamond-outline',
+      onPress: () =>
+        router.push(profile.isPremium ? '/billing/manage' : '/billing/upgrade'),
+    },
+    {
       label: 'Sobre o app',
       icon: 'information-circle-outline',
       onPress: () => router.push('/about'),

@@ -7,6 +7,8 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { StripeProvider } from '@stripe/stripe-react-native'
+import Constants from 'expo-constants'
 import { useFonts } from 'expo-font'
 import { Ionicons } from '@expo/vector-icons'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -45,7 +47,11 @@ function AuthGuard() {
       !onCompleteProfile
     ) {
       router.replace('/(auth)/complete-profile')
-    } else if (status === 'authenticated' && !profileIncomplete && inAuthGroup) {
+    } else if (
+      status === 'authenticated' &&
+      !profileIncomplete &&
+      inAuthGroup
+    ) {
       router.replace('/(tabs)/feed')
     }
   }, [status, profileIncomplete, segments, router])
@@ -78,43 +84,50 @@ export default function RootLayout() {
   const showHeader = isAuthenticated && !profileIncomplete
   const chatActive = isAuthenticated && !profileIncomplete && !!userId
 
+  // Publishable key é pública por natureza (pk_) — sem ela a PaymentSheet
+  // falha no init com erro tratado na tela de upgrade, o resto do app segue.
+  const stripePublishableKey: string =
+    Constants.expoConfig?.extra?.stripePublishableKey ?? ''
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <ConfirmProvider>
-            <BannerProvider>
-              <StatusBar style="light" />
-              <SafeAreaView
-                style={{ flex: 1, backgroundColor: '#000000' }}
-                edges={['top']}
-              >
-                {showHeader && <GlobalHeader />}
-                <View className="flex-1 bg-black">
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      contentStyle: { backgroundColor: '#000000' },
-                    }}
+          <StripeProvider publishableKey={stripePublishableKey}>
+            <ConfirmProvider>
+              <BannerProvider>
+                <StatusBar style="light" />
+                <SafeAreaView
+                  style={{ flex: 1, backgroundColor: '#000000' }}
+                  edges={['top']}
+                >
+                  {showHeader && <GlobalHeader />}
+                  <View className="flex-1 bg-black">
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: '#000000' },
+                      }}
+                    />
+                    {/* Gate de sessão: bloqueia as telas até /me validar. */}
+                    {status === 'loading' && (
+                      <View className="absolute inset-0 bg-black" />
+                    )}
+                    {status === 'offline' && (
+                      <SessionUnavailable onRetry={retry} />
+                    )}
+                  </View>
+                </SafeAreaView>
+                <AuthGuard />
+                {chatActive && userId && (
+                  <ChatRealtimeMount
+                    myId={userId}
+                    onAuthError={handleChatAuthError}
                   />
-                  {/* Gate de sessão: bloqueia as telas até /me validar. */}
-                  {status === 'loading' && (
-                    <View className="absolute inset-0 bg-black" />
-                  )}
-                  {status === 'offline' && (
-                    <SessionUnavailable onRetry={retry} />
-                  )}
-                </View>
-              </SafeAreaView>
-              <AuthGuard />
-              {chatActive && userId && (
-                <ChatRealtimeMount
-                  myId={userId}
-                  onAuthError={handleChatAuthError}
-                />
-              )}
-            </BannerProvider>
-          </ConfirmProvider>
+                )}
+              </BannerProvider>
+            </ConfirmProvider>
+          </StripeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
