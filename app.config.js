@@ -63,6 +63,12 @@ export default {
     },
     android: {
       package: 'com.netobonato.connectaimobile',
+      // FCM v1 (push). O arquivo vem do Firebase console e é registrado via
+      // `eas credentials` / env GOOGLE_SERVICES_JSON — sem ele o push Android
+      // não chega, mas o build local segue funcionando.
+      ...(process.env.GOOGLE_SERVICES_JSON
+        ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON }
+        : {}),
     },
     plugins: [
       "expo-router",
@@ -73,13 +79,14 @@ export default {
       ["@rnmapbox/maps", {
         RNMAPBOX_MAPS_DOWNLOAD_TOKEN: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN
       }],
+      "expo-notifications",
       ["expo-location", {
-        locationWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa.",
+        locationWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa e, se você ativar, avisar de eventos perto de você.",
         // expo-location força as 3 keys de location no plist; só usamos
         // foreground, mas passamos texto PT-BR específico nas de "Always"
         // pra App Review não receber strings genéricas em inglês.
-        locationAlwaysAndWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa.",
-        locationAlwaysPermission: "Usamos sua localização para mostrar eventos próximos no mapa."
+        locationAlwaysAndWhenInUsePermission: "Usamos sua localização para mostrar eventos próximos no mapa e, se você ativar, avisar de eventos perto de você.",
+        locationAlwaysPermission: "Usamos sua localização para mostrar eventos próximos no mapa e, se você ativar, avisar de eventos perto de você."
       }],
       ["expo-image-picker", {
         photosPermission: "Precisamos de acesso às suas fotos para alterar a foto de perfil.",
