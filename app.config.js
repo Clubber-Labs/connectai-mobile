@@ -7,6 +7,10 @@ import { withEntitlementsPlist } from 'expo/config-plugins'
 // remove o entitlement no prebuild — push iOS fica fora DESTE build e o app
 // degrada gracioso (getExpoPushTokenAsync falha dentro de try/catch). Nunca
 // setar em build EAS/produção; não commitar o ios/ gerado com o flag ativo.
+// ATENÇÃO à posição na lista de plugins: mods executam na ORDEM INVERSA —
+// este plugin precisa ser o PRIMEIRO da lista pra rodar por último e vencer
+// o withEntitlementsPlist do expo-notifications (que re-adiciona a chave se
+// não existir).
 function withoutIosPushEntitlement(config) {
   return withEntitlementsPlist(config, c => {
     delete c.modResults['aps-environment']
@@ -85,6 +89,9 @@ export default {
         : {}),
     },
     plugins: [
+      ...(process.env.IOS_DISABLE_PUSH === '1'
+        ? [withoutIosPushEntitlement]
+        : []),
       "expo-router",
       "expo-secure-store",
       ["react-native-vision-camera", {
@@ -119,10 +126,7 @@ export default {
         supportsBackgroundPlayback: false,
         supportsPictureInPicture: false
       }],
-      ...socialAuthPlugins(),
-      ...(process.env.IOS_DISABLE_PUSH === '1'
-        ? [withoutIosPushEntitlement]
-        : [])
+      ...socialAuthPlugins()
     ],
     extra: {
       apiUrl: process.env.API_URL,
