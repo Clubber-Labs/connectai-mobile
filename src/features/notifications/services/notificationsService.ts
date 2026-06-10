@@ -22,10 +22,7 @@ export const notificationsService = {
   markAllRead: (): Promise<{ updated: number }> =>
     api.post('/notifications/read-all').then(r => r.data),
 
-  registerDevice: (
-    token: string,
-    platform: 'ios' | 'android',
-  ): Promise<void> =>
+  registerDevice: (token: string, platform: 'ios' | 'android'): Promise<void> =>
     api.post('/devices', { token, platform }).then(() => undefined),
 
   // Idempotente no backend (204 mesmo se o token já não existe).
