@@ -17,7 +17,7 @@ function formatDate(iso: string) {
 }
 
 export function UserEventCard({ event, onPress }: Props) {
-  const { labelFor } = useCategories()
+  const { labelsFor } = useCategories()
   return (
     <Pressable
       onPress={onPress}
@@ -46,7 +46,9 @@ export function UserEventCard({ event, onPress }: Props) {
           </View>
           <View className="flex-row items-center gap-1">
             <Ionicons name="grid-outline" size={12} color="#a1a1aa" />
-            <Text className="text-zinc-400 text-xs">{labelFor(event.category)}</Text>
+            <Text className="text-zinc-400 text-xs">
+              {labelsFor(event.categories)}
+            </Text>
           </View>
           {typeof event.attendancesCount === 'number' && (
             <View className="flex-row items-center gap-1">
