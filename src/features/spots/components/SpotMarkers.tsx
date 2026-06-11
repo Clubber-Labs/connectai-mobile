@@ -13,22 +13,51 @@ type Props = {
 
 const BALLOON_SIZE = 48
 const BALLOON_SIZE_SELECTED = 58
-const TAIL_SIZE = 10
+const BORDER_WIDTH = 3
 const DIMMED_OPACITY = 0.5
+const VIOLET = '#8b5cf6'
 
-// Balão do spot: foto de perfil do criador com borda violeta + badge de
-// membros. O rabinho embaixo diferencia visualmente dos pins de evento
-// (borda branca, capa do banner).
+// Proporções do balão de mensagem (estilo 💬): caixa arredondada com rabinho
+// apontando pra baixo-esquerda. Derivadas do tamanho pra escalar na seleção.
+const TAIL_WIDTH_RATIO = 0.28
+const TAIL_HEIGHT_RATIO = 0.22
+const TAIL_LEFT_RATIO = 0.16
+const RADIUS_RATIO = 0.34
+
+// Balão de mensagem com a foto de perfil do criador dentro + badge de
+// membros. O formato de "speech bubble" diferencia dos pins de evento
+// (círculo com borda branca e capa do banner).
 function SpotBalloon({ spot, size }: { spot: Spot; size: number }) {
+  const tailWidth = size * TAIL_WIDTH_RATIO
+  const tailHeight = size * TAIL_HEIGHT_RATIO
+  const tailLeft = size * TAIL_LEFT_RATIO
+
   return (
-    <View style={{ alignItems: 'center' }}>
+    <View style={{ width: size, height: size + tailHeight }}>
+      {/* Rabinho: triângulo violeta inclinado pra esquerda, encostado por
+          baixo da caixa (skewX dá o caimento do 💬). */}
+      <View
+        style={{
+          position: 'absolute',
+          left: tailLeft,
+          top: size - BORDER_WIDTH,
+          width: 0,
+          height: 0,
+          borderLeftWidth: 0,
+          borderRightWidth: tailWidth,
+          borderTopWidth: tailHeight,
+          borderRightColor: 'transparent',
+          borderTopColor: VIOLET,
+          transform: [{ skewX: '-18deg' }],
+        }}
+      />
       <View
         style={{
           width: size,
           height: size,
-          borderRadius: size / 2,
-          borderWidth: 3,
-          borderColor: '#8b5cf6',
+          borderRadius: size * RADIUS_RATIO,
+          borderWidth: BORDER_WIDTH,
+          borderColor: VIOLET,
           backgroundColor: '#0a0a0a',
           alignItems: 'center',
           justifyContent: 'center',
@@ -37,7 +66,7 @@ function SpotBalloon({ spot, size }: { spot: Spot; size: number }) {
         <UserAvatar
           name={`${spot.creator.name} ${spot.creator.lastname}`}
           avatarUrl={spot.creator.avatarUrl}
-          size={size - 8}
+          size={size - BORDER_WIDTH * 2 - 4}
         />
         {spot.memberCount > 1 && (
           <View
@@ -50,19 +79,6 @@ function SpotBalloon({ spot, size }: { spot: Spot; size: number }) {
           </View>
         )}
       </View>
-      <View
-        style={{
-          width: 0,
-          height: 0,
-          borderLeftWidth: TAIL_SIZE / 2,
-          borderRightWidth: TAIL_SIZE / 2,
-          borderTopWidth: TAIL_SIZE,
-          borderLeftColor: 'transparent',
-          borderRightColor: 'transparent',
-          borderTopColor: '#8b5cf6',
-          marginTop: -1,
-        }}
-      />
     </View>
   )
 }
@@ -78,8 +94,9 @@ export function SpotMarkers({ spots, selectedId, onPress, dimmed }: Props) {
             key={spot.id}
             id={`spot-${spot.id}`}
             coordinate={[spot.longitude, spot.latitude]}
-            // Âncora na ponta do rabinho — o balão "aponta" pro lugar.
-            anchor={{ x: 0.5, y: 1 }}
+            // Âncora na ponta do rabinho (esquerda-baixo) — é ela que
+            // "aponta" pro lugar do rolê.
+            anchor={{ x: TAIL_LEFT_RATIO, y: 1 }}
             allowOverlap
           >
             <View style={{ opacity: dimmed ? DIMMED_OPACITY : 1 }}>
