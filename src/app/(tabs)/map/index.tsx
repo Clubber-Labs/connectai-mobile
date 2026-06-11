@@ -32,6 +32,11 @@ import { MapStatusBanner } from '@/features/map/components/MapStatusBanner'
 import { MapSearchBar } from '@/features/map/components/MapSearchBar'
 import { MapFiltersSheet } from '@/features/map/components/MapFiltersSheet'
 import { FloatingCreateButton } from '@/features/events/components/FloatingCreateButton'
+import { useViewportSpots } from '@/features/spots/hooks/useViewportSpots'
+import { SpotMarkers } from '@/features/spots/components/SpotMarkers'
+import { SpotPreviewCard } from '@/features/spots/components/SpotPreviewCard'
+import { GenerateSpotsButton } from '@/features/spots/components/GenerateSpotsButton'
+import type { Spot } from '@/features/spots/types'
 
 const COINCIDENT_FOCUS_ZOOM = 20
 
@@ -49,6 +54,7 @@ export default function MapScreen() {
   const showBanner = useBanner()
 
   const [selectedEvent, setSelectedEvent] = useState<FeedEvent | null>(null)
+  const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null)
   const [densityVisible, setDensityVisible] = useState(false)
 
   const shapeSourceRef = useRef<Mapbox.ShapeSource>(null)
@@ -56,6 +62,13 @@ export default function MapScreen() {
   const { events, eventsGeoJson, truncated, isLoading, error } = useMapEvents(
     bbox,
     filters,
+  )
+  // Balões de spots só no zoom de marcadores — de longe viraria nuvem de
+  // avatares; o fetch também só liga aí (bbox menor = resposta menor).
+  const { data: spots = [] } = useViewportSpots(
+    bbox,
+    { categories: filters.categories, friendsOnly: filters.friendsOnly },
+    showMarkers,
   )
   const { data: heatmapPoints = [] } = useHeatmap(bbox, filters, densityVisible)
 
@@ -66,8 +79,15 @@ export default function MapScreen() {
   // Abre o preview e aproxima — vale pra tap no pin e pra resultado de busca
   // (que pode estar fora do viewport; o flyTo dispara o refetch por bbox).
   function openEvent(event: FeedEvent) {
+    setSelectedSpot(null)
     setSelectedEvent(event)
     focusOnEvent([event.longitude, event.latitude])
+  }
+
+  function openSpot(spot: Spot) {
+    setSelectedEvent(null)
+    setSelectedSpot(spot)
+    focusOnEvent([spot.longitude, spot.latitude])
   }
 
   // Centraliza na posição ATUAL (live), com fallback pro fix inicial; sem coords,
@@ -128,6 +148,7 @@ export default function MapScreen() {
         onPress={() => {
           Keyboard.dismiss()
           setSelectedEvent(null)
+          setSelectedSpot(null)
         }}
         // onMapIdle dispara quando o mapa estabiliza (load inicial + fim de cada
         // movimento) — captura confiável do bbox. onCameraChanged reforça (e
@@ -172,6 +193,14 @@ export default function MapScreen() {
             dimmed={densityVisible}
           />
         )}
+        {showMarkers && (
+          <SpotMarkers
+            spots={spots}
+            selectedId={selectedSpot?.id}
+            onPress={openSpot}
+            dimmed={densityVisible}
+          />
+        )}
       </Mapbox.MapView>
 
       <View className="absolute top-3 left-3 right-3">
@@ -208,13 +237,26 @@ export default function MapScreen() {
         onToggleDensity={() => setDensityVisible(v => !v)}
       />
 
-      {!selectedEvent && <FloatingCreateButton />}
+      {!selectedEvent && !selectedSpot && (
+        <>
+          <FloatingCreateButton />
+          <GenerateSpotsButton />
+        </>
+      )}
 
       {selectedEvent && (
         <EventPreviewCard
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
           onSeeDetails={() => router.push(`/events/${selectedEvent.id}`)}
+        />
+      )}
+
+      {selectedSpot && (
+        <SpotPreviewCard
+          spot={selectedSpot}
+          onClose={() => setSelectedSpot(null)}
+          onSeeDetails={() => router.push(`/spots/${selectedSpot.id}`)}
         />
       )}
 
