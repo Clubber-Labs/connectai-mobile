@@ -33,9 +33,11 @@ import { MapSearchBar } from '@/features/map/components/MapSearchBar'
 import { MapFiltersSheet } from '@/features/map/components/MapFiltersSheet'
 import { FloatingCreateButton } from '@/features/events/components/FloatingCreateButton'
 import { useViewportSpots } from '@/features/spots/hooks/useViewportSpots'
+import { useSuggestSpots } from '@/features/spots/hooks/useSuggestSpots'
 import { SpotMarkers } from '@/features/spots/components/SpotMarkers'
 import { SpotPreviewCard } from '@/features/spots/components/SpotPreviewCard'
 import { GenerateSpotsButton } from '@/features/spots/components/GenerateSpotsButton'
+import { SpotSuggestionsPanel } from '@/features/spots/components/SpotSuggestionsPanel'
 import type { Spot } from '@/features/spots/types'
 
 const COINCIDENT_FOCUS_ZOOM = 20
@@ -56,6 +58,11 @@ export default function MapScreen() {
   const [selectedEvent, setSelectedEvent] = useState<FeedEvent | null>(null)
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null)
   const [densityVisible, setDensityVisible] = useState(false)
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+
+  // O fluxo de gerar vive aqui (não no painel) pra fechar/reabrir o painel
+  // sem perder as sugestões já geradas — reabrir não gasta outra geração.
+  const suggest = useSuggestSpots()
 
   const shapeSourceRef = useRef<Mapbox.ShapeSource>(null)
 
@@ -63,13 +70,13 @@ export default function MapScreen() {
     bbox,
     filters,
   )
-  // Balões de spots só no zoom de marcadores — de longe viraria nuvem de
-  // avatares; o fetch também só liga aí (bbox menor = resposta menor).
-  const { data: spots = [] } = useViewportSpots(
-    bbox,
-    { categories: filters.categories, friendsOnly: filters.friendsOnly },
-    showMarkers,
-  )
+  // Spots sempre visíveis, sem o gate de zoom dos pins de evento: o zoom
+  // padrão (USER_ZOOM) fica abaixo do threshold e esconderia os balões. O
+  // volume é baixo (máx. 5 ativos por usuário, vida de 24h) — não clusteriza.
+  const { data: spots = [] } = useViewportSpots(bbox, {
+    categories: filters.categories,
+    friendsOnly: filters.friendsOnly,
+  })
   const { data: heatmapPoints = [] } = useHeatmap(bbox, filters, densityVisible)
 
   useEffect(() => {
@@ -193,14 +200,12 @@ export default function MapScreen() {
             dimmed={densityVisible}
           />
         )}
-        {showMarkers && (
-          <SpotMarkers
-            spots={spots}
-            selectedId={selectedSpot?.id}
-            onPress={openSpot}
-            dimmed={densityVisible}
-          />
-        )}
+        <SpotMarkers
+          spots={spots}
+          selectedId={selectedSpot?.id}
+          onPress={openSpot}
+          dimmed={densityVisible}
+        />
       </Mapbox.MapView>
 
       <View className="absolute top-3 left-3 right-3">
@@ -237,11 +242,18 @@ export default function MapScreen() {
         onToggleDensity={() => setDensityVisible(v => !v)}
       />
 
-      {!selectedEvent && !selectedSpot && (
+      {!selectedEvent && !selectedSpot && !suggestionsOpen && (
         <>
           <FloatingCreateButton />
-          <GenerateSpotsButton />
+          <GenerateSpotsButton onPress={() => setSuggestionsOpen(true)} />
         </>
+      )}
+
+      {suggestionsOpen && (
+        <SpotSuggestionsPanel
+          suggest={suggest}
+          onClose={() => setSuggestionsOpen(false)}
+        />
       )}
 
       {selectedEvent && (

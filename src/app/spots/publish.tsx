@@ -47,8 +47,9 @@ export default function PublishSpotScreen() {
   const create = useCreateSpot()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  // Sem candidato válido não há o que publicar (deep link malformado).
-  if (!candidate) return <Redirect href="/spots/suggestions" />
+  // Sem candidato válido não há o que publicar (deep link malformado) —
+  // volta pro mapa, onde fica o painel de sugestões.
+  if (!candidate) return <Redirect href="/(tabs)/map" />
 
   function handleSubmit(data: CreateSpotInput) {
     setSubmitError(null)

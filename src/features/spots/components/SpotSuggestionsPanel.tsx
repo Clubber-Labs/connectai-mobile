@@ -4,10 +4,10 @@ import { useRouter } from 'expo-router'
 import { Button } from '@/shared/components/Button'
 import { FormError } from '@/shared/components/FormError'
 import { isValidationError } from '@/shared/lib/apiError'
-import { useSuggestSpots } from '@/features/spots/hooks/useSuggestSpots'
-import { suggestionsErrorMessage } from '@/features/spots/utils/suggestionsError'
-import { SpotSuggestionCard } from '@/features/spots/components/SpotSuggestionCard'
-import type { SpotSuggestion } from '@/features/spots/types'
+import type { useSuggestSpots } from '../hooks/useSuggestSpots'
+import { suggestionsErrorMessage } from '../utils/suggestionsError'
+import { SpotSuggestionCard } from './SpotSuggestionCard'
+import type { SpotSuggestion } from '../types'
 
 const LOCATION_ISSUE_MESSAGES = {
   denied:
@@ -15,7 +15,16 @@ const LOCATION_ISSUE_MESSAGES = {
   error: 'Não foi possível obter sua localização. Tente novamente.',
 } as const
 
-export default function SpotSuggestionsScreen() {
+type Props = {
+  // O fluxo vive na tela do mapa — fechar o painel não descarta as sugestões
+  // já geradas (nem gasta outra geração da quota ao reabrir).
+  suggest: ReturnType<typeof useSuggestSpots>
+  onClose: () => void
+}
+
+// Painel da metade de baixo da tab do mapa: gera e lista as sugestões da IA
+// enquanto os balões dos spots continuam visíveis na metade de cima.
+export function SpotSuggestionsPanel({ suggest, onClose }: Props) {
   const router = useRouter()
   const {
     hasLocationConsent,
@@ -25,7 +34,7 @@ export default function SpotSuggestionsScreen() {
     generateError,
     locationIssue,
     handleGenerate,
-  } = useSuggestSpots()
+  } = suggest
 
   function choose(suggestion: SpotSuggestion) {
     // Candidatos são efêmeros (não persistem no backend) — seguem por
@@ -39,14 +48,11 @@ export default function SpotSuggestionsScreen() {
   const hasResult = suggestions.length > 0
 
   const header = (
-    <View className="gap-4 pb-5">
-      <View className="gap-1">
-        <Text className="text-white text-2xl font-bold">Bora pra onde?</Text>
-        <Text className="text-zinc-400 text-sm">
-          A IA sugere rolês em lugares perto de você, com base nas suas
-          preferências. Escolha um, publique e chame a galera pro grupo.
-        </Text>
-      </View>
+    <View className="gap-3 pb-4">
+      <Text className="text-zinc-400 text-sm">
+        A IA sugere rolês em lugares perto de você, com base nas suas
+        preferências. Escolha um, publique e chame a galera pro grupo.
+      </Text>
 
       {!hasLocationConsent ? (
         <View className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 gap-3">
@@ -122,12 +128,29 @@ export default function SpotSuggestionsScreen() {
   )
 
   return (
-    <View className="flex-1 bg-black">
+    <View className="absolute bottom-0 left-0 right-0 h-[55%] bg-zinc-950 rounded-t-3xl border-t border-zinc-800">
+      <View className="items-center pt-2 pb-1">
+        <View className="w-10 h-1 bg-zinc-700 rounded-full" />
+      </View>
+      <View className="flex-row items-center justify-between px-5 pb-2">
+        <Text className="text-white text-lg font-bold">Bora pra onde?</Text>
+        <Pressable
+          onPress={onClose}
+          className="w-8 h-8 items-center justify-center"
+          accessibilityLabel="Fechar sugestões"
+        >
+          <Ionicons name="close" size={22} color="#a1a1aa" />
+        </Pressable>
+      </View>
       <FlatList
         // Ordem ranqueada pela IA — renderiza como veio, sem reordenar.
         data={suggestions}
         keyExtractor={item => item.placeId}
-        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 12 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: 24,
+          gap: 12,
+        }}
         ListHeaderComponent={header}
         renderItem={({ item }) => (
           <SpotSuggestionCard suggestion={item} onChoose={() => choose(item)} />

@@ -1,15 +1,16 @@
 import { Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useRouter } from 'expo-router'
 
-// FAB "gerar rolê" do mapa — leva pra tela de sugestões da IA. Fica acima do
-// FloatingCreateButton (criar evento), mesmo estilo.
-export function GenerateSpotsButton() {
-  const router = useRouter()
+type Props = {
+  onPress: () => void
+}
 
+// FAB "gerar rolê" do mapa — abre o painel de sugestões da IA na metade de
+// baixo da tela. Fica acima do FloatingCreateButton (criar evento).
+export function GenerateSpotsButton({ onPress }: Props) {
   return (
     <Pressable
-      onPress={() => router.push('/spots/suggestions')}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel="Gerar sugestões de rolê"
       className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-zinc-900 border border-violet-600 items-center justify-center shadow-lg"
