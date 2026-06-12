@@ -21,10 +21,16 @@ import { useNavigateToProfile } from '@/features/users/hooks/useNavigateToProfil
 import { useSpot } from '@/features/spots/hooks/useSpot'
 import { useJoinSpot } from '@/features/spots/hooks/useJoinSpot'
 import { useCancelSpot } from '@/features/spots/hooks/useCancelSpot'
+import { useRenewSpot } from '@/features/spots/hooks/useRenewSpot'
 import { formatSpotWindow } from '@/features/spots/utils/spotWindow'
 
 export default function SpotDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  // renew=1 chega pelo deep-link da notificação SPOT_RENEWAL ("seu rolê está
+  // acabando") — destaca o CTA de renovar.
+  const { id, renew: renewParam } = useLocalSearchParams<{
+    id: string
+    renew?: string
+  }>()
   const router = useRouter()
   const myId = useAuthStore(s => s.userId)
   const confirm = useConfirm()
@@ -34,7 +40,10 @@ export default function SpotDetailScreen() {
   const { data: spot, isLoading, error } = useSpot(id)
   const join = useJoinSpot(id)
   const cancel = useCancelSpot(id)
+  const renew = useRenewSpot(id)
   const [joinError, setJoinError] = useState<string | null>(null)
+  const [renewError, setRenewError] = useState<string | null>(null)
+  const highlightRenew = renewParam === '1'
 
   if (isLoading) {
     return (
@@ -81,6 +90,15 @@ export default function SpotDetailScreen() {
       // 403 (só amigos), 404 (sumiu/bloqueio) e 409 (cancelado/encerrado)
       // são decisão do backend — refletimos a mensagem, sem burlar.
       onError: err => setJoinError(getApiError(err).message),
+    })
+  }
+
+  function handleRenew() {
+    setRenewError(null)
+    renew.mutate(undefined, {
+      // 409 (cancelado/encerrado) e 429 (quota diária, mesma do gerar) —
+      // decisão do backend, refletimos a mensagem.
+      onError: err => setRenewError(getApiError(err).message),
     })
   }
 
@@ -178,18 +196,22 @@ export default function SpotDetailScreen() {
 
       {isCreator && !isCanceled && (
         <View className="gap-2 border-t border-zinc-900 pt-4">
+          {highlightRenew && (
+            <Text className="text-violet-300 text-sm text-center">
+              Seu rolê está acabando — renove para continuar no mapa.
+            </Text>
+          )}
+          <Button
+            label="Renovar por +24h"
+            variant={highlightRenew ? 'primary' : 'secondary'}
+            onPress={handleRenew}
+            loading={renew.isPending}
+          />
+          <FormError message={renewError} />
           <Button
             label="Editar spot"
             variant="secondary"
             onPress={() => router.push(`/spots/${spot.id}/edit`)}
-          />
-          {/* Renovar +24h: endpoint chega no PR de lifecycle do backend —
-              lugar reservado na UI, sem chamada por enquanto. */}
-          <Button
-            label="Renovar por +24h (em breve)"
-            variant="secondary"
-            onPress={() => {}}
-            disabled
           />
           <Button
             label="Cancelar spot"

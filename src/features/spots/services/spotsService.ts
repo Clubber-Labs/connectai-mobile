@@ -54,6 +54,11 @@ export const spotsService = {
   update: (id: string, data: UpdateSpotPayload): Promise<Spot> =>
     api.patch(`/spots/${id}`, data).then(r => r.data),
 
+  // Empurra o endsAt em +24h. Consome 1 da MESMA quota diária do gerar
+  // (429 ao estourar) — o caller trava o botão enquanto pendente.
+  renew: (id: string): Promise<Spot> =>
+    api.post(`/spots/${id}/renew`).then(r => r.data),
+
   cancel: (id: string): Promise<void> =>
     api.delete(`/spots/${id}`).then(() => undefined),
 }

@@ -5,11 +5,15 @@ import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { getApiError } from '@/shared/lib/apiError'
 import { useCreateSpot } from '@/features/spots/hooks/useCreateSpot'
 import { SpotForm } from '@/features/spots/components/SpotForm'
-import type { CreateSpotInput } from '@/features/spots/schemas/createSpotSchema'
+import {
+  SPOT_MAX_WINDOW_MS,
+  type CreateSpotInput,
+} from '@/features/spots/schemas/createSpotSchema'
 import type { SpotSuggestion } from '@/features/spots/types'
 
-// Duração default da janela — ajustável nos pickers (teto de 24h no schema).
-const DEFAULT_DURATION_MS = 3 * 60 * 60 * 1000
+// O rolê vive 24h por vez (renovável) — a janela default é o ciclo inteiro,
+// ajustável nos pickers (teto de agora+24h no schema e no picker).
+const DEFAULT_DURATION_MS = SPOT_MAX_WINDOW_MS
 
 function parseCandidate(raw: string | undefined): SpotSuggestion | null {
   if (!raw) return null

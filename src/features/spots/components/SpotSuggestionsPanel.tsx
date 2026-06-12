@@ -60,7 +60,7 @@ export function SpotSuggestionsPanel({ suggest, onChoose, onClose }: Props) {
             </Text>
           </View>
           <Text className="text-zinc-400 text-sm">
-            Para sugerir rolês perto de você, ative o consentimento de
+            Para sugerir e mostrar rolês perto de você, ative o consentimento de
             localização precisa. Ela é usada só neste momento — nada de
             rastreamento em segundo plano.
           </Text>
