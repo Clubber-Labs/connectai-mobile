@@ -68,16 +68,6 @@ export default function ProfileScreen() {
     return <ProfileEmpty message="Não foi possível carregar o perfil." />
 
   const drawerItems: DrawerItem[] = [
-    // Área de moderação: só para ADMIN (role vem de /users/me).
-    ...(profile.role === 'ADMIN'
-      ? [
-          {
-            label: 'Painel de moderação',
-            icon: 'shield-outline' as const,
-            onPress: () => router.push('/admin/reports'),
-          },
-        ]
-      : []),
     ...(profile.isPrivate
       ? [
           {
