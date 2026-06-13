@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   View,
   Text,
@@ -10,41 +11,54 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import type { EventDetail } from '@/shared/types'
 import { useEvent } from '@/features/events/hooks/useEvents'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { useMyProfile } from '@/features/users/hooks/useProfile'
 import { isForbiddenError } from '@/shared/lib/apiError'
 import { EventHeader } from '@/features/events/components/EventHeader'
 import { EventMap } from '@/features/events/components/EventMap'
 import { EventAttendanceButton } from '@/features/events/components/EventAttendanceButton'
 import { EventPostsFeed } from '@/features/events/components/EventPostsFeed'
 import { EventActionsButton } from '@/features/events/components/EventActionsButton'
+import { EventShareButton } from '@/features/events/components/EventShareButton'
+import { EventAnalyticsEntryCard } from '@/features/event-analytics/components/EventAnalyticsEntryCard'
+import { useTrackEventView } from '@/features/event-analytics/hooks/useTrackEventView'
+import { useTrackEventShare } from '@/features/event-analytics/hooks/useTrackEventShare'
 import { ReportButton } from '@/features/reports/components/ReportButton'
 import { colors } from '@/shared/theme'
 
 type HeaderProps = {
   event: EventDetail
   isAuthor: boolean
+  isPremium: boolean
+  onShared: () => void
 }
 
-function DetailHeader({ event, isAuthor }: HeaderProps) {
+function DetailHeader({ event, isAuthor, isPremium, onShared }: HeaderProps) {
   const allowAttendance = event.status !== 'PAST' && event.status !== 'CANCELED'
 
   return (
     <View>
       <View className="relative">
         <EventHeader event={event} />
-        {isAuthor ? (
-          <View className="absolute top-3 right-3">
+        <View className="absolute top-3 right-3 flex-row items-center gap-2">
+          <EventShareButton
+            eventId={event.id}
+            title={event.title}
+            onShared={onShared}
+          />
+          {isAuthor ? (
             <EventActionsButton eventId={event.id} isPublic={event.isPublic} />
-          </View>
-        ) : (
-          <View className="absolute top-3 right-3">
+          ) : (
             <ReportButton
               target={{ type: 'event', id: event.id }}
               variant="overlay"
             />
-          </View>
-        )}
+          )}
+        </View>
       </View>
       <View className="pt-4 pb-5 gap-5">
+        {isAuthor && (
+          <EventAnalyticsEntryCard eventId={event.id} isPremium={isPremium} />
+        )}
         {allowAttendance && (
           <EventAttendanceButton
             eventId={event.id}
@@ -63,6 +77,15 @@ export default function EventDetailScreen() {
   const router = useRouter()
   const userId = useAuthStore(state => state.userId)
   const { data: event, isLoading, isError, error } = useEvent(id)
+  const { data: profile } = useMyProfile()
+  const { mutate: trackView } = useTrackEventView(id)
+  const { mutate: trackShare } = useTrackEventShare(id)
+
+  // Registra a visualização ao abrir o detalhe. mutate é estável (React Query),
+  // então o efeito dispara uma vez quando o id da rota está disponível.
+  useEffect(() => {
+    if (id) trackView()
+  }, [id, trackView])
 
   if (isLoading) {
     return (
@@ -110,7 +133,12 @@ export default function EventDetailScreen() {
         eventId={event.id}
         myAttendance={event.userAttendance}
         ListHeaderComponent={
-          <DetailHeader event={event} isAuthor={event.authorId === userId} />
+          <DetailHeader
+            event={event}
+            isAuthor={event.authorId === userId}
+            isPremium={!!profile?.isPremium}
+            onShared={() => trackShare()}
+          />
         }
       />
     </KeyboardAvoidingView>
