@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -81,11 +81,17 @@ export default function EventDetailScreen() {
   const { mutate: trackView } = useTrackEventView(id)
   const { mutate: trackShare } = useTrackEventShare(id)
 
-  // Registra a visualização ao abrir o detalhe. mutate é estável (React Query),
-  // então o efeito dispara uma vez quando o id da rota está disponível.
+  // Registra a visualização só depois que o evento carrega com sucesso (não
+  // conta 403/404/loading). Guard por id: o cache de detalhe é mutado por
+  // likes/presença otimistas, então sem ele o efeito re-dispararia a cada
+  // interação, inflando as visualizações.
+  const trackedEventId = useRef<string | null>(null)
   useEffect(() => {
-    if (id) trackView()
-  }, [id, trackView])
+    if (event && trackedEventId.current !== event.id) {
+      trackedEventId.current = event.id
+      trackView()
+    }
+  }, [event, trackView])
 
   if (isLoading) {
     return (
