@@ -1,33 +1,24 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { DatePicker } from '@/shared/components/DatePicker'
 import { Button } from '@/shared/components/Button'
 import { FormError } from '@/shared/components/FormError'
 import { useConfirm } from '@/shared/lib/confirm'
 import { getApiError } from '@/shared/lib/apiError'
 import { colors } from '@/shared/theme'
+import { formatDateTime } from '@/shared/utils/dateFormat'
 import { usePromoteEvent } from '../hooks/usePromoteEvent'
 import { useCancelPromotion } from '../hooks/useCancelPromotion'
-import { featuredKeys } from '../hooks/cacheKeys'
+import { useFeaturedEvent } from '../hooks/useFeaturedEvent'
 import { SponsoredBadge } from './SponsoredBadge'
-import type { FeaturedEvent } from '../types'
 
 type Props = {
   eventId: string
   eventDate: string // ISO datetime — upper bound for endsAt picker
   isPremium: boolean
   isFeatured: boolean
-}
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso)
-  return `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`
 }
 
 export function PromoteEventCard({
@@ -38,50 +29,29 @@ export function PromoteEventCard({
 }: Props) {
   const router = useRouter()
   const confirm = useConfirm()
-  const queryClient = useQueryClient()
 
-  // Subscribes reactively to cache set by usePromoteEvent.onSuccess and
-  // cleared by useCancelPromotion.onSuccess. enabled:false means no network
-  // fetch; the queryFn is never called.
-  const { data: cachedFeature } = useQuery<FeaturedEvent | undefined>({
-    queryKey: featuredKeys.active(eventId),
-    queryFn: () => undefined,
-    enabled: false,
-    staleTime: Infinity,
-  })
-
+  const featuredEvent = useFeaturedEvent(eventId)
   const promote = usePromoteEvent(eventId)
   const cancel = useCancelPromotion(eventId)
 
   const [startsAt, setStartsAt] = useState<Date | undefined>()
   const [endsAt, setEndsAt] = useState<Date | undefined>()
 
-  // Purge expired cache entry so the form re-appears after the period ends.
-  useEffect(() => {
-    if (cachedFeature && new Date(cachedFeature.endsAt) < new Date()) {
-      queryClient.setQueryData(featuredKeys.active(eventId), undefined)
-    }
-  }, [cachedFeature, eventId, queryClient])
-
-  const validCachedFeature =
-    cachedFeature && new Date(cachedFeature.endsAt) >= new Date()
-      ? cachedFeature
-      : undefined
-
   function handlePromote() {
     if (!startsAt || !endsAt) return
+    if (startsAt >= endsAt) return
     promote.mutate({ startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() })
   }
 
   async function handleCancel() {
-    if (!validCachedFeature) return
+    if (featuredEvent.kind === 'none') return
     const ok = await confirm({
       title: 'Cancelar promoção',
       message: 'Tem certeza que deseja cancelar o destaque deste evento?',
       confirmLabel: 'Cancelar promoção',
       destructive: true,
     })
-    if (ok) cancel.mutate(validCachedFeature.id)
+    if (ok) cancel.mutate(featuredEvent.feature.id)
   }
 
   // Cases 2 and 3 are checked BEFORE the premium gate: DELETE /featured/:id
@@ -89,15 +59,15 @@ export function PromoteEventCard({
   // premium must still see the promotion state and be able to cancel it.
 
   // Case 2: Active or scheduled feature in cache — show dates + cancel
-  if (validCachedFeature) {
-    const isActive = new Date(validCachedFeature.startsAt) <= new Date()
+  if (featuredEvent.kind !== 'none') {
+    const { feature } = featuredEvent
     return (
       <View className="bg-surface-sunken border border-brand-emphasis/30 rounded-xl px-4 py-4 gap-3">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-2">
             <Ionicons name="star" size={18} color={colors.brandText} />
             <Text className="text-content font-semibold text-base">
-              {isActive ? 'Em promoção' : 'Promoção agendada'}
+              {featuredEvent.kind === 'active' ? 'Em promoção' : 'Promoção agendada'}
             </Text>
           </View>
           <SponsoredBadge />
@@ -105,15 +75,11 @@ export function PromoteEventCard({
         <View className="gap-0.5">
           <Text className="text-content-muted text-sm">
             De{' '}
-            <Text className="text-content">
-              {formatDateTime(validCachedFeature.startsAt)}
-            </Text>
+            <Text className="text-content">{formatDateTime(feature.startsAt)}</Text>
           </Text>
           <Text className="text-content-muted text-sm">
             Até{' '}
-            <Text className="text-content">
-              {formatDateTime(validCachedFeature.endsAt)}
-            </Text>
+            <Text className="text-content">{formatDateTime(feature.endsAt)}</Text>
           </Text>
         </View>
         <Button
@@ -235,7 +201,7 @@ export function PromoteEventCard({
         label="Promover evento"
         onPress={handlePromote}
         loading={promote.isPending}
-        disabled={!startsAt || !endsAt}
+        disabled={!startsAt || !endsAt || startsAt >= endsAt}
       />
     </View>
   )
