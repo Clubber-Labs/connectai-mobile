@@ -9,8 +9,11 @@ import type {
 export const authService = {
   register: (data: RegisterPayload) =>
     api.post('/users', data).then(r => r.data),
+  // skipAuthHandler: login é pré-sessão — um 401 aqui é "credenciais inválidas"
+  // (tratado inline no LoginForm), nunca "sessão expirou". Sem isso, o 401 dispara
+  // o handler global de sessão expirada (endSession) e mostra o banner indevido.
   login: (data: LoginInput): Promise<LoginSessionResponse> =>
-    api.post('/auth/login', data).then(r => r.data),
+    api.post('/auth/login', data, { skipAuthHandler: true }).then(r => r.data),
   me: () => api.get('/users/me').then(r => r.data),
   socialLogin: (data: SocialLoginPayload): Promise<SocialLoginResponse> =>
     api.post('/auth/social', data).then(r => r.data),
