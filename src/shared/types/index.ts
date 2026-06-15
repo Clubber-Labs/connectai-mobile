@@ -225,6 +225,9 @@ export type UserProfile = {
   // Raio de interesse das notificações de proximidade (km). Presente só em
   // /users/me e só em backends que já expõem o campo no select privado.
   notifyRadiusKm?: number
+  // Raio salvo da busca de sugestões de spots (km). Presente em /users/me;
+  // override por geração vai no body de POST /spots/suggestions.
+  spotRadiusKm?: number
   // Ciclo de vida da conta — presentes só em /users/me e no user de /auth/*
   // (mesma razão de role?). Em /users/:id são ausentes. Ramificar só nos valores
   // inativos explícitos; undefined = desconhecido/skip.
