@@ -8,8 +8,12 @@ import {
 } from '@/features/users/hooks/useProfile'
 import { useNotificationConsent } from '@/features/notifications/hooks/useNotificationConsent'
 import { useNotificationPrefs } from '@/features/notifications/hooks/useNotificationPrefs'
-import { RadiusSlider } from '@/features/notifications/components/RadiusSlider'
+import {
+  NOTIFY_RADIUS_MIN_KM,
+  NOTIFY_RADIUS_MAX_KM,
+} from '@/features/notifications/store/notificationPrefsStore'
 import { OsPermissionWarning } from '@/features/notifications/components/OsPermissionWarning'
+import { RadiusSlider } from '@/shared/components/RadiusSlider'
 import { CategoryMultiSelect } from '@/shared/components/CategoryMultiSelect'
 import { SettingsRow } from '@/shared/components/SettingsRow'
 
@@ -80,6 +84,9 @@ export default function NotificationSettingsScreen() {
 
       <View className="mx-4 mt-4 bg-surface-sunken border border-line rounded-xl px-4 py-4">
         <RadiusSlider
+          label="Raio de aviso"
+          min={NOTIFY_RADIUS_MIN_KM}
+          max={NOTIFY_RADIUS_MAX_KM}
           value={notifyRadiusKm}
           onCommit={km => void saveRadius(km)}
           disabled={!locationConsent}

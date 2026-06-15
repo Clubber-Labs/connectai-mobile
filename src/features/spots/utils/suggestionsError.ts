@@ -2,10 +2,13 @@ import { isAxiosError } from 'axios'
 
 // Fallbacks por status quando o backend não manda {message}. A semântica vem
 // do contrato: 400 = sem preferências de rolê (ou sem lugar correspondente),
-// 429 = quota diária, 503 = busca de locais fora do ar.
+// 401 = sessão (o interceptor já tenta refresh/desloga; isto cobre o transitório),
+// 429 = quota diária, 502/503 = busca de locais fora do ar.
 const FALLBACKS: Record<number, string> = {
   400: 'Configure suas preferências de rolê no perfil para receber sugestões.',
+  401: 'Sua sessão expirou. Entre novamente para gerar sugestões.',
   429: 'Você atingiu o limite diário de sugestões. Tente de novo amanhã.',
+  502: 'A busca de lugares está indisponível agora. Tente em instantes.',
   503: 'A busca de lugares está indisponível agora. Tente em instantes.',
 }
 

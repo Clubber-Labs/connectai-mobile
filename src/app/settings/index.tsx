@@ -29,6 +29,12 @@ export default function SettingsScreen() {
           onPress={() => router.push('/settings/notifications')}
         />
         <SettingsRow
+          label="Sugestões de rolês"
+          description="Raio da busca de spots no mapa"
+          icon="sparkles-outline"
+          onPress={() => router.push('/settings/spots')}
+        />
+        <SettingsRow
           label="Privacidade"
           description="Consentimentos e dados (LGPD)"
           icon="shield-checkmark-outline"

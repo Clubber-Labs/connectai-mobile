@@ -2,17 +2,28 @@ import { api } from '@/shared/lib/api'
 import type { Bbox } from '@/features/map/services/mapService'
 import type { CreateSpotPayload } from '../schemas/createSpotSchema'
 import type { UpdateSpotPayload } from '../schemas/editSpotSchema'
-import type { Spot, SpotListFilters, SpotSuggestionsResponse } from '../types'
+import type {
+  Spot,
+  SpotListFilters,
+  SpotSuggestionsParams,
+  SpotSuggestionsResponse,
+} from '../types'
 
 type ListParams = Bbox & SpotListFilters & { limit?: number }
 
 export const spotsService = {
   // Consome quota diária — o caller deve travar o botão enquanto pendente.
-  generateSuggestions: (coords: {
-    latitude: number
-    longitude: number
-  }): Promise<SpotSuggestionsResponse> =>
-    api.post('/spots/suggestions', coords).then(r => r.data),
+  generateSuggestions: (
+    params: SpotSuggestionsParams,
+  ): Promise<SpotSuggestionsResponse> =>
+    api.post('/spots/suggestions', params).then(r => r.data),
+
+  // Salva o raio padrão da busca de spots (inteiro, min 2, ≤ teto). Mesmo modelo
+  // do PATCH de notification-prefs; 400 "Raio máximo permitido: Nkm" se exceder.
+  updateSpotPrefs: (
+    spotRadiusKm: number,
+  ): Promise<{ id: string; spotRadiusKm: number }> =>
+    api.patch('/users/me/spot-prefs', { spotRadiusKm }).then(r => r.data),
 
   create: (data: CreateSpotPayload): Promise<Spot> =>
     api.post('/spots', data).then(r => r.data),
