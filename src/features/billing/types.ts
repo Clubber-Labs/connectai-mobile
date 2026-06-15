@@ -18,6 +18,17 @@ export type Subscription = {
   startedAt: string
 }
 
+// Resposta do GET /billing/plan — preço do Premium lido do Stripe + se este
+// usuário ainda tem direito ao trial. `amount` em centavos; `currency` ISO.
+export type Plan = {
+  amount: number
+  currency: string
+  interval: 'month' | 'year'
+  intervalCount: number
+  trialDays: number
+  trialEligible: boolean
+}
+
 // Resposta do POST /billing/subscribe (fluxo PaymentSheet).
 // intentType decide qual confirmação a sheet faz: 'payment' cobra a 1ª
 // invoice agora; 'setup' só coleta o cartão (assinatura em trial).

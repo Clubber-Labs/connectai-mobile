@@ -11,7 +11,9 @@ import { useRouter } from 'expo-router'
 import { useMyProfile } from '@/features/users/hooks/useProfile'
 import { useSubscribePremium } from '@/features/billing/hooks/useSubscribePremium'
 import { useSubscription } from '@/features/billing/hooks/useSubscription'
+import { usePlan } from '@/features/billing/hooks/usePlan'
 import { PremiumBenefits } from '@/features/billing/components/PremiumBenefits'
+import { PlanPriceCard } from '@/features/billing/components/PlanPriceCard'
 import { Button } from '@/shared/components/Button'
 import { getApiError } from '@/shared/lib/apiError'
 import { colors } from '@/shared/theme'
@@ -27,6 +29,7 @@ const TERMINAL_STATUSES = ['CANCELED', 'INCOMPLETE_EXPIRED', 'UNPAID']
 export default function UpgradeScreen() {
   const router = useRouter()
   const { data: profile } = useMyProfile()
+  const { data: plan, isLoading: planLoading } = usePlan()
   const subscribe = useSubscribePremium()
 
   // Pós-pagamento: a ativação chega via webhook no backend. Polla a
@@ -69,6 +72,11 @@ export default function UpgradeScreen() {
       setStalled(true)
     }
   }, [activating, subscription])
+
+  const ctaLabel =
+    plan?.trialEligible && plan.trialDays > 0
+      ? `Começar ${plan.trialDays} dias grátis`
+      : 'Assinar Premium'
 
   function handleSubscribe() {
     subscribe.mutate(undefined, {
@@ -133,7 +141,7 @@ export default function UpgradeScreen() {
         </Pressable>
       </View>
 
-      <View className="items-center mb-8">
+      <View className="items-center mb-7">
         {/* Badge com camadas concêntricas pra dar profundidade/brilho ao
             ícone (NativeWind não tem gradiente nativo — halo via opacidades). */}
         <View className="w-28 h-28 rounded-full bg-brand/10 items-center justify-center mb-5">
@@ -151,22 +159,30 @@ export default function UpgradeScreen() {
             </Text>
           </View>
         </View>
-        <Text className="text-content-muted text-sm mt-2 text-center">
-          Mais visibilidade para você e seus eventos.
+        <Text className="text-content-secondary text-base mt-3 text-center leading-6 px-2">
+          Tire seus eventos do anonimato. Mais destaque, mais alcance e os dados
+          pra crescer de verdade.
         </Text>
       </View>
 
-      <PremiumBenefits />
+      <PlanPriceCard plan={plan} isLoading={planLoading} />
 
-      <View className="mt-8 gap-3">
+      <View className="mt-8">
+        <Text className="text-content-tertiary text-xs font-semibold uppercase tracking-wide mb-4">
+          Tudo que você ganha
+        </Text>
+        <PremiumBenefits />
+      </View>
+
+      <View className="mt-9 gap-3">
         <Button
-          label="Assinar Premium"
+          label={ctaLabel}
           onPress={handleSubscribe}
           loading={subscribe.isPending}
         />
-        <Text className="text-content-subtle text-xs text-center">
-          Novos assinantes ganham 7 dias grátis. Assinatura mensal, cancele
-          quando quiser — o acesso continua até o fim do período pago.
+        <Text className="text-content-subtle text-xs text-center leading-5">
+          Cancele quando quiser — o acesso continua até o fim do período pago.
+          Renovação automática.
         </Text>
         {subscribe.isError && (
           <Text className="text-danger text-sm text-center">

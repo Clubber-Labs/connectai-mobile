@@ -1,8 +1,12 @@
 import { api } from '@/shared/lib/api'
 import { isNotFoundError } from '@/shared/lib/apiError'
-import type { SubscribeIntent, Subscription } from '../types'
+import type { Plan, SubscribeIntent, Subscription } from '../types'
 
 export const billingService = {
+  // Preço do Premium lido do Stripe (fonte da verdade) + elegibilidade de
+  // trial deste usuário. Alimenta a tela de upgrade.
+  getPlan: (): Promise<Plan> => api.get('/billing/plan').then(r => r.data),
+
   // Cria a assinatura no backend e devolve os secrets que a PaymentSheet
   // precisa pra confirmar o pagamento (ou coletar o cartão, no trial).
   subscribe: (): Promise<SubscribeIntent> =>

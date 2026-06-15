@@ -23,7 +23,7 @@ export function SubscriptionCard({ subscription }: Props) {
   const isPastDue = subscription.status === 'PAST_DUE'
 
   return (
-    <View className="bg-surface rounded-2xl p-5 gap-4">
+    <View className="bg-surface border border-line rounded-2xl p-5 gap-4">
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           <Ionicons name="diamond-outline" size={20} color={colors.brandText} />

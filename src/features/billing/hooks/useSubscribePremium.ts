@@ -19,6 +19,7 @@ const SHEET_APPEARANCE = {
     placeholderText: colors.contentSubtle, // zinc-500
     icon: colors.contentMuted,
   },
+  shapes: { borderRadius: 12 }, // rounded-xl do app
 }
 
 export type SubscribeOutcome = { kind: 'completed' } | { kind: 'dismissed' }

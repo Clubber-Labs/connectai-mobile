@@ -135,8 +135,15 @@ export default function RootLayout() {
   // nessa rota (events/[id], sem subrotas como edit/invites).
   const isEventDetail =
     segments[0] === 'events' && segments[1] === '[id]' && segments.length === 2
+  // Telas de billing (upgrade/manage) têm header próprio (fechar/voltar) —
+  // o header global em cima seria redundante.
+  const isBilling = segments[0] === 'billing'
   const showHeader =
-    isAuthenticated && !profileIncomplete && !onConsentFlow && !isEventDetail
+    isAuthenticated &&
+    !profileIncomplete &&
+    !onConsentFlow &&
+    !isEventDetail &&
+    !isBilling
   const chatActive = isAuthenticated && !profileIncomplete && !!userId
 
   // Publishable key é pública por natureza (pk_) — sem ela a PaymentSheet
