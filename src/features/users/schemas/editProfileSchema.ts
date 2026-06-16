@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MIN_PREFERRED_CATEGORIES } from '@/shared/utils/rolePreferences'
 
 const NAME_REGEX = /^[a-zA-ZÀ-ÿ\s]+$/
 
@@ -25,7 +26,10 @@ export const editProfileSchema = z.object({
   bio: z.string().max(255, 'Máximo 255 caracteres'),
   isPrivate: z.boolean(),
   birthdate: z.date().optional(),
-  preferredCategories: z.array(z.string()).max(10, 'No máximo 10 categorias'),
+  preferredCategories: z
+    .array(z.string())
+    .min(MIN_PREFERRED_CATEGORIES, 'Escolha ao menos 2 categorias de rolê')
+    .max(10, 'No máximo 10 categorias'),
   preferredSubcategories: z
     .array(z.string())
     .max(30, 'No máximo 30 interesses'),

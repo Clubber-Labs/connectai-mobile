@@ -24,11 +24,10 @@ export function StepInterests({ control, errors }: Props) {
       <View className="gap-5">
         <View className="gap-2">
           <Text className="text-sm font-medium text-content-tertiary">
-            Categorias de interesse
+            Categorias de rolê
           </Text>
           <Text className="text-xs text-content-subtle">
-            Escolha temas de eventos pra personalizar seu feed. Dá pra mudar
-            depois.
+            Escolha ao menos 2 pra personalizar seu feed. Dá pra mudar depois.
           </Text>
           <Controller
             control={control}

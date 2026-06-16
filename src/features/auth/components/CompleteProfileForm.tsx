@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import { View, Animated } from 'react-native'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { MIN_PREFERRED_CATEGORIES } from '@/shared/utils/rolePreferences'
 import {
   completeProfileSchema,
   type CompleteProfileInput,
@@ -101,6 +102,12 @@ export function CompleteProfileForm({ profile }: Props) {
 
   const totalSteps = STEPS.length
   const isLastStep = currentStep === totalSteps - 1
+
+  // Perfil mínimo obrigatório: trava o "Concluir" até escolher ao menos 2
+  // categorias de rolê (o backend rejeita < 2 com 400 — bloqueia antes).
+  const watchedCategories = useWatch({ control, name: 'preferredCategories' })
+  const rolesBlocked =
+    (watchedCategories?.length ?? 0) < MIN_PREFERRED_CATEGORIES
 
   function goToStep(index: number, direction: 'forward' | 'back') {
     const toValue = direction === 'forward' ? -30 : 30
@@ -204,6 +211,7 @@ export function CompleteProfileForm({ profile }: Props) {
               label={isPending ? 'Salvando...' : 'Concluir'}
               onPress={handleSubmit(onSubmit)}
               loading={isPending}
+              disabled={rolesBlocked}
             />
           ) : (
             <Button label="Continuar" onPress={handleNext} />
