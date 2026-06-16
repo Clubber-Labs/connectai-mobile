@@ -13,6 +13,10 @@ import { FormError } from '@/shared/components/FormError'
 import { CategoryMultiSelect } from '@/shared/components/CategoryMultiSelect'
 import { InterestsMultiSelect } from '@/shared/components/InterestsMultiSelect'
 import { parseLocalDate } from '@/shared/utils/dateFormat'
+import {
+  MIN_PREFERRED_CATEGORIES,
+  MIN_PREFERRED_CATEGORIES_MESSAGE,
+} from '@/shared/utils/rolePreferences'
 import type { UserProfile } from '@/shared/types'
 import { colors } from '@/shared/theme'
 
@@ -76,6 +80,12 @@ export function EditProfileForm({
     control,
     compute: values => !isPatchEmpty(buildProfilePatch(profile, values)),
   })
+
+  // Perfil mínimo obrigatório: não dá pra salvar com menos de 2 categorias de
+  // rolê (o backend rejeita < 2 com 400). Desabilita o salvar e mostra o aviso.
+  const watchedCategories = useWatch({ control, name: 'preferredCategories' })
+  const categoriesBelowMin =
+    (watchedCategories?.length ?? 0) < MIN_PREFERRED_CATEGORIES
 
   return (
     <View className="gap-4">
@@ -181,8 +191,11 @@ export function EditProfileForm({
       </Field>
 
       <Field
-        label="Categorias de interesse"
-        error={errors.preferredCategories?.message}
+        label="Categorias de rolê"
+        error={
+          errors.preferredCategories?.message ??
+          (categoriesBelowMin ? MIN_PREFERRED_CATEGORIES_MESSAGE : undefined)
+        }
       >
         <Controller
           control={control}
@@ -240,7 +253,9 @@ export function EditProfileForm({
             label={saving ? 'Salvando...' : 'Salvar'}
             onPress={handleSubmit(onSubmit)}
             loading={saving}
-            disabled={(!hasChanges && !avatarChanged) || saving}
+            disabled={
+              (!hasChanges && !avatarChanged) || categoriesBelowMin || saving
+            }
           />
         </View>
       </View>

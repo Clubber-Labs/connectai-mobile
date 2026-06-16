@@ -6,13 +6,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   DEFAULT_REGISTER_CONSENTS,
   registerSchema,
   type RegisterInput,
 } from '../schemas/registerSchema'
+import { MIN_PREFERRED_CATEGORIES } from '@/shared/utils/rolePreferences'
 import { useRegister } from '../hooks/useRegister'
 import { Button } from '@/shared/components/Button'
 import { RegisterProgressBar } from './RegisterProgressBar'
@@ -99,6 +100,13 @@ export function RegisterForm() {
 
   const totalSteps = STEPS.length
   const isLastStep = currentStep === totalSteps - 1
+
+  // Etapa de rolês é obrigatória: trava o avanço até escolher ao menos 2
+  // categorias (o schema também valida no trigger, isto só dá o feedback visual).
+  const watchedCategories = useWatch({ control, name: 'preferredCategories' })
+  const rolesStepBlocked =
+    STEPS[currentStep].includes('preferredCategories') &&
+    (watchedCategories?.length ?? 0) < MIN_PREFERRED_CATEGORIES
 
   function goToStep(index: number, direction: 'forward' | 'back') {
     const toValue = direction === 'forward' ? -30 : 30
@@ -197,7 +205,11 @@ export function RegisterForm() {
                 loading={isPending}
               />
             ) : (
-              <Button label="Continuar" onPress={handleNext} />
+              <Button
+                label="Continuar"
+                onPress={handleNext}
+                disabled={rolesStepBlocked}
+              />
             )}
           </View>
         </View>

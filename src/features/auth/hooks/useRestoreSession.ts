@@ -14,6 +14,7 @@ import {
 import { isUnauthorizedError, isNotFoundError } from '@/shared/lib/apiError'
 import { setUnauthorizedHandler } from '@/shared/lib/api'
 import { setAccountRecovery } from '@/features/account/lib/accountRecovery'
+import { needsRolePreferences } from '@/shared/utils/rolePreferences'
 import type { UserProfile } from '@/shared/types'
 
 type SessionResult =
@@ -59,8 +60,11 @@ async function loadSession(): Promise<SessionResult> {
   }
 }
 
+// Perfil incompleto = falta dado obrigatório (telefone/nascimento) OU menos de 2
+// categorias de rolê. Em qualquer caso o AuthGuard força a tela de completar
+// perfil antes de liberar o app — preferência mínima nunca pode ficar vazia.
 function isProfileIncomplete(profile: UserProfile): boolean {
-  return !profile.phone || !profile.birthdate
+  return !profile.phone || !profile.birthdate || needsRolePreferences(profile)
 }
 
 export function useRestoreSession() {

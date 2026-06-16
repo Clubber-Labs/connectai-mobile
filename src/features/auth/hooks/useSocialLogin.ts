@@ -13,6 +13,7 @@ import {
 } from '@/shared/lib/secureStore'
 import { useBanner } from '@/shared/lib/banner'
 import { getConflictMessage } from '@/shared/utils/conflictMessage'
+import { needsRolePreferences } from '@/shared/utils/rolePreferences'
 import { maybeShowWelcomeBack } from '@/features/account/lib/welcomeBack'
 import { userKeys } from '@/features/users/hooks/cacheKeys'
 import type { SocialProvider } from '../schemas/socialLoginSchema'
@@ -100,12 +101,23 @@ export function useSocialLogin(provider: SocialProvider) {
         token: tokenResult.token,
       })
 
+      // Login social cria a conta sem passar pelo cadastro, então pode nascer
+      // sem preferência. Força completar perfil também quando há menos de 2
+      // categorias de rolê — não só pelo flag do backend. Só considera o campo
+      // quando ele vem na resposta (selects reduzidos o omitem): um perfil sem o
+      // campo é confirmado pelo /users/me completo no próximo boot, evitando
+      // mandar de volta quem já tem categorias.
+      const incomplete =
+        response.profileIncomplete ||
+        (Array.isArray(response.user.preferredCategories) &&
+          needsRolePreferences(response.user))
+
       await saveToken(response.token)
       await saveRefreshToken(response.refreshToken)
       await saveUserId(response.user.id)
       // Persistir profileIncomplete pra o restore sobreviver a kill/restart sem
       // depender de me() ter sucesso (offline = me() falha, flag persistido vence).
-      await saveProfileIncomplete(response.profileIncomplete)
+      await saveProfileIncomplete(incomplete)
 
       // Seed do cache do useMe pra evitar refetch imediato e pré-popular o form
       // de completar perfil sem flash de loading.
@@ -113,7 +125,7 @@ export function useSocialLogin(provider: SocialProvider) {
 
       // Ordem importa: setar profileIncomplete ANTES de setUser pra evitar
       // flicker pro feed antes do AuthGuard redirecionar pra complete-profile.
-      setProfileIncomplete(response.profileIncomplete)
+      setProfileIncomplete(incomplete)
       setUser(response.user.id)
 
       // Reativação no login social (backend já reativou na carência). Banner
@@ -122,7 +134,7 @@ export function useSocialLogin(provider: SocialProvider) {
 
       return {
         kind: 'authenticated',
-        profileIncomplete: response.profileIncomplete,
+        profileIncomplete: incomplete,
       }
     },
     onError: async error => {

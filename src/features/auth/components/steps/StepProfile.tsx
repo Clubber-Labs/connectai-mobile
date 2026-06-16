@@ -17,7 +17,8 @@ export function StepProfile({ control, errors }: Props) {
       <View className="gap-1">
         <Text className="text-2xl font-bold text-content">Seu perfil</Text>
         <Text className="text-sm text-content-muted">
-          Opcional — você pode preencher depois.
+          Escolha ao menos 2 categorias de rolê. Bio e privacidade são
+          opcionais.
         </Text>
       </View>
 
@@ -72,10 +73,11 @@ export function StepProfile({ control, errors }: Props) {
 
         <View className="gap-2">
           <Text className="text-sm font-medium text-content-tertiary">
-            Categorias de interesse
+            Categorias de rolê
           </Text>
           <Text className="text-xs text-content-subtle">
-            Ajuda a personalizar seu feed com eventos que combinam com você.
+            Escolha ao menos 2 — personaliza seu feed com o que combina com
+            você.
           </Text>
           <Controller
             control={control}

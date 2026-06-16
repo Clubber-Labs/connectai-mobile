@@ -27,10 +27,9 @@ function toPayload(data: RegisterInput): RegisterPayload {
     birthdate: data.birthdate.toISOString(),
     bio: data.bio,
     isPrivate: data.isPrivate,
-    // Campo opcional: só envia quando há seleção (vazio → omite).
-    ...(data.preferredCategories?.length
-      ? { preferredCategories: data.preferredCategories }
-      : {}),
+    // Obrigatório (mín. 2) — sempre presente após a validação do schema.
+    preferredCategories: data.preferredCategories,
+    // Interesses continuam opcionais: só envia quando há seleção.
     ...(data.preferredSubcategories?.length
       ? { preferredSubcategories: data.preferredSubcategories }
       : {}),
