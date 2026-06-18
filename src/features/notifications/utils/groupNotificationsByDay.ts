@@ -16,7 +16,9 @@ export function groupNotificationsByDay(
   for (const item of items) {
     const date = new Date(item.createdAt)
     if (isToday(date)) today.push(item)
-    else if (isThisWeek(date)) week.push(item)
+    // Semana começando na segunda (padrão do date-fns é domingo): no domingo,
+    // o sábado recente fica em "Esta semana" em vez de cair em "Anteriores".
+    else if (isThisWeek(date, { weekStartsOn: 1 })) week.push(item)
     else older.push(item)
   }
 

@@ -9,6 +9,7 @@ import {
 import { EditFieldScaffold } from './EditFieldScaffold'
 import { useEditProfileField } from '../../hooks/useEditProfileField'
 import { editProfileSchema } from '../../schemas/editProfileSchema'
+import type { UpdateMePayload } from '../../services/usersService'
 import type { UserProfile } from '@/shared/types'
 import { colors } from '@/shared/theme'
 
@@ -93,7 +94,7 @@ export function EditTextFieldScreen({ field }: { field: TextFieldKey }) {
 type FormProps = {
   profile: UserProfile
   field: TextFieldKey
-  save: (patch: Record<TextFieldKey, string>) => void
+  save: (patch: UpdateMePayload) => void
   saving: boolean
   serverError: string | null
 }
@@ -119,7 +120,7 @@ function TextFieldForm({
   return (
     <EditFieldScaffold
       title={config.title}
-      onSave={() => save({ [field]: value } as Record<TextFieldKey, string>)}
+      onSave={() => save({ [field]: value } as UpdateMePayload)}
       saving={saving}
       canSave={canSave}
     >

@@ -72,17 +72,23 @@ export function WheelColumn({
     setCenterIndex(prev => (prev === clamped ? prev : clamped))
   }
 
-  function handleMomentumEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
+  function settleTo(offsetY: number) {
     const index = Math.max(
       0,
-      Math.min(
-        items.length - 1,
-        Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_HEIGHT),
-      ),
+      Math.min(items.length - 1, Math.round(offsetY / WHEEL_ITEM_HEIGHT)),
     )
     const value = items[index].value
     lastReported.current = value
     if (value !== selectedValue) onSelect(value)
+  }
+
+  // Drag lento solto sem flick (velocidade ~0) pode não gerar onMomentumScrollEnd
+  // no iOS — o snap acontece visualmente mas a seleção não comitava. Comita aqui
+  // sobre o offset (round = alvo do snap). Com velocidade, deixa o momentum
+  // comitar o destino final.
+  function handleScrollEndDrag(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const velocityY = e.nativeEvent.velocity?.y ?? 0
+    if (Math.abs(velocityY) < 0.1) settleTo(e.nativeEvent.contentOffset.y)
   }
 
   return (
@@ -95,7 +101,8 @@ export function WheelColumn({
       scrollEventThrottle={16}
       nestedScrollEnabled
       onScroll={handleScroll}
-      onMomentumScrollEnd={handleMomentumEnd}
+      onScrollEndDrag={handleScrollEndDrag}
+      onMomentumScrollEnd={e => settleTo(e.nativeEvent.contentOffset.y)}
       contentContainerStyle={{ paddingVertical: PADDING }}
     >
       {items.map((item, index) => (
