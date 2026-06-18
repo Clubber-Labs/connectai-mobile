@@ -1,6 +1,3 @@
-// Seletor "abrir no mapa" — componente próprio (sheet dark), mesmo padrão
-// imperativo do useConfirm (ver confirm.tsx). Opções: Google Maps, Apple Maps
-// (só iOS) e Waze.
 import { createContext, useCallback, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Linking, Platform } from 'react-native'

@@ -11,18 +11,26 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useConfirm } from '@/shared/lib/confirm'
 import { useOpenInMaps } from '@/shared/lib/openInMaps'
-import { getApiError, isNotFoundError } from '@/shared/lib/apiError'
+import {
+  getApiError,
+  isNotFoundError,
+  isTooManyRequestsError,
+} from '@/shared/lib/apiError'
 import { Button } from '@/shared/components/Button'
 import { FormError } from '@/shared/components/FormError'
+import { SheetModal } from '@/shared/components/SheetModal'
 import { CategoryBadge } from '@/shared/components/CategoryBadge'
 import { UserAvatar } from '@/shared/components/UserAvatar'
 import { EventMap } from '@/features/events/components/EventMap'
 import { useNavigateToProfile } from '@/features/users/hooks/useNavigateToProfile'
+import { useMyProfile } from '@/features/users/hooks/useProfile'
 import { useSpot } from '@/features/spots/hooks/useSpot'
 import { useJoinSpot } from '@/features/spots/hooks/useJoinSpot'
 import { useCancelSpot } from '@/features/spots/hooks/useCancelSpot'
 import { useRenewSpot } from '@/features/spots/hooks/useRenewSpot'
 import { formatSpotWindow } from '@/features/spots/utils/spotWindow'
+import { SpotOwnerActions } from '@/features/spots/components/SpotOwnerActions'
+import { SpotQuotaExhausted } from '@/features/spots/components/SpotQuotaExhausted'
 import { colors } from '@/shared/theme'
 
 export default function SpotDetailScreen() {
@@ -44,6 +52,11 @@ export default function SpotDetailScreen() {
   const renew = useRenewSpot(id)
   const [joinError, setJoinError] = useState<string | null>(null)
   const [renewError, setRenewError] = useState<string | null>(null)
+  // 429 no renovar (mesma cota diária do gerar) → folha de cota esgotada com
+  // upsell, em vez de erro inline.
+  const [renewQuotaReached, setRenewQuotaReached] = useState(false)
+  const { data: profile } = useMyProfile()
+  const isPremium = !!profile?.isPremium
   const highlightRenew = renewParam === '1'
 
   if (isLoading) {
@@ -97,18 +110,22 @@ export default function SpotDetailScreen() {
   function handleRenew() {
     setRenewError(null)
     renew.mutate(undefined, {
-      // 409 (cancelado/encerrado) e 429 (quota diária, mesma do gerar) —
-      // decisão do backend, refletimos a mensagem.
-      onError: err => setRenewError(getApiError(err).message),
+      // 429 = cota diária esgotada (a mesma do gerar) → estado dedicado com
+      // upsell do Premium, igual ao fluxo de sugestões. 409 (cancelado/
+      // encerrado) e demais ficam inline.
+      onError: err => {
+        if (isTooManyRequestsError(err)) setRenewQuotaReached(true)
+        else setRenewError(getApiError(err).message)
+      },
     })
   }
 
   async function handleCancel() {
     const ok = await confirm({
-      title: 'Cancelar spot',
+      title: 'Cancelar rolê',
       message:
-        'O spot sai do mapa para todo mundo. O grupo de chat continua existindo.',
-      confirmLabel: 'Cancelar spot',
+        'O rolê sai do mapa pra todo mundo. O grupo de chat continua existindo.',
+      confirmLabel: 'Cancelar rolê',
       destructive: true,
     })
     if (!ok) return
@@ -116,121 +133,185 @@ export default function SpotDetailScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 16 }}
-    >
-      {isCanceled && (
-        <View className="bg-surface border border-line rounded-xl px-4 py-3">
-          <Text className="text-danger-text text-sm font-semibold">
-            Este spot foi cancelado.
-          </Text>
-        </View>
-      )}
-
-      <Pressable
-        onPress={() => navigateToProfile(spot.creator.id)}
-        className="flex-row items-center gap-3"
+    <>
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 18 }}
       >
-        <UserAvatar
-          name={`${spot.creator.name} ${spot.creator.lastname}`}
-          avatarUrl={spot.creator.avatarUrl}
-          size={40}
-        />
-        <View className="flex-1">
-          <Text className="text-content text-sm font-semibold">
-            {spot.creator.name} {spot.creator.lastname}
-          </Text>
-          <Text className="text-content-subtle text-xs">
-            @{spot.creator.username} sugeriu esse rolê
-          </Text>
-        </View>
-      </Pressable>
-
-      <View className="gap-2">
-        <Text className="text-content text-2xl font-bold">{spot.title}</Text>
-        {spot.description && (
-          <Text className="text-content-tertiary text-base">
-            {spot.description}
-          </Text>
-        )}
-      </View>
-
-      <View className="flex-row flex-wrap gap-2">
-        {spot.categories.map(category => (
-          <CategoryBadge key={category} value={category} />
-        ))}
-        {(spot.subcategories ?? []).map(subcategory => (
-          <CategoryBadge key={subcategory} value={subcategory} />
-        ))}
-      </View>
-
-      <View className="gap-2">
-        <View className="flex-row items-center gap-2">
-          <Ionicons name="time-outline" size={16} color={colors.contentMuted} />
-          <Text className="text-content-tertiary text-sm">
-            {formatSpotWindow(spot.startsAt, spot.endsAt)}
-          </Text>
-        </View>
-        <View className="flex-row items-center gap-2">
+        <Pressable
+          onPress={() => navigateToProfile(spot.creator.id)}
+          className="flex-row items-center gap-3"
+        >
+          <UserAvatar
+            name={`${spot.creator.name} ${spot.creator.lastname}`}
+            avatarUrl={spot.creator.avatarUrl}
+            size={42}
+          />
+          <View className="flex-1">
+            <Text className="text-content text-sm font-semibold">
+              {spot.creator.name} {spot.creator.lastname}
+            </Text>
+            <Text className="text-content-subtle text-xs">
+              @{spot.creator.username} sugeriu esse rolê
+            </Text>
+          </View>
           <Ionicons
-            name="people-outline"
+            name="chevron-forward"
             size={16}
-            color={colors.contentMuted}
+            color={colors.contentFaint}
           />
-          <Text className="text-content-tertiary text-sm">{memberLabel}</Text>
-        </View>
-      </View>
+        </Pressable>
 
-      <View className="gap-2">
-        <EventMap latitude={spot.latitude} longitude={spot.longitude} />
-        <Button
-          label="Como chegar"
-          variant="secondary"
-          onPress={() =>
-            openInMaps({ latitude: spot.latitude, longitude: spot.longitude })
-          }
-        />
-      </View>
-
-      {!isCanceled && (
-        <View className="gap-2">
-          <Button
-            label={isCreator ? 'Abrir chat do grupo' : 'Entrar no chat do rolê'}
-            onPress={handleJoin}
-            loading={join.isPending}
-          />
-          <FormError message={joinError} />
-        </View>
-      )}
-
-      {isCreator && !isCanceled && (
-        <View className="gap-2 border-t border-line-subtle pt-4">
-          {highlightRenew && (
-            <Text className="text-brand-text-strong text-sm text-center">
-              Seu rolê está acabando — renove para continuar no mapa.
+        <View className="gap-2.5">
+          <Text className="text-content text-2xl font-bold leading-tight">
+            {spot.title}
+          </Text>
+          <View className="flex-row items-center">
+            {isCanceled ? (
+              <View className="flex-row items-center gap-1.5 rounded-md bg-danger/10 border border-danger/30 px-2.5 py-1">
+                <Ionicons
+                  name="close-circle"
+                  size={12}
+                  color={colors.dangerText}
+                />
+                <Text className="text-danger-text text-[11px] font-bold">
+                  cancelado
+                </Text>
+              </View>
+            ) : (
+              <View className="flex-row items-center gap-1.5 rounded-md bg-success/20 border border-success/30 px-2.5 py-1">
+                <View className="w-1.5 h-1.5 rounded-full bg-success-text" />
+                <Text className="text-success-text text-[11px] font-bold">
+                  no ar
+                </Text>
+              </View>
+            )}
+          </View>
+          {isCanceled && (
+            <Text className="text-content-muted text-sm">
+              Esse rolê foi cancelado e saiu do mapa. O grupo de chat continua
+              existindo.
             </Text>
           )}
-          <Button
-            label="Renovar por +24h"
-            variant={highlightRenew ? 'primary' : 'secondary'}
-            onPress={handleRenew}
-            loading={renew.isPending}
+          {spot.description && (
+            <Text className="text-content-tertiary text-base leading-relaxed">
+              {spot.description}
+            </Text>
+          )}
+        </View>
+
+        <View className="flex-row flex-wrap gap-2">
+          {spot.categories.map(category => (
+            <CategoryBadge key={category} value={category} />
+          ))}
+          {(spot.subcategories ?? []).map(subcategory => (
+            <CategoryBadge key={subcategory} value={subcategory} />
+          ))}
+        </View>
+
+        <View className="bg-surface border border-line rounded-2xl overflow-hidden">
+          <View className="flex-row items-center gap-3 px-4 py-3.5">
+            <View className="w-10 h-10 rounded-xl bg-brand-surface border border-brand-surface-strong items-center justify-center">
+              <Ionicons
+                name="time-outline"
+                size={20}
+                color={colors.brandText}
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-content-subtle text-[11px] font-semibold">
+                Quando
+              </Text>
+              <Text className="text-content-secondary text-sm font-semibold mt-0.5">
+                {formatSpotWindow(spot.startsAt, spot.endsAt)}
+              </Text>
+            </View>
+          </View>
+          <View className="h-px bg-line mx-4" />
+          <View className="flex-row items-center gap-3 px-4 py-3.5">
+            <View className="w-10 h-10 rounded-xl bg-brand-surface border border-brand-surface-strong items-center justify-center">
+              <Ionicons
+                name="people-outline"
+                size={20}
+                color={colors.brandText}
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-content-subtle text-[11px] font-semibold">
+                Grupo do rolê
+              </Text>
+              <Text className="text-content-secondary text-sm font-semibold mt-0.5">
+                {memberLabel}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View className="relative">
+          <EventMap latitude={spot.latitude} longitude={spot.longitude} />
+          <Pressable
+            onPress={() =>
+              openInMaps({ latitude: spot.latitude, longitude: spot.longitude })
+            }
+            accessibilityRole="button"
+            className="absolute bottom-3 right-3 flex-row items-center gap-1.5 bg-surface-sunken/95 border border-line-strong rounded-lg px-3 py-2"
+          >
+            <Ionicons
+              name="navigate-outline"
+              size={14}
+              color={colors.contentSecondary}
+            />
+            <Text className="text-content-secondary text-xs font-bold">
+              Como chegar
+            </Text>
+          </Pressable>
+        </View>
+
+        {!isCanceled && (
+          <View className="gap-2">
+            <Button
+              label={
+                isCreator ? 'Abrir chat do grupo' : 'Entrar no chat do rolê'
+              }
+              icon="chatbubble-ellipses-outline"
+              onPress={handleJoin}
+              loading={join.isPending}
+            />
+            <FormError message={joinError} />
+          </View>
+        )}
+
+        {isCreator && !isCanceled && (
+          <SpotOwnerActions
+            highlightRenew={highlightRenew}
+            onRenew={handleRenew}
+            onEdit={() => router.push(`/spots/${spot.id}/edit`)}
+            onCancel={handleCancel}
+            renewing={renew.isPending}
+            canceling={cancel.isPending}
+            renewError={renewError}
           />
-          <FormError message={renewError} />
-          <Button
-            label="Editar spot"
-            variant="secondary"
-            onPress={() => router.push(`/spots/${spot.id}/edit`)}
-          />
-          <Button
-            label="Cancelar spot"
-            variant="destructive"
-            onPress={handleCancel}
-            loading={cancel.isPending}
+        )}
+      </ScrollView>
+
+      <SheetModal
+        visible={renewQuotaReached}
+        onClose={() => setRenewQuotaReached(false)}
+      >
+        <View className="px-5 pb-2">
+          <SpotQuotaExhausted
+            isPremium={isPremium}
+            onUpgrade={() => {
+              setRenewQuotaReached(false)
+              router.push('/billing/upgrade')
+            }}
+            onSeeMap={() => {
+              setRenewQuotaReached(false)
+              router.replace('/(tabs)/map')
+            }}
           />
         </View>
-      )}
-    </ScrollView>
+      </SheetModal>
+    </>
   )
 }

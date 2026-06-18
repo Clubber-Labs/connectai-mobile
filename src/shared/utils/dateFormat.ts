@@ -1,5 +1,30 @@
-import { format, formatDistanceToNow } from 'date-fns'
+import { format, formatDistanceToNow, isToday, isTomorrow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+
+// Rótulo curto de dia para a roda de data+hora: "Hoje" / "Amanhã" para os dias
+// próximos, senão "qua, 24 jun". Abreviações montadas à mão pra caber na coluna
+// sem cortar — o token EEE do date-fns vinha com o nome do dia por extenso.
+const WHEEL_WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
+const WHEEL_MONTHS = [
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez',
+]
+
+export function formatWheelDay(date: Date): string {
+  if (isToday(date)) return 'Hoje'
+  if (isTomorrow(date)) return 'Amanhã'
+  return `${WHEEL_WEEKDAYS[date.getDay()]}, ${date.getDate()} ${WHEEL_MONTHS[date.getMonth()]}`
+}
 
 export function formatRelative(iso: string): string {
   return formatDistanceToNow(new Date(iso), { addSuffix: true, locale: ptBR })

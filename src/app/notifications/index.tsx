@@ -1,4 +1,11 @@
-import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native'
+import { useMemo } from 'react'
+import {
+  View,
+  Text,
+  SectionList,
+  Pressable,
+  RefreshControl,
+} from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh'
@@ -8,6 +15,7 @@ import { useMarkAllRead } from '@/features/notifications/hooks/useMarkRead'
 import { useOpenNotification } from '@/features/notifications/hooks/useOpenNotification'
 import { NotificationRow } from '@/features/notifications/components/NotificationRow'
 import { NotificationsEmptyState } from '@/features/notifications/components/NotificationsEmptyState'
+import { groupNotificationsByDay } from '@/features/notifications/utils/groupNotificationsByDay'
 import { colors } from '@/shared/theme'
 
 export default function NotificationsScreen() {
@@ -25,18 +33,38 @@ export default function NotificationsScreen() {
   const { openNotification } = useOpenNotification()
   const { refreshing, onRefresh } = usePullRefresh(refetch)
 
+  const sections = useMemo(
+    () => groupNotificationsByDay(notifications),
+    [notifications],
+  )
+
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between px-4 py-3">
-        <Text className="text-xl font-bold text-content">Notificações</Text>
-        <View className="flex-row items-center gap-1">
+      <View className="flex-row items-center justify-between px-2 pt-2 pb-3">
+        <View className="flex-1 flex-row items-center gap-1">
+          <Pressable
+            onPress={() => router.back()}
+            className="w-9 h-9 items-center justify-center"
+            accessibilityLabel="Voltar"
+          >
+            <Ionicons
+              name="chevron-back"
+              size={26}
+              color={colors.contentBright}
+            />
+          </Pressable>
+          <Text className="text-content text-xl font-extrabold">
+            Notificações
+          </Text>
+        </View>
+        <View className="flex-row items-center gap-1 pr-2">
           {count > 0 && (
             <Pressable
               onPress={() => markAllRead.mutate()}
-              className="px-3 py-1.5"
+              className="px-2 py-1.5"
             >
-              <Text className="text-brand-text text-sm font-semibold">
-                Marcar todas como lidas
+              <Text className="text-brand-text text-[13px] font-bold">
+                Marcar lidas
               </Text>
             </Pressable>
           )}
@@ -57,12 +85,18 @@ export default function NotificationsScreen() {
       {isLoading ? (
         <View className="flex-1 bg-background" />
       ) : (
-        <FlatList
-          data={notifications}
+        <SectionList
+          sections={sections}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <NotificationRow notification={item} onPress={openNotification} />
           )}
+          renderSectionHeader={({ section }) => (
+            <Text className="text-content-subtle bg-background text-[11px] font-bold uppercase tracking-wider px-4 pt-4 pb-2">
+              {section.title}
+            </Text>
+          )}
+          stickySectionHeadersEnabled={false}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage()
           }}
@@ -76,7 +110,7 @@ export default function NotificationsScreen() {
           }
           ListEmptyComponent={<NotificationsEmptyState />}
           contentContainerStyle={
-            notifications.length === 0 ? { flexGrow: 1 } : undefined
+            sections.length === 0 ? { flexGrow: 1 } : undefined
           }
         />
       )}

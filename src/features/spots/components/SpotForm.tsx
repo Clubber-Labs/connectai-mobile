@@ -6,8 +6,9 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Switch,
+  Pressable,
 } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { ReactNode } from 'react'
@@ -21,9 +22,18 @@ import {
   SPOT_MAX_WINDOW_MS,
   type CreateSpotInput,
 } from '../schemas/createSpotSchema'
+import { spotPresetWindow, type SpotTimePreset } from '../utils/spotTimePresets'
 import { colors } from '@/shared/theme'
 
 const MAX_CATEGORIES = 5
+
+// Atalhos de horário: 'custom' revela os date-pickers; os demais preenchem
+// início/fim num toque (a janela é calculada em spotPresetWindow).
+const TIME_PRESETS = [
+  { key: 'now2h', label: 'Agora', sub: 'por 2h' },
+  { key: 'tonight', label: 'Hoje à noite', sub: '20h–24h' },
+  { key: 'custom', label: 'Escolher', sub: 'até 24h' },
+] as const
 
 type Props = {
   // Sempre vem do candidato escolhido — inclui placeId/latitude/longitude.
@@ -56,11 +66,25 @@ export function SpotForm({
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CreateSpotInput>({
     resolver: zodResolver(createSpotSchema),
     defaultValues,
   })
+
+  // O publish já entrega a janela default de 2h, então o atalho "Agora" começa
+  // selecionado. 'custom' revela os pickers; os outros preenchem início/fim.
+  const [timePreset, setTimePreset] = useState<SpotTimePreset>('now2h')
+
+  function applyPreset(preset: SpotTimePreset) {
+    setTimePreset(preset)
+    const window = spotPresetWindow(preset, new Date())
+    if (window) {
+      setValue('startsAt', window.startsAt, { shouldValidate: true })
+      setValue('endsAt', window.endsAt, { shouldValidate: true })
+    }
+  }
 
   const startsAt = watch('startsAt')
   const selectedCategories = watch('categories')
@@ -77,9 +101,17 @@ export function SpotForm({
         {headerSection}
 
         <View className="gap-1">
-          <Text className="text-sm font-medium text-content-tertiary">
-            Título
-          </Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm font-medium text-content-tertiary">
+              Título
+            </Text>
+            <View className="flex-row items-center gap-1 rounded-full bg-brand-surface border border-brand-surface-strong px-2 py-0.5">
+              <Ionicons name="sparkles" size={10} color={colors.brandText} />
+              <Text className="text-brand-text text-[10px] font-bold">
+                sugerido pela IA
+              </Text>
+            </View>
+          </View>
           <Controller
             control={control}
             name="title"
@@ -127,50 +159,91 @@ export function SpotForm({
 
         <View className="gap-1">
           <Text className="text-sm font-medium text-content-tertiary">
-            Começa
+            Quando
           </Text>
-          <Controller
-            control={control}
-            name="startsAt"
-            render={({ field: { onChange, value } }) => (
-              <DatePicker
-                value={value}
-                onChange={onChange}
-                mode="datetime"
-                placeholder="Quando começa"
-                minimumDate={new Date()}
-                maximumDate={maxEndsAt}
-                hasError={!!errors.startsAt}
-              />
-            )}
-          />
-          {errors.startsAt && (
-            <Text className="text-content text-xs">
-              {errors.startsAt.message}
-            </Text>
-          )}
-        </View>
+          <View className="flex-row gap-2">
+            {TIME_PRESETS.map(option => {
+              const active = timePreset === option.key
+              return (
+                <Pressable
+                  key={option.key}
+                  onPress={() => applyPreset(option.key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  className={`flex-1 items-center rounded-xl border py-2.5 ${
+                    active ? 'bg-brand border-brand' : 'bg-surface border-line'
+                  }`}
+                >
+                  <Text
+                    className={`text-xs font-semibold ${
+                      active ? 'text-content' : 'text-content-muted'
+                    }`}
+                  >
+                    {option.label}
+                  </Text>
+                  <Text
+                    className={`text-[10px] ${
+                      active ? 'text-brand-text-bright' : 'text-content-subtle'
+                    }`}
+                  >
+                    {option.sub}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
 
-        <View className="gap-1">
-          <Text className="text-sm font-medium text-content-tertiary">
-            Termina
-          </Text>
-          <Controller
-            control={control}
-            name="endsAt"
-            render={({ field: { onChange, value } }) => (
-              <DatePicker
-                value={value}
-                onChange={onChange}
-                mode="datetime"
-                placeholder="Quando termina"
-                minimumDate={startsAt ?? new Date()}
-                // Spot é rolê de curta duração: no máximo 24h a partir de agora.
-                maximumDate={maxEndsAt}
-                hasError={!!errors.endsAt}
-              />
-            )}
-          />
+          {timePreset === 'custom' && (
+            <View className="gap-3 pt-1">
+              <View className="gap-1">
+                <Text className="text-sm font-medium text-content-tertiary">
+                  Começa
+                </Text>
+                <Controller
+                  control={control}
+                  name="startsAt"
+                  render={({ field: { onChange, value } }) => (
+                    <DatePicker
+                      value={value}
+                      onChange={onChange}
+                      mode="datetime"
+                      placeholder="Quando começa"
+                      minimumDate={new Date()}
+                      maximumDate={maxEndsAt}
+                      hasError={!!errors.startsAt}
+                    />
+                  )}
+                />
+                {errors.startsAt && (
+                  <Text className="text-content text-xs">
+                    {errors.startsAt.message}
+                  </Text>
+                )}
+              </View>
+              <View className="gap-1">
+                <Text className="text-sm font-medium text-content-tertiary">
+                  Termina
+                </Text>
+                <Controller
+                  control={control}
+                  name="endsAt"
+                  render={({ field: { onChange, value } }) => (
+                    <DatePicker
+                      value={value}
+                      onChange={onChange}
+                      mode="datetime"
+                      placeholder="Quando termina"
+                      minimumDate={startsAt ?? new Date()}
+                      // Curta duração: no máximo 24h a partir de agora.
+                      maximumDate={maxEndsAt}
+                      hasError={!!errors.endsAt}
+                    />
+                  )}
+                />
+              </View>
+            </View>
+          )}
+
           <Text className="text-content-subtle text-xs">
             O rolê pode durar no máximo 24 horas.
           </Text>
@@ -182,9 +255,12 @@ export function SpotForm({
         </View>
 
         <View className="gap-1">
-          <Text className="text-sm font-medium text-content-tertiary">
-            Categorias
-          </Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm font-medium text-content-tertiary">
+              Categorias
+            </Text>
+            <Text className="text-content-subtle text-xs">1 a 5</Text>
+          </View>
           <Controller
             control={control}
             name="categories"
@@ -230,35 +306,71 @@ export function SpotForm({
           control={control}
           name="visibility"
           render={({ field: { onChange, value } }) => (
-            <View className="flex-row items-center justify-between bg-surface px-4 py-3 rounded-xl">
-              <View className="flex-1 pr-3">
-                <Text className="text-sm font-medium text-content-secondary">
-                  Spot público
-                </Text>
-                <Text className="text-xs text-content-muted">
-                  {VISIBILITY_HINTS[value]}
-                </Text>
+            <View className="gap-1">
+              <Text className="text-sm font-medium text-content-tertiary">
+                Quem vê
+              </Text>
+              <View className="flex-row gap-1 bg-surface border border-line rounded-xl p-1">
+                {(['PUBLIC', 'FRIENDS'] as const).map(option => {
+                  const active = value === option
+                  const isPublic = option === 'PUBLIC'
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() => onChange(option)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-lg py-2.5 ${
+                        active ? 'bg-surface-elevated' : ''
+                      }`}
+                    >
+                      <Ionicons
+                        name={isPublic ? 'earth' : 'people'}
+                        size={16}
+                        color={active ? colors.content : colors.contentMuted}
+                      />
+                      <Text
+                        className={`text-sm font-semibold ${
+                          active ? 'text-content' : 'text-content-muted'
+                        }`}
+                      >
+                        {isPublic ? 'Público' : 'Amigos'}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
               </View>
-              <Switch
-                value={value === 'PUBLIC'}
-                onValueChange={isPublic =>
-                  onChange(isPublic ? 'PUBLIC' : 'FRIENDS')
-                }
-                trackColor={{ true: colors.brand, false: colors.lineStrong }}
-                thumbColor={colors.content}
-              />
+              <Text className="text-xs text-content-muted">
+                {VISIBILITY_HINTS[value]}
+              </Text>
             </View>
           )}
         />
+      </ScrollView>
 
+      <View className="border-t border-line bg-surface-sunken px-5 pt-3 pb-5 gap-3">
         <FormError message={submitError} />
-
+        <View className="flex-row items-center justify-center gap-2">
+          <Ionicons
+            name="chatbubble-outline"
+            size={14}
+            color={colors.contentMuted}
+          />
+          <Text className="text-content-muted text-xs">
+            Publicar cria o{' '}
+            <Text className="text-content-secondary font-semibold">
+              grupo de chat
+            </Text>{' '}
+            do rolê
+          </Text>
+        </View>
         <Button
-          label={submitting ? 'Publicando...' : 'Publicar spot'}
+          label={submitting ? 'Publicando...' : 'Publicar rolê'}
+          icon="sparkles"
           onPress={handleSubmit(onSubmit)}
           loading={submitting}
         />
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   )
 }

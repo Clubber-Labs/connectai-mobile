@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ConnectAI · Editar perfil · Filtros · Notificações</title>
+<style>
+  /* ───────────────────────────────────────────────────────────
+     TOKENS — espelho exato de src/global.css (tema dark único).
+     Mesma fonte da verdade dos outros docs em /design.
+     ─────────────────────────────────────────────────────────── */
+  :root{
+    --background:#000000;--surface-sunken:#0a0a0a;--surface:#18181b;--surface-elevated:#27272a;
+    --surface-high:#3f3f46;--surface-higher:#52525b;
+    --content:#ffffff;--content-bright:#f4f4f5;--content-secondary:#e4e4e7;--content-tertiary:#d4d4d8;
+    --content-muted:#a1a1aa;--content-subtle:#71717a;--content-faint:#52525b;
+    --line:#27272a;--line-strong:#3f3f46;--line-subtle:#18181b;
+    --brand:#7c3aed;--brand-emphasis:#8b5cf6;--brand-strong:#6d28d9;--brand-text:#a78bfa;
+    --brand-text-strong:#c4b5fd;--brand-text-bright:#ddd6fe;--brand-surface:#2e1065;--brand-surface-strong:#4c1d95;
+    --danger:#ef4444;--danger-strong:#dc2626;--danger-text:#f87171;--warning:#fbbf24;--warning-text:#fde68a;
+    --success:#22c55e;--success-text:#4ade80;--success-strong:#16a34a;--info:#7dd3fc;--blue:#3b82f6;
+
+    --t-display:28px;--t-title:20px;--t-section:17px;--t-body:15px;--t-meta:13px;--t-caption:11px;
+    --r-card:12px;--r-btn:10px;--r-chip:999px;
+    font-synthesis:none;-webkit-font-smoothing:antialiased;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050505;color:var(--content);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif;line-height:1.4;padding:48px 24px 120px}
+  .wrap{max-width:1180px;margin:0 auto}
+
+  .doc-head{text-align:center;margin-bottom:56px}
+  .doc-head .eyebrow{font-size:var(--t-caption);letter-spacing:.18em;text-transform:uppercase;color:var(--brand-text);font-weight:700}
+  .doc-head h1{font-size:40px;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px}
+  .doc-head p{color:var(--content-muted);font-size:var(--t-body);max-width:730px;margin:0 auto}
+
+  section{margin-bottom:72px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .sec-head .num{font-size:var(--t-meta);font-weight:800;color:var(--brand-text);background:var(--brand-surface);border:1px solid var(--brand-surface-strong);width:28px;height:28px;border-radius:999px;display:grid;place-items:center;flex:none}
+  .sec-head h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+  .sec-sub{color:var(--content-muted);font-size:var(--t-body);margin:0 0 28px 40px;max-width:790px}
+  .sec-sub b{color:var(--content-secondary);font-weight:700}
+
+  /* botões canônicos */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:var(--r-btn);font-size:var(--t-body);font-weight:700;border:none;cursor:pointer;width:100%}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-secondary{background:transparent;border:1px solid var(--line-strong);color:var(--content-secondary)}
+  .btn-ghost{background:var(--surface-elevated);color:var(--content-secondary)}
+
+  /* phone frame */
+  .phone{width:344px;background:var(--background);border:10px solid #1a1a1d;border-radius:40px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.45);position:relative}
+  .screen{height:792px;overflow:hidden;position:relative;display:flex;flex-direction:column;background:#08080b}
+  .statusbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:700;flex:none;z-index:9}
+  .statusbar.over{position:absolute;top:0;left:0;right:0;color:#fff}
+  .statusbar .dots{display:flex;gap:5px;align-items:center}
+
+  /* topbar (back + título [+ ação]) */
+  .topbar{display:flex;align-items:center;gap:12px;padding:8px 12px 12px;flex:none}
+  .topbar .back{width:38px;height:38px;border-radius:999px;background:var(--surface-elevated);display:grid;place-items:center;color:var(--content-secondary)}
+  .topbar h3{font-size:var(--t-title);font-weight:800;flex:1}
+  .topbar .act{font-size:13px;font-weight:700;color:var(--brand-text);padding:0 6px}
+
+  .scrollarea{flex:1;overflow-y:auto;padding:0 16px}
+  .scrollarea::-webkit-scrollbar{width:0}
+
+  /* form bits (iguais ao Publicar/Criar) */
+  .grouplabel{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--content-subtle);margin:22px 2px 12px}
+  .grouplabel:first-child{margin-top:6px}
+  .field{margin-bottom:14px}
+  .flabel{font-size:var(--t-meta);font-weight:700;color:var(--content-secondary);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+  .flabel .opt{font-size:var(--t-caption);color:var(--content-subtle);font-weight:600;letter-spacing:0;text-transform:none}
+  .flabel .req{font-size:10px;font-weight:700;color:var(--brand-text);background:var(--brand-surface);border:1px solid var(--brand-surface-strong);border-radius:999px;padding:2px 8px;text-transform:none;letter-spacing:0}
+  .finput{background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:13px 14px;font-size:var(--t-body);font-weight:600;color:#fff;display:flex;align-items:center;gap:8px}
+  .finput.ph{color:var(--content-subtle);font-weight:500}
+  .finput.area{min-height:74px;font-weight:400;color:var(--content-secondary);font-size:14.5px;align-items:flex-start}
+  .finput .prefix{color:var(--content-subtle);font-weight:600}
+  .finput .grow{flex:1}
+  .finput .lead{color:var(--content-muted);flex:none}
+  .finput .chev{color:var(--content-faint);flex:none}
+  .cats{display:flex;flex-wrap:wrap;gap:8px}
+  .fchip{font-size:var(--t-meta);font-weight:600;padding:8px 13px;border-radius:8px;background:var(--surface);border:1px solid var(--line-strong);color:var(--content-tertiary);white-space:nowrap}
+  .fchip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .fchip .ic{display:inline-block;vertical-align:-2px;margin-right:4px}
+  .visseg{display:flex;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:4px;gap:4px}
+  .visseg .o{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 0;border-radius:9px;font-size:var(--t-meta);font-weight:700;color:var(--content-muted)}
+  .visseg .o.on{background:var(--surface-elevated);color:#fff}
+  .vishint{font-size:12px;color:var(--content-subtle);margin-top:8px;display:flex;gap:6px;align-items:flex-start}
+  .vishint svg{flex:none;margin-top:1px}
+  .stickycta{padding:13px 16px 18px;border-top:1px solid var(--line);background:var(--surface-sunken);flex:none;display:flex;gap:12px}
+
+  /* avatar editor */
+  .avwrap-edit{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0 8px}
+  .avedit{position:relative;width:96px;height:96px}
+  .avedit .face{width:96px;height:96px;border-radius:999px}
+  .avedit .cam{position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:999px;background:var(--brand);border:3px solid var(--background);display:grid;place-items:center;color:#fff}
+  .avwrap-edit .lnk{font-size:13px;font-weight:700;color:var(--brand-text)}
+
+  /* hub de edição: lista de campos → tela focada (padrão Instagram) */
+  .editlist{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .editrow{display:flex;align-items:center;gap:10px;padding:13px 14px}
+  .editrow + .editrow{border-top:1px solid var(--line)}
+  .editrow .lbl{font-size:14.5px;font-weight:600;color:var(--content-secondary);flex:none}
+  .editrow .val{flex:1;font-size:13.5px;color:var(--content-muted);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .editrow .val.ph{color:var(--content-faint)}
+  .editrow .chev{color:var(--content-faint);flex:none}
+  /* tela focada de um único campo */
+  .bigfield{background:var(--surface);border:1.5px solid var(--brand);border-radius:12px;padding:14px;font-size:17px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px}
+  .bigfield.area{min-height:118px;align-items:flex-start;font-size:15px;font-weight:400;color:var(--content-secondary);line-height:1.5}
+  .bigfield .prefix{color:var(--content-subtle)}
+  .focushelp{font-size:12.5px;color:var(--content-subtle);margin-top:11px;padding:0 2px;line-height:1.45}
+  .focushelp.ok{color:var(--success-text);font-weight:600;display:flex;align-items:center;gap:5px}
+  .focustip{font-size:12.5px;color:var(--content-muted);margin:0 2px 14px;line-height:1.45}
+  .cursor{display:inline-block;width:2px;height:20px;background:var(--brand-text);vertical-align:-3px;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* switch visual */
+  .sw{width:44px;height:27px;border-radius:999px;background:var(--line-strong);position:relative;flex:none}
+  .sw.on{background:var(--brand)}
+  .sw .knob{position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:999px;background:#fff}
+  .sw.on .knob{left:20px}
+
+  /* toggle row (settings) */
+  .togglerow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+  .togglerow .tile{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;background:var(--brand-surface);border:1px solid var(--brand-surface-strong);color:var(--brand-text)}
+  .togglerow .txt{flex:1;min-width:0}
+  .togglerow .txt b{font-size:14.5px;font-weight:600;color:var(--content-secondary);display:block}
+  .togglerow .txt small{font-size:12px;color:var(--content-subtle)}
+
+  /* ───────── BOTTOM SHEET (filtros) ───────── */
+  .stage{flex:1;position:relative;overflow:hidden}
+  .mapbg{position:absolute;inset:0;background:radial-gradient(115% 90% at 50% 28%,#15151d 0%,#0c0c11 55%,#08080b 100%)}
+  .mroad{position:absolute;background:#16161d;border-radius:10px}
+  .topscrim{position:absolute;top:0;left:0;right:0;height:96px;background:linear-gradient(to bottom,rgba(0,0,0,.55),transparent);z-index:5}
+  .pin{position:absolute;width:34px;height:34px;border-radius:999px 999px 999px 2px;transform:rotate(45deg);display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.45);z-index:4}
+  .pin>*{transform:rotate(-45deg);font-weight:800;font-size:12px;color:#fff}
+  .pin.brand{background:var(--brand)}
+  .avpin{position:absolute;transform:translate(-50%,-50%);z-index:4}
+  .avpin .face{width:36px;height:36px;border-radius:999px;border:3px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.55)}
+  .avpin .tip{position:absolute;left:50%;bottom:-4px;width:8px;height:8px;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:0 0 2px 0}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface-sunken);border-top:1px solid var(--line);border-top-left-radius:24px;border-top-right-radius:24px;box-shadow:0 -10px 30px rgba(0,0,0,.5);z-index:8;display:flex;flex-direction:column;overflow:hidden}
+  .grab{width:38px;height:5px;border-radius:999px;background:var(--surface-high);align-self:center;margin:10px 0 2px}
+  .sheethead{display:flex;align-items:center;justify-content:space-between;padding:6px 18px 6px}
+  .sheethead h3{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .sheethead .clear{font-size:13px;font-weight:700;color:var(--brand-text)}
+  .sheetbody{padding:6px 16px 0;overflow-y:auto}
+  .sheetbody::-webkit-scrollbar{width:0}
+  .seclabel{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--content-subtle);margin:16px 2px 10px}
+
+  /* ───────── NOTIFICAÇÕES ───────── */
+  .nhead{display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;flex:none}
+  .nhead h3{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .nhead .acts{display:flex;align-items:center;gap:4px}
+  .nhead .readall{font-size:12.5px;font-weight:700;color:var(--brand-text);padding:6px 8px}
+  .nhead .gear{width:36px;height:36px;border-radius:999px;display:grid;place-items:center;color:var(--content-secondary)}
+  .daysep{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--content-subtle);padding:14px 16px 7px}
+  .notif{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;position:relative}
+  .notif.unread{background:linear-gradient(90deg,rgba(46,16,101,.34) 0%,rgba(46,16,101,.12) 100%)}
+  .notif .avwrap{position:relative;flex:none}
+  .notif .av{width:46px;height:46px;border-radius:999px}
+  .notif .tile{width:46px;height:46px;border-radius:999px;display:grid;place-items:center;background:var(--brand-surface);border:1px solid var(--brand-surface-strong);color:var(--brand-text)}
+  .notif .tbadge{position:absolute;right:-3px;bottom:-3px;width:21px;height:21px;border-radius:999px;border:2.5px solid var(--background);display:grid;place-items:center;color:#fff}
+  .notif .body{flex:1;min-width:0;padding-top:2px}
+  .notif .t{font-size:13.5px;color:var(--content-tertiary);line-height:1.35}
+  .notif.unread .t{color:var(--content)}
+  .notif .t b{font-weight:700;color:var(--content)}
+  .notif .sub{font-size:12.5px;color:var(--content-muted);margin-top:2px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .notif .time{font-size:11px;color:var(--content-subtle);margin-top:4px}
+  .notif .dot{width:9px;height:9px;border-radius:999px;background:var(--brand-emphasis);flex:none;margin-top:7px}
+  .nstate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:13px}
+  .nstate .ic{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--content-faint)}
+  .nstate h4{font-size:17px;font-weight:800}
+  .nstate p{font-size:13px;color:var(--content-muted);max-width:240px}
+
+  /* gradientes (avatares) */
+  .g1{background:linear-gradient(135deg,#7c3aed,#ec4899)}.g2{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
+  .g3{background:linear-gradient(135deg,#f59e0b,#ef4444)}.g4{background:linear-gradient(135deg,#10b981,#84cc16)}.g5{background:linear-gradient(135deg,#8b5cf6,#6366f1)}
+
+  svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+  svg.i.sm{width:13px;height:13px}svg.i.lg{width:22px;height:22px}svg.i.xl{width:26px;height:26px}
+  svg.fill{fill:currentColor;stroke:none}
+
+  .row{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  .col{display:flex;flex-direction:column;align-items:center;gap:14px;width:344px}
+  .col .clabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--content-subtle);font-weight:700}
+  .col .clabel b{color:var(--brand-text);font-weight:800}
+  .cap{font-size:11.5px;color:var(--content-subtle);text-align:center;max-width:320px;line-height:1.5}
+
+  .notes-2{margin:30px auto 0;max-width:1040px;display:grid;grid-template-columns:1fr 1fr;gap:10px 28px}
+  .note{display:flex;gap:10px;font-size:var(--t-meta);color:var(--content-tertiary);align-items:flex-start}
+  .note .k{flex:none;width:22px;height:22px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:800;background:rgba(34,197,94,.16);color:var(--success-text)}
+  .note b{color:var(--content);font-weight:700}
+  .pill-inline{display:inline-block;background:var(--surface-elevated);border:1px solid var(--line-strong);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--content-tertiary)}
+  .caption-foot{text-align:center;color:var(--content-faint);font-size:var(--t-meta);margin-top:64px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <div class="eyebrow">ConnectAI · Design System</div>
+    <h1>Editar perfil · Filtros do mapa · Notificações</h1>
+    <p>Três telas funcionais na mesma língua do redesign de Spots: <b>seções agrupadas</b> com label, <b>inputs com hint</b>, <b>controle segmentado</b>, <b>linhas-card</b> e <b>CTA fixo no rodapé</b>. Tokens reais de <span class="pill-inline">global.css</span> · marca violet #7c3aed · sem aurora/glow.</p>
+  </div>
+
+  <!-- ════════════ 1. EDITAR PERFIL ════════════ -->
+  <section>
+    <div class="sec-head"><div class="num">1</div><h2>Editar perfil — hub + tela por campo</h2></div>
+    <p class="sec-sub">Em vez de uma parede de campos, <b>Editar perfil</b> vira um <b>hub</b>: cada linha mostra o valor atual e abre uma <b>tela focada de um campo só</b> (padrão Instagram). Uma responsabilidade por tela, contexto limpo, validação local e <b>Salvar</b> no header de cada uma. O hub agrupa por <b>Perfil público · Preferências · Conta · Privacidade</b>.</p>
+
+    <div class="row">
+
+      <!-- HUB -->
+      <div class="col">
+        <div class="clabel">Hub · <b>Editar perfil</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Editar perfil</h3></div>
+          <div class="scrollarea">
+            <div class="avwrap-edit">
+              <div class="avedit">
+                <div class="face g1"></div>
+                <div class="cam"><svg class="i sm" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="3.2"/></svg></div>
+              </div>
+              <span class="lnk">Alterar foto</span>
+            </div>
+
+            <div class="grouplabel">Perfil público</div>
+            <div class="editlist">
+              <div class="editrow"><span class="lbl">Nome</span><span class="val">Neto Bonato</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+              <div class="editrow"><span class="lbl">Usuário</span><span class="val">@netobonato</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+              <div class="editrow"><span class="lbl">Bio</span><span class="val">Sempre afim de um rolê novo…</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+            </div>
+
+            <div class="grouplabel">Preferências de rolê</div>
+            <div class="editlist">
+              <div class="editrow"><span class="lbl">Categorias</span><span class="val">Vida noturna, Música +3</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+              <div class="editrow"><span class="lbl">Interesses</span><span class="val">Jazz, Indie +1</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+            </div>
+
+            <div class="grouplabel">Conta</div>
+            <div class="editlist">
+              <div class="editrow"><span class="lbl">Telefone</span><span class="val">41 99999-9999</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+              <div class="editrow"><span class="lbl">Nascimento</span><span class="val">12 mar 2001</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+            </div>
+
+            <div class="grouplabel">Privacidade</div>
+            <div class="editlist" style="margin-bottom:18px">
+              <div class="editrow"><span class="lbl">Visibilidade</span><span class="val">Público</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Cada linha = valor atual + chevron, agrupadas por responsabilidade. Sem CTA de salvar no hub (cada tela-filho salva o seu). Avatar é a única edição inline.</div>
+      </div>
+
+      <!-- SUB · texto (Nome) -->
+      <div class="col">
+        <div class="clabel">Tela focada · <b>texto</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Nome</h3><span class="act">Salvar</span></div>
+          <div class="scrollarea" style="padding-top:14px">
+            <div class="bigfield">Neto Bonato<span class="cursor"></span></div>
+            <div class="focushelp">Como você aparece no perfil, nos rolês e no mapa. De 4 a 25 letras.</div>
+          </div>
+        </div></div>
+        <div class="cap">O padrão de campo de texto: um input em foco, "Salvar" no header, a regra logo abaixo. Serve Nome, Sobrenome e Telefone (com teclado próprio).</div>
+      </div>
+
+      <!-- SUB · usuário -->
+      <div class="col">
+        <div class="clabel">Tela focada · <b>usuário</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Nome de usuário</h3><span class="act">Salvar</span></div>
+          <div class="scrollarea" style="padding-top:14px">
+            <div class="bigfield"><span class="prefix">@</span>netobonato<span class="cursor"></span></div>
+            <div class="focushelp ok" style="margin-bottom:4px"><svg class="i sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> @netobonato está disponível</div>
+            <div class="focustip">Letras, números e _ . Mínimo 4 caracteres.</div>
+          </div>
+        </div></div>
+        <div class="cap">O <span class="pill-inline">@</span> fica fixo. Disponibilidade checada inline (✓ verde / ✗ vermelho) — o 409 do backend vira sinal na hora, sem submeter.</div>
+      </div>
+
+      <!-- SUB · bio -->
+      <div class="col">
+        <div class="clabel">Tela focada · <b>bio</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Bio</h3><span class="act">Salvar</span></div>
+          <div class="scrollarea" style="padding-top:14px">
+            <div class="bigfield area">Sempre afim de um rolê novo. Música ao vivo, café e cinema. Chama pra colar 👋<span class="cursor"></span></div>
+            <div class="focushelp" style="text-align:right">86/255</div>
+          </div>
+        </div></div>
+        <div class="cap">Textarea em foco com contador alinhado à direita. Mesma casca, só muda o tipo de campo.</div>
+      </div>
+
+      <!-- SUB · categorias -->
+      <div class="col">
+        <div class="clabel">Tela focada · <b>categorias</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Categorias de rolê</h3><span class="act">Salvar</span></div>
+          <div class="scrollarea" style="padding-top:14px">
+            <div class="focustip">O que você curte fazer num rolê — escolha de <b style="color:var(--content-secondary)">2 a 10</b>. <span style="color:var(--brand-text);font-weight:700">5 selecionadas</span></div>
+            <div class="cats">
+              <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Vida noturna</span>
+              <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Música</span>
+              <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Café e doceria</span>
+              <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Arte</span>
+              <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Games</span>
+              <span class="fchip">Esportes</span><span class="fchip">Gastronomia</span><span class="fchip">Cinema e teatro</span>
+              <span class="fchip">Ar livre</span><span class="fchip">Saúde</span>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">O picker pesado ganha tela própria — sem disputar espaço com o resto. Mín. 2 sinalizado; abaixo disso o "Salvar" fica desabilitado. Interesses usa a mesma tela.</div>
+      </div>
+
+      <!-- SUB · privacidade -->
+      <div class="col">
+        <div class="clabel">Tela focada · <b>privacidade</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Visibilidade</h3><span class="act">Salvar</span></div>
+          <div class="scrollarea" style="padding-top:14px">
+            <div class="visseg">
+              <div class="o on"><svg class="i sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg> Público</div>
+              <div class="o"><svg class="i sm" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Privado</div>
+            </div>
+            <div class="vishint" style="margin-top:12px"><svg class="i sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg> Qualquer pessoa pode te encontrar e ver seus rolês e eventos.</div>
+          </div>
+        </div></div>
+        <div class="cap">Privacidade segmentada Público/Privado com a dica embaixo — sozinha na tela, sem o switch solto perdido no meio do form.</div>
+      </div>
+
+    </div>
+
+    <div class="notes-2">
+      <div class="note"><span class="k">1</span><span><b>Uma responsabilidade por tela</b>: o hub só navega + mostra o valor atual; cada campo tem sua tela com foco, regra e "Salvar". Telas curtas, sem rolagem, fáceis de testar.</span></div>
+      <div class="note"><span class="k">2</span><span><b>Reúsa o que já existe</b>: <span class="pill-inline">editProfileSchema</span> valida campo a campo; cada tela manda só o <span class="pill-inline">PATCH</span> do seu campo (<span class="pill-inline">buildProfilePatch</span> já é parcial). O <span class="pill-inline">CategoryMultiSelect</span>/<span class="pill-inline">InterestsMultiSelect</span> entram inteiros na tela de categorias.</span></div>
+      <div class="note"><span class="k">3</span><span><b>Rotas novas</b> sob <span class="pill-inline">app/profile/edit/</span>: <span class="pill-inline">index</span> (hub), <span class="pill-inline">[field]</span> (texto genérico) ou telas dedicadas (<span class="pill-inline">categories</span>, <span class="pill-inline">privacy</span>). Sem mudança no backend.</span></div>
+      <div class="note"><span class="k">4</span><span><b>Coerência</b>: linhas-card = lista de gerência do rolê; chips com check = filtros/form; segmento = "Quem vê" do evento. Nada de cor ou componente novo.</span></div>
+    </div>
+  </section>
+
+  <!-- ════════════ 2. FILTROS DO MAPA ════════════ -->
+  <section>
+    <div class="sec-head"><div class="num">2</div><h2>Filtros do mapa</h2></div>
+    <p class="sec-sub">A folha de filtros ganha a casca dos outros sheets (alça arrastável, <span class="pill-inline">surface-sunken</span>): <b>Status</b> e <b>Categorias</b> como chips selecionáveis (check no ativo), <b>Apenas amigos</b> como linha-card com tile, e um CTA <b>Ver eventos</b> que fecha. Continua aplicando ao vivo no mapa.</p>
+
+    <div class="row">
+
+      <!-- filtros default -->
+      <div class="col">
+        <div class="clabel">Filtros · sem alteração</div>
+        <div class="phone"><div class="screen">
+          <div class="stage">
+            <div class="mapbg"></div>
+            <div class="mroad" style="top:24%;left:-8%;width:116%;height:6px;transform:rotate(-6deg)"></div>
+            <div class="mroad" style="top:60%;left:-8%;width:116%;height:5px;transform:rotate(5deg)"></div>
+            <div class="mroad" style="top:0;left:42%;width:6px;height:62%;transform:rotate(4deg)"></div>
+            <div class="topscrim"></div>
+            <div class="statusbar over"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+            <div class="avpin" style="top:15%;left:28%"><div class="face g3"></div><div class="tip"></div></div>
+            <div class="pin brand" style="top:19%;left:64%"><span>4</span></div>
+            <div class="sheet" style="height:560px">
+              <div class="grab"></div>
+              <div class="sheethead"><h3>Filtros</h3></div>
+              <div class="sheetbody">
+                <div class="seclabel">Status</div>
+                <div class="cats">
+                  <span class="fchip">Acontecendo</span><span class="fchip">Em breve</span>
+                  <span class="fchip">Futuros</span><span class="fchip">Encerrados</span>
+                </div>
+                <div class="seclabel">Categorias</div>
+                <div class="cats">
+                  <span class="fchip">Música</span><span class="fchip">Gastronomia</span>
+                  <span class="fchip">Vida noturna</span><span class="fchip">Esportes</span>
+                  <span class="fchip">Arte</span><span class="fchip">Games</span>
+                </div>
+                <div class="seclabel">Pessoas</div>
+                <div class="togglerow">
+                  <div class="tile"><svg class="i lg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+                  <div class="txt"><b>Apenas amigos</b><small>Eventos de quem você segue ou com presença de amigos</small></div>
+                  <div class="sw"><div class="knob"></div></div>
+                </div>
+                <div style="padding:16px 0 18px"><button class="btn btn-primary">Ver eventos</button></div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Sem filtro aplicado: chips neutros, "Apenas amigos" desligado. Sem cabeçalho "Limpar" (nada pra limpar). O CTA fecha a folha.</div>
+      </div>
+
+      <!-- filtros ativos -->
+      <div class="col">
+        <div class="clabel">Filtros · <b>ativos</b></div>
+        <div class="phone"><div class="screen">
+          <div class="stage">
+            <div class="mapbg"></div>
+            <div class="mroad" style="top:24%;left:-8%;width:116%;height:6px;transform:rotate(-6deg)"></div>
+            <div class="mroad" style="top:0;left:42%;width:6px;height:62%;transform:rotate(4deg)"></div>
+            <div class="topscrim"></div>
+            <div class="statusbar over"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+            <div class="avpin" style="top:16%;left:60%"><div class="face g4"></div><div class="tip"></div></div>
+            <div class="sheet" style="height:560px">
+              <div class="grab"></div>
+              <div class="sheethead"><h3>Filtros</h3><span class="clear">Limpar</span></div>
+              <div class="sheetbody">
+                <div class="seclabel">Status</div>
+                <div class="cats">
+                  <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Acontecendo</span>
+                  <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Em breve</span>
+                  <span class="fchip">Futuros</span><span class="fchip">Encerrados</span>
+                </div>
+                <div class="seclabel">Categorias</div>
+                <div class="cats">
+                  <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Música</span>
+                  <span class="fchip">Gastronomia</span>
+                  <span class="fchip on"><svg class="i sm ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Vida noturna</span>
+                  <span class="fchip">Esportes</span><span class="fchip">Arte</span><span class="fchip">Games</span>
+                </div>
+                <div class="seclabel">Pessoas</div>
+                <div class="togglerow">
+                  <div class="tile"><svg class="i lg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+                  <div class="txt"><b>Apenas amigos</b><small>Eventos de quem você segue ou com presença de amigos</small></div>
+                  <div class="sw on"><div class="knob"></div></div>
+                </div>
+                <div style="padding:16px 0 18px"><button class="btn btn-primary">Ver eventos</button></div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Com filtros ativos aparece "Limpar". Chips marcados com check (igual ao form). "Apenas amigos" ligado (trilho violeta). O mapa já reagiu ao vivo atrás.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════ 3. NOTIFICAÇÕES ════════════ -->
+  <section>
+    <div class="sec-head"><div class="num">3</div><h2>Notificações</h2></div>
+    <p class="sec-sub">A lista ganha hierarquia: não-lidas com <b>fundo violeta sutil</b> + bolinha, <b>avatar com selo de tipo</b> (seguir · curtir · comentar · presença), e <b>tile de ícone</b> pras de sistema (perto de você, rolê). Agrupadas por <b>dia</b>. Sem <span class="pill-inline">Alert</span>, sem toast.</p>
+
+    <div class="row">
+
+      <!-- inbox -->
+      <div class="col">
+        <div class="clabel">Inbox</div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="nhead">
+            <h3>Notificações</h3>
+            <div class="acts">
+              <span class="readall">Marcar lidas</span>
+              <div class="gear"><svg class="i lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 7 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 1.1-2.7H5a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 6.6 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg></div>
+            </div>
+          </div>
+
+          <div class="daysep">Hoje</div>
+
+          <!-- novo seguidor (unread) -->
+          <div class="notif unread">
+            <div class="avwrap">
+              <div class="av g3"></div>
+              <div class="tbadge" style="background:var(--brand)"><svg class="i sm" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></div>
+            </div>
+            <div class="body">
+              <div class="t"><b>Marina Alves</b> começou a te seguir</div>
+              <div class="time">há 8 min</div>
+            </div>
+            <div class="dot"></div>
+          </div>
+
+          <!-- curtida (unread) -->
+          <div class="notif unread">
+            <div class="avwrap">
+              <div class="av g2"></div>
+              <div class="tbadge" style="background:var(--danger)"><svg class="i sm fill" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+            </div>
+            <div class="body">
+              <div class="t"><b>Lucas Pereira</b> curtiu seu evento</div>
+              <div class="sub">Festival de Inverno no Parque</div>
+              <div class="time">há 25 min</div>
+            </div>
+            <div class="dot"></div>
+          </div>
+
+          <!-- entrou no rolê (unread) -->
+          <div class="notif unread">
+            <div class="avwrap">
+              <div class="av g5"></div>
+              <div class="tbadge" style="background:var(--brand)"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"/></svg></div>
+            </div>
+            <div class="body">
+              <div class="t"><b>Pedro Lima</b> entrou no seu rolê</div>
+              <div class="sub">Noite de jazz no Blue Note</div>
+              <div class="time">há 1 h</div>
+            </div>
+            <div class="dot"></div>
+          </div>
+
+          <!-- rolê perto (sistema, unread) -->
+          <div class="notif unread">
+            <div class="avwrap">
+              <div class="tile"><svg class="i lg" viewBox="0 0 24 24"><path d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"/></svg></div>
+            </div>
+            <div class="body">
+              <div class="t">Tem um <b>rolê novo</b> perto de você</div>
+              <div class="sub">Happy hour no Boteco da Praça · 800 m</div>
+              <div class="time">há 2 h</div>
+            </div>
+            <div class="dot"></div>
+          </div>
+
+          <div class="daysep">Esta semana</div>
+
+          <!-- comentário (read) -->
+          <div class="notif">
+            <div class="avwrap">
+              <div class="av g4"></div>
+              <div class="tbadge" style="background:var(--blue)"><svg class="i sm" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg></div>
+            </div>
+            <div class="body">
+              <div class="t"><b>Ana Souza</b> comentou no seu evento</div>
+              <div class="sub">"bora demais, conta comigo!"</div>
+              <div class="time">ontem</div>
+            </div>
+          </div>
+
+          <!-- presença (read) -->
+          <div class="notif">
+            <div class="avwrap">
+              <div class="av g1"></div>
+              <div class="tbadge" style="background:var(--success-strong)"><svg class="i sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            </div>
+            <div class="body">
+              <div class="t"><b>Rafa Dias</b> confirmou presença</div>
+              <div class="sub">Festival de Inverno no Parque</div>
+              <div class="time">2 dias</div>
+            </div>
+          </div>
+
+          <!-- rolê expirando (sistema, read) -->
+          <div class="notif">
+            <div class="avwrap">
+              <div class="tile" style="background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.32);color:var(--warning-text)"><svg class="i lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            </div>
+            <div class="body">
+              <div class="t">Seu rolê está <b>acabando</b></div>
+              <div class="sub">Renove pra continuar no mapa</div>
+              <div class="time">3 dias</div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Não-lidas com fundo violeta sutil + bolinha. Avatar com selo de tipo (cor por ação). Sistema usa tile de ícone. Cabeçalhos de dia separam o fluxo.</div>
+      </div>
+
+      <!-- selos + vazio -->
+      <div class="col">
+        <div class="clabel">Selos de tipo &amp; vazio</div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="nhead"><h3>Notificações</h3><div class="acts"><div class="gear"><svg class="i lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 7 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 1.1-2.7H5a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 6.6 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg></div></div></div>
+
+          <div style="padding:14px 16px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;gap:14px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:64px">
+                <div class="avwrap"><div class="av g3" style="width:42px;height:42px"></div><div class="tbadge" style="background:var(--brand);width:19px;height:19px"><svg class="i sm" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></div></div>
+                <span style="font-size:10px;color:var(--content-subtle)">seguir</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:64px">
+                <div class="avwrap"><div class="av g2" style="width:42px;height:42px"></div><div class="tbadge" style="background:var(--danger);width:19px;height:19px"><svg class="i sm fill" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg></div></div>
+                <span style="font-size:10px;color:var(--content-subtle)">curtir</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:64px">
+                <div class="avwrap"><div class="av g4" style="width:42px;height:42px"></div><div class="tbadge" style="background:var(--blue);width:19px;height:19px"><svg class="i sm" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg></div></div>
+                <span style="font-size:10px;color:var(--content-subtle)">comentar</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:64px">
+                <div class="avwrap"><div class="av g1" style="width:42px;height:42px"></div><div class="tbadge" style="background:var(--success-strong);width:19px;height:19px"><svg class="i sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div></div>
+                <span style="font-size:10px;color:var(--content-subtle)">presença</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:64px">
+                <div class="tile" style="width:42px;height:42px;border-radius:999px;display:grid;place-items:center;background:var(--brand-surface);border:1px solid var(--brand-surface-strong);color:var(--brand-text)"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"/></svg></div>
+                <span style="font-size:10px;color:var(--content-subtle)">rolê</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:64px">
+                <div class="tile" style="width:42px;height:42px;border-radius:999px;display:grid;place-items:center;background:var(--brand-surface);border:1px solid var(--brand-surface-strong);color:var(--brand-text)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/></svg></div>
+                <span style="font-size:10px;color:var(--content-subtle)">perto</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- estado vazio -->
+          <div class="nstate">
+            <div class="ic"><svg class="i xl" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+            <h4>Tudo em dia por aqui</h4>
+            <p>Atividades da sua rede e rolês perto de você aparecem nesta tela.</p>
+          </div>
+        </div></div>
+        <div class="cap">Os selos de tipo, com cor por ação (seguir/rolê = violeta, curtir = vermelho, comentar = azul, presença = verde). Embaixo, o estado vazio no padrão dos demais (tile + título + texto).</div>
+      </div>
+
+    </div>
+
+    <div class="notes-2">
+      <div class="note"><span class="k">1</span><span><b>Zero dependência nova de backend</b>: tudo sai do que <span class="pill-inline">/notifications</span> já devolve — <span class="pill-inline">type</span>, <span class="pill-inline">data.actor</span>, <span class="pill-inline">title/body</span>, <span class="pill-inline">readAt</span>, <span class="pill-inline">createdAt</span>. O selo é derivado do <span class="pill-inline">type</span>.</span></div>
+      <div class="note"><span class="k">2</span><span><b>Agrupamento por dia</b> (Hoje · Esta semana · Antes) é client-side sobre <span class="pill-inline">createdAt</span> — <span class="pill-inline">SectionList</span> no lugar do <span class="pill-inline">FlatList</span>, sem mudar o hook de paginação.</span></div>
+      <div class="note"><span class="k">3</span><span><b>Marcar lidas</b> e <b>engrenagem</b> ficam no header; tap numa linha continua roteando pelo <span class="pill-inline">useOpenNotification</span> e marcando como lida.</span></div>
+      <div class="note"><span class="k">4</span><span><b>Coerência</b>: segmento de privacidade = "Quem vê" do rolê/evento; chips de filtro = chips do form; tile de ícone = card de detalhe. Nada novo de cor.</span></div>
+    </div>
+  </section>
+
+  <div class="caption-foot">
+    Tokens reais de <span class="pill-inline">src/global.css</span> · tema dark único · marca violet #7c3aed · sem aurora/glow · toque ≥44px.<br>
+    Editar perfil = seções + CTA fixo · Filtros = chips selecionáveis + linha-card · Notificações = selo de tipo + agrupamento por dia. Reúsa segmento, chips, tile e botão do resto do app.
+  </div>
+
+</div>
+</body>
+</html>

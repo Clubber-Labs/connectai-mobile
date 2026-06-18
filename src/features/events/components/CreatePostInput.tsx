@@ -49,7 +49,7 @@ export function CreatePostInput({ eventId, disabled, disabledReason }: Props) {
 
   if (disabled) {
     return (
-      <View className="bg-brand-surface border border-info rounded-xl px-4 py-3">
+      <View className="bg-brand-surface rounded-xl px-4 py-3">
         <Text className="text-sm text-brand-text-strong">
           {disabledReason ?? 'Você não pode postar agora.'}
         </Text>

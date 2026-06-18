@@ -40,7 +40,7 @@ export function MapCreateButton({ onCreateEvent, onCreateSpot }: Props) {
         <Ionicons name="add" size={28} color={colors.content} />
       </Pressable>
 
-      <SheetModal visible={open} onClose={() => setOpen(false)}>
+      <SheetModal visible={open} onClose={() => setOpen(false)} dimmed={false}>
         <View className="px-4 pb-2">
           <Text className="px-1 pb-2 text-lg font-bold text-content">
             Criar

@@ -115,8 +115,9 @@ export default function RootLayout() {
     initFacebookSDK()
   }, [])
 
-  // 4401 em qualquer socket (chat/notificações) = token inválido e sem rota
-  // de refresh → encerra a sessão (mesmo caminho do interceptor REST 401).
+  // Chamado SÓ quando o refresh do socket falha de forma terminal (o socket
+  // tenta renovar o token no 4401 antes de desistir — ver handleAuthClose): a
+  // sessão acabou de verdade → encerra (mesmo caminho do interceptor REST 401).
   const handleSocketAuthError = useCallback(() => {
     endSession({ expired: true })
   }, [])
@@ -138,12 +139,21 @@ export default function RootLayout() {
   // Telas de billing (upgrade/manage) têm header próprio (fechar/voltar) —
   // o header global em cima seria redundante.
   const isBilling = segments[0] === 'billing'
+  // Telas com header próprio (voltar + título + ações) — o header global em
+  // cima seria redundante. Notificações tem cabeçalho com "Marcar lidas" +
+  // ajustes.
+  const isNotifications = segments[0] === 'notifications'
+  // Editar perfil é hub + telas focadas, cada uma com voltar/título/Salvar
+  // próprios — o header global em cima seria redundante.
+  const isProfileEdit = segments[0] === 'profile' && segments[1] === 'edit'
   const showHeader =
     isAuthenticated &&
     !profileIncomplete &&
     !onConsentFlow &&
     !isEventDetail &&
-    !isBilling
+    !isBilling &&
+    !isNotifications &&
+    !isProfileEdit
   const chatActive = isAuthenticated && !profileIncomplete && !!userId
 
   // Publishable key é pública por natureza (pk_) — sem ela a PaymentSheet

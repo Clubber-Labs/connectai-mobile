@@ -41,7 +41,10 @@ export function useSuggestSpots() {
   // (aceita com query; responde 400 sem query e sem preferências).
   const hasValidQuery = trimmedQuery.length >= MIN_QUERY_LENGTH
 
-  async function handleGenerate() {
+  // radiusKmArg: override explícito desta geração (ex.: "aumentar raio" do estado
+  // vazio) — tem prioridade sobre o slider, cujo setState não chega a tempo no
+  // mesmo tap. Sem ele, segue o override do slider; sem override, o raio salvo.
+  async function handleGenerate(radiusKmArg?: number) {
     if (generate.isPending || isCapturing || !hasLocationConsent) return
     setIsCapturing(true)
     setLocationIssue(null)
@@ -51,13 +54,14 @@ export function useSuggestSpots() {
         setLocationIssue(location.kind)
         return
       }
+      const radius = radiusKmArg ?? radiusOverride
       generate.mutate({
         latitude: location.latitude,
         longitude: location.longitude,
-        // radiusKm é OVERRIDE: só vai quando o usuário mexeu no slider. Sem
-        // override o backend usa o raio salvo — evita mandar o default (antes de
-        // /users/me hidratar) e sobrescrever o valor real do usuário naquela busca.
-        ...(radiusOverride !== null ? { radiusKm: radiusOverride } : {}),
+        // radiusKm é OVERRIDE: só vai quando há valor. Sem override o backend usa
+        // o raio salvo — evita mandar o default (antes de /users/me hidratar) e
+        // sobrescrever o valor real do usuário naquela busca.
+        ...(radius != null ? { radiusKm: radius } : {}),
         ...(hasValidQuery ? { query: trimmedQuery } : {}),
       })
     } finally {

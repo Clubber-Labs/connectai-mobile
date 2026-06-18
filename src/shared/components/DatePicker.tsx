@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { View, Text, Pressable, Modal, Platform } from 'react-native'
-import DateTimePicker from '@react-native-community/datetimepicker'
+import { View, Text, Pressable } from 'react-native'
+import { SheetModal } from './SheetModal'
+import { WheelDatePicker } from './WheelDatePicker'
+import { WheelDateTimePicker } from './WheelDateTimePicker'
 
 type Mode = 'date' | 'datetime'
 
@@ -24,6 +26,9 @@ function formatValue(value: Date, mode: Mode): string {
   return value.toLocaleDateString('pt-BR')
 }
 
+// Campo de data/hora: mostra o valor e abre a roda própria (tema dark da marca)
+// numa folha. Edita um rascunho — só comita no "Confirmar", então rolar as rodas
+// não dispara updates parciais no form. Sem picker nativo (não aceita a marca).
 export function DatePicker({
   value,
   onChange,
@@ -34,18 +39,22 @@ export function DatePicker({
   mode = 'date',
 }: Props) {
   const [open, setOpen] = useState(false)
-  const [step, setStep] = useState<'date' | 'time'>('date')
-  const pickerValue = value ?? minimumDate ?? maximumDate ?? new Date()
+  const [draft, setDraft] = useState<Date>(value ?? minimumDate ?? new Date())
 
-  function handleClose() {
+  function handleOpen() {
+    setDraft(value ?? minimumDate ?? new Date())
+    setOpen(true)
+  }
+
+  function handleConfirm() {
+    onChange(draft)
     setOpen(false)
-    setStep('date')
   }
 
   return (
     <>
       <Pressable
-        onPress={() => setOpen(true)}
+        onPress={handleOpen}
         className={`border ${hasError ? 'border-content' : 'border-line'} bg-surface rounded-xl px-4 py-3.5`}
       >
         <Text
@@ -57,50 +66,36 @@ export function DatePicker({
         </Text>
       </Pressable>
 
-      {Platform.OS === 'ios' ? (
-        <Modal visible={open} transparent animationType="slide">
-          <View className="flex-1 justify-end bg-background/40">
-            <View className="bg-surface rounded-t-2xl pb-8">
-              <View className="flex-row justify-end px-4 pt-4 pb-2">
-                <Pressable onPress={handleClose}>
-                  <Text className="text-brand-text font-semibold text-base">
-                    Confirmar
-                  </Text>
-                </Pressable>
-              </View>
-              <DateTimePicker
-                value={pickerValue}
-                mode={mode === 'datetime' ? 'datetime' : 'date'}
-                display="spinner"
-                maximumDate={maximumDate}
-                minimumDate={minimumDate}
-                onValueChange={(_, date) => onChange(date)}
-                locale="pt-BR"
-              />
-            </View>
+      <SheetModal visible={open} onClose={() => setOpen(false)}>
+        <View className="px-5 pt-1">
+          <View className="flex-row items-center justify-between pb-3">
+            <Text className="text-content text-xl font-extrabold">
+              {mode === 'datetime' ? 'Data e hora' : 'Data'}
+            </Text>
+            <Pressable onPress={handleConfirm} hitSlop={8}>
+              <Text className="text-brand-text text-[15px] font-bold">
+                Confirmar
+              </Text>
+            </Pressable>
           </View>
-        </Modal>
-      ) : (
-        open && (
-          <DateTimePicker
-            value={pickerValue}
-            mode={mode === 'datetime' ? step : 'date'}
-            display="default"
-            maximumDate={maximumDate}
-            minimumDate={minimumDate}
-            onValueChange={(_, date) => {
-              if (mode === 'datetime' && step === 'date') {
-                onChange(date)
-                setStep('time')
-              } else {
-                onChange(date)
-                handleClose()
-              }
-            }}
-            onDismiss={handleClose}
-          />
-        )
-      )}
+
+          {mode === 'datetime' ? (
+            <WheelDateTimePicker
+              value={draft}
+              onChange={setDraft}
+              minimumDate={minimumDate}
+              maximumDate={maximumDate}
+            />
+          ) : (
+            <WheelDatePicker
+              value={draft}
+              onChange={setDraft}
+              minimumDate={minimumDate}
+              maximumDate={maximumDate}
+            />
+          )}
+        </View>
+      </SheetModal>
     </>
   )
 }

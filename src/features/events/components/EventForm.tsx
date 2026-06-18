@@ -5,8 +5,9 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Switch,
+  Pressable,
 } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -76,6 +77,8 @@ export function EventForm({
         contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 20 }}
         keyboardShouldPersistTaps="handled"
       >
+        {imagesSection}
+
         <View className="gap-1">
           <Text className="text-sm font-medium text-content-tertiary">
             Título
@@ -280,34 +283,61 @@ export function EventForm({
           )}
         </View>
 
-        <View className="flex-row items-center justify-between bg-surface px-4 py-3 rounded-xl">
-          <View className="flex-1">
-            <Text className="text-sm font-medium text-content-secondary">
-              Evento público
-            </Text>
-            <Text className="text-xs text-content-muted">
-              Visível para qualquer pessoa
-            </Text>
-          </View>
-          <Controller
-            control={control}
-            name="isPublic"
-            render={({ field: { onChange, value } }) => (
-              <Switch value={value} onValueChange={onChange} />
-            )}
-          />
-        </View>
+        <Controller
+          control={control}
+          name="isPublic"
+          render={({ field: { onChange, value } }) => (
+            <View className="gap-1">
+              <Text className="text-sm font-medium text-content-tertiary">
+                Quem vê
+              </Text>
+              <View className="flex-row gap-1 bg-surface border border-line rounded-xl p-1">
+                {([true, false] as const).map(option => {
+                  const active = value === option
+                  return (
+                    <Pressable
+                      key={String(option)}
+                      onPress={() => onChange(option)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-lg py-2.5 ${
+                        active ? 'bg-surface-elevated' : ''
+                      }`}
+                    >
+                      <Ionicons
+                        name={option ? 'earth' : 'lock-closed'}
+                        size={16}
+                        color={active ? colors.content : colors.contentMuted}
+                      />
+                      <Text
+                        className={`text-sm font-semibold ${
+                          active ? 'text-content' : 'text-content-muted'
+                        }`}
+                      >
+                        {option ? 'Público' : 'Privado'}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+              <Text className="text-xs text-content-muted">
+                {value
+                  ? 'Qualquer pessoa pode ver e participar do evento.'
+                  : 'Só quem você convidar pode ver o evento.'}
+              </Text>
+            </View>
+          )}
+        />
+      </ScrollView>
 
-        {imagesSection}
-
+      <View className="border-t border-line bg-surface-sunken px-5 pt-4 pb-12 gap-3">
         <FormError message={submitError ? errorMessage : null} />
-
         <Button
           label={submitting ? submittingLabel : submitLabel}
           onPress={handleSubmit(onSubmit)}
           loading={submitting}
         />
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   )
 }

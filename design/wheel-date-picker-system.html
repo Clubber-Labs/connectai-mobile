@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ConnectAI · Seletor de data (roda)</title>
+<style>
+  /* ───────────────────────────────────────────────────────────
+     TOKENS — espelho exato de src/global.css (tema dark único).
+     Mesma fonte da verdade dos outros docs em /design.
+     ─────────────────────────────────────────────────────────── */
+  :root{
+    --background:#000000;--surface-sunken:#0a0a0a;--surface:#18181b;--surface-elevated:#27272a;
+    --surface-high:#3f3f46;--surface-higher:#52525b;
+    --content:#ffffff;--content-bright:#f4f4f5;--content-secondary:#e4e4e7;--content-tertiary:#d4d4d8;
+    --content-muted:#a1a1aa;--content-subtle:#71717a;--content-faint:#52525b;
+    --line:#27272a;--line-strong:#3f3f46;--line-subtle:#18181b;
+    --brand:#7c3aed;--brand-emphasis:#8b5cf6;--brand-strong:#6d28d9;--brand-text:#a78bfa;
+    --brand-text-strong:#c4b5fd;--brand-text-bright:#ddd6fe;--brand-surface:#2e1065;--brand-surface-strong:#4c1d95;
+    --danger:#ef4444;--danger-strong:#dc2626;--danger-text:#f87171;--warning:#fbbf24;--warning-text:#fde68a;
+    --success:#22c55e;--success-text:#4ade80;--success-strong:#16a34a;--info:#7dd3fc;--blue:#3b82f6;
+
+    --t-display:28px;--t-title:20px;--t-section:17px;--t-body:15px;--t-meta:13px;--t-caption:11px;
+    --r-card:12px;--r-btn:10px;--r-chip:999px;
+    font-synthesis:none;-webkit-font-smoothing:antialiased;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050505;color:var(--content);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif;line-height:1.4;padding:48px 24px 120px}
+  .wrap{max-width:1180px;margin:0 auto}
+
+  .doc-head{text-align:center;margin-bottom:56px}
+  .doc-head .eyebrow{font-size:var(--t-caption);letter-spacing:.18em;text-transform:uppercase;color:var(--brand-text);font-weight:700}
+  .doc-head h1{font-size:40px;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px}
+  .doc-head p{color:var(--content-muted);font-size:var(--t-body);max-width:730px;margin:0 auto}
+
+  section{margin-bottom:72px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .sec-head .num{font-size:var(--t-meta);font-weight:800;color:var(--brand-text);background:var(--brand-surface);border:1px solid var(--brand-surface-strong);width:28px;height:28px;border-radius:999px;display:grid;place-items:center;flex:none}
+  .sec-head h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+  .sec-sub{color:var(--content-muted);font-size:var(--t-body);margin:0 0 28px 40px;max-width:790px}
+  .sec-sub b{color:var(--content-secondary);font-weight:700}
+
+  /* botões canônicos */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:var(--r-btn);font-size:var(--t-body);font-weight:700;border:none;cursor:pointer;width:100%}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-secondary{background:transparent;border:1px solid var(--line-strong);color:var(--content-secondary)}
+
+  /* phone frame */
+  .phone{width:344px;background:var(--background);border:10px solid #1a1a1d;border-radius:40px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.45);position:relative}
+  .screen{height:792px;overflow:hidden;position:relative;display:flex;flex-direction:column;background:#08080b}
+  .statusbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:700;flex:none;z-index:9}
+  .statusbar .dots{display:flex;gap:5px;align-items:center}
+
+  /* topbar (back + título + ação) */
+  .topbar{display:flex;align-items:center;gap:12px;padding:8px 12px 12px;flex:none}
+  .topbar .back{width:38px;height:38px;border-radius:999px;background:var(--surface-elevated);display:grid;place-items:center;color:var(--content-secondary)}
+  .topbar h3{font-size:var(--t-title);font-weight:800;flex:1}
+  .topbar .act{font-size:15px;font-weight:700;color:var(--brand-text);padding:0 6px}
+  .topbar .act.off{color:var(--content-faint)}
+
+  .scrollarea{flex:1;overflow-y:auto;padding:0 16px}
+  .scrollarea::-webkit-scrollbar{width:0}
+  .focustip{font-size:12.5px;color:var(--content-muted);margin:2px 2px 22px;line-height:1.5}
+
+  .flabel{font-size:var(--t-meta);font-weight:700;color:var(--content-secondary);margin-bottom:8px}
+  .finput{background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:13px 14px;font-size:var(--t-body);font-weight:600;color:#fff;display:flex;align-items:center;gap:8px}
+  .finput .grow{flex:1}
+  .finput .lead{color:var(--content-muted);flex:none}
+  .finput .chev{color:var(--content-faint);flex:none;margin-left:auto}
+
+  /* ───────── RODA DE DATA ───────── */
+  .wheel{position:relative;height:220px;background:var(--background);border-radius:16px;overflow:hidden}
+  .wband{position:absolute;left:8px;right:8px;top:88px;height:44px;background:rgba(46,16,101,.3);border:1px solid var(--brand-surface-strong);border-radius:14px;z-index:1}
+  .wcols{position:relative;z-index:2;display:flex;height:100%;align-items:center}
+  .wcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .wcol.mid{flex:1.3}
+  .witem{height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;width:100%}
+  .witem.on{opacity:1;font-weight:700}
+  .witem.o1{opacity:.5;transform:scale(.9)}
+  .witem.o2{opacity:.22;transform:scale(.8)}
+  .preview{text-align:center;font-size:15px;font-weight:600;color:var(--content-secondary);margin-top:24px}
+
+  /* anatomia (callouts) */
+  .anno{position:relative}
+  .tag{position:absolute;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--brand-text-bright);background:var(--brand-surface);border:1px solid var(--brand-surface-strong);border-radius:999px;padding:3px 9px;white-space:nowrap;z-index:5}
+  .tag.t-band{top:96px;right:-8px}
+  .tag.t-center{top:8px;left:-8px}
+  .tag.t-fade{bottom:6px;left:-8px}
+
+  /* bottom sheet (variante de formulário) */
+  .stage{flex:1;position:relative;overflow:hidden;background:#08080b}
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:6}
+  .formghost{padding:14px 16px}
+  .gline{height:13px;border-radius:6px;background:var(--surface);margin-bottom:14px}
+  .gline.s{width:42%}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface-sunken);border-top:1px solid var(--line);border-top-left-radius:24px;border-top-right-radius:24px;box-shadow:0 -10px 30px rgba(0,0,0,.5);z-index:8;display:flex;flex-direction:column;overflow:hidden;padding-bottom:18px}
+  .grab{width:38px;height:5px;border-radius:999px;background:var(--surface-high);align-self:center;margin:10px 0 2px}
+  .sheethead{display:flex;align-items:center;justify-content:space-between;padding:6px 18px 10px}
+  .sheethead h3{font-size:19px;font-weight:800;letter-spacing:-.02em}
+  .sheethead .done{font-size:14px;font-weight:700;color:var(--brand-text)}
+  .sheetpad{padding:0 14px}
+
+  svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+  svg.i.sm{width:13px;height:13px}
+
+  .row{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  .col{display:flex;flex-direction:column;align-items:center;gap:14px;width:344px}
+  .col .clabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--content-subtle);font-weight:700}
+  .col .clabel b{color:var(--brand-text);font-weight:800}
+  .cap{font-size:11.5px;color:var(--content-subtle);text-align:center;max-width:320px;line-height:1.5}
+
+  .notes-2{margin:34px auto 0;max-width:1040px;display:grid;grid-template-columns:1fr 1fr;gap:10px 28px}
+  .note{display:flex;gap:10px;font-size:var(--t-meta);color:var(--content-tertiary);align-items:flex-start}
+  .note .k{flex:none;width:22px;height:22px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:800;background:rgba(34,197,94,.16);color:var(--success-text)}
+  .note b{color:var(--content);font-weight:700}
+  .pill-inline{display:inline-block;background:var(--surface-elevated);border:1px solid var(--line-strong);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--content-tertiary)}
+  .caption-foot{text-align:center;color:var(--content-faint);font-size:var(--t-meta);margin-top:64px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <div class="eyebrow">ConnectAI · Design System</div>
+    <h1>Seletor de data — roda</h1>
+    <p>Um picker de data próprio (estilo Tinder/iOS) no tema dark da marca, no lugar do picker nativo que não aceita as nossas cores. Três rodas <b>Dia · Mês · Ano</b> (ordem BR), banda de seleção violeta ao centro e profundidade por <b>desbote + escala</b> dirigida pelo scroll. Tokens reais de <span class="pill-inline">global.css</span> · marca violet #7c3aed · sem aurora/glow.</p>
+  </div>
+
+  <!-- ════════════ 1. RODA ════════════ -->
+  <section>
+    <div class="sec-head"><div class="num">1</div><h2>Tela de nascimento — roda inline</h2></div>
+    <p class="sec-sub">Na tela focada de <b>Nascimento</b> a roda fica <b>na cara</b> (sem campo, sem modal — padrão Tinder): casca de tela focada (voltar + título + <b>Salvar</b>), a roda, e o <b>preview por extenso</b> embaixo pra confirmação. O <pill class="pill-inline">Salvar</pill> só acende quando a data muda. Aplica via <span class="pill-inline">PATCH</span> do campo, como as outras telas do hub.</p>
+
+    <div class="row">
+
+      <!-- A · tela completa -->
+      <div class="col">
+        <div class="clabel">Tela focada · <b>nascimento</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Nascimento</h3><span class="act">Salvar</span></div>
+          <div class="scrollarea" style="padding-top:8px">
+            <div class="focustip">Sua idade confirma que você pode usar o ConnectAI. Não aparece no seu perfil.</div>
+            <div class="wheel">
+              <div class="wband"></div>
+              <div class="wcols">
+                <div class="wcol">
+                  <div class="witem o2">10</div><div class="witem o1">11</div>
+                  <div class="witem on">12</div>
+                  <div class="witem o1">13</div><div class="witem o2">14</div>
+                </div>
+                <div class="wcol mid">
+                  <div class="witem o2">Jan</div><div class="witem o1">Fev</div>
+                  <div class="witem on">Mar</div>
+                  <div class="witem o1">Abr</div><div class="witem o2">Mai</div>
+                </div>
+                <div class="wcol">
+                  <div class="witem o2">2003</div><div class="witem o1">2002</div>
+                  <div class="witem on">2001</div>
+                  <div class="witem o1">2000</div><div class="witem o2">1999</div>
+                </div>
+              </div>
+            </div>
+            <div class="preview">12 de março de 2001</div>
+          </div>
+        </div></div>
+        <div class="cap">A integração real. Dia/Mês/Ano em rodas; o item central nítido sobre a banda violeta, os vizinhos desbotando. O preview confirma a escolha sem ambiguidade.</div>
+      </div>
+
+      <!-- B · anatomia -->
+      <div class="col">
+        <div class="clabel">Anatomia · <b>como funciona</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 18px">
+            <div class="wheel anno" style="height:264px">
+              <div class="wband" style="top:110px"></div>
+              <span class="tag t-band">banda de seleção · marca</span>
+              <span class="tag t-center">centro nítido · opacidade 1</span>
+              <span class="tag t-fade">bordas desbotam · 0.22</span>
+              <div class="wcols">
+                <div class="wcol">
+                  <div class="witem o2">10</div><div class="witem o1">11</div>
+                  <div class="witem on">12</div>
+                  <div class="witem o1">13</div><div class="witem o2">14</div>
+                </div>
+                <div class="wcol mid">
+                  <div class="witem o2">Jan</div><div class="witem o1">Fev</div>
+                  <div class="witem on">Mar</div>
+                  <div class="witem o1">Abr</div><div class="witem o2">Mai</div>
+                </div>
+                <div class="wcol">
+                  <div class="witem o2">2003</div><div class="witem o1">2002</div>
+                  <div class="witem on">2001</div>
+                  <div class="witem o1">2000</div><div class="witem o2">1999</div>
+                </div>
+              </div>
+            </div>
+            <div class="focustip" style="text-align:center;margin:26px 6px 0">Cada coluna rola e <b style="color:var(--content-secondary)">encaixa item a item</b> (snap). Opacidade e escala saem do scroll com <b style="color:var(--content-secondary)">driver nativo</b> — fluido sem travar a JS thread.</div>
+          </div>
+        </div></div>
+        <div class="cap">Sem rotação 3D: a profundidade vem do falloff de opacidade (1 → 0.5 → 0.22) e escala (1 → 0.8). Leve, roda em qualquer device e em qualquer fundo.</div>
+      </div>
+
+      <!-- C · variante sheet (forms) -->
+      <div class="col">
+        <div class="clabel">Variante · <b>campo + folha</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="stage">
+            <div class="formghost">
+              <div class="flabel">Data de nascimento</div>
+              <div class="finput"><span class="grow">12/03/2001</span><svg class="i sm chev" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+              <div style="height:8px"></div>
+              <div class="gline"></div><div class="gline s"></div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="grab"></div>
+              <div class="sheethead"><h3>Nascimento</h3><span class="done">Confirmar</span></div>
+              <div class="sheetpad">
+                <div class="wheel" style="background:var(--surface-sunken)">
+                  <div class="wband"></div>
+                  <div class="wcols">
+                    <div class="wcol">
+                      <div class="witem o2">10</div><div class="witem o1">11</div>
+                      <div class="witem on">12</div>
+                      <div class="witem o1">13</div><div class="witem o2">14</div>
+                    </div>
+                    <div class="wcol mid">
+                      <div class="witem o2">Jan</div><div class="witem o1">Fev</div>
+                      <div class="witem on">Mar</div>
+                      <div class="witem o1">Abr</div><div class="witem o2">Mai</div>
+                    </div>
+                    <div class="wcol">
+                      <div class="witem o2">2003</div><div class="witem o1">2002</div>
+                      <div class="witem on">2001</div>
+                      <div class="witem o1">2000</div><div class="witem o2">1999</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Para campo dentro de form (cadastro): toca no campo → a mesma roda sobe numa folha (alça arrastável) com "Confirmar". Mesmo componente, embrulhado no <span class="pill-inline">SheetModal</span>.</div>
+      </div>
+
+    </div>
+
+    <div class="notes-2">
+      <div class="note"><span class="k">1</span><span><b>Por que próprio</b>: o <span class="pill-inline">@react-native-community/datetimepicker</span> não aceita as cores da marca (fica cinza do sistema). A roda autoral casa com o dark + violet e a casca de tela focada.</span></div>
+      <div class="note"><span class="k">2</span><span><b>Dia se reajusta</b>: ao trocar mês/ano, a coluna de dias recompõe (31 → 28 em fev) e o dia selecionado é clampado e re-encaixado sozinho. Data final clampada ao intervalo permitido.</span></div>
+      <div class="note"><span class="k">3</span><span><b>Reúso</b>: <span class="pill-inline">WheelColumn</span> é a primitiva (rola + snap + falloff); <span class="pill-inline">WheelDatePicker</span> compõe Dia/Mês/Ano. A coluna serve outras rodas depois (hora, etc.).</span></div>
+      <div class="note"><span class="k">4</span><span><b>Escopo</b>: cobre <b>data pura</b> (nascimento). Campos de <b>data + hora</b> (evento, spot, promover) seguem no picker nativo por ora — precisariam de colunas de hora/minuto.</span></div>
+    </div>
+  </section>
+
+  <div class="caption-foot">ConnectAI · seletor de data em roda · alinhado ao dark theme + marca violet #7c3aed<br/>WheelColumn + WheelDatePicker · integrado em Editar perfil › Nascimento</div>
+
+</div>
+</body>
+</html>

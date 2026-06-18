@@ -1,4 +1,5 @@
-import { ScrollView, Pressable, Text } from 'react-native'
+import { ScrollView, View } from 'react-native'
+import { Chip } from '@/shared/components/Chip'
 import type { EventStatus } from '@/shared/types'
 
 type Option = {
@@ -17,9 +18,12 @@ const OPTIONS: Option[] = [
 type Props = {
   value: EventStatus[]
   onChange: (next: EventStatus[]) => void
+  // Quebra em linhas (flex-wrap) em vez do scroll horizontal — para o sheet de
+  // filtros do mapa, onde os chips ficam empilhados com os de categoria.
+  wrap?: boolean
 }
 
-export function EventStatusFilter({ value, onChange }: Props) {
+export function EventStatusFilter({ value, onChange, wrap }: Props) {
   function toggle(status: EventStatus) {
     const next = value.includes(status)
       ? value.filter(s => s !== status)
@@ -29,31 +33,26 @@ export function EventStatusFilter({ value, onChange }: Props) {
     onChange(OPTIONS.map(o => o.value).filter(s => next.includes(s)))
   }
 
+  const chips = OPTIONS.map(option => (
+    <Chip
+      key={option.value}
+      label={option.label}
+      active={value.includes(option.value)}
+      onPress={() => toggle(option.value)}
+    />
+  ))
+
+  if (wrap) {
+    return <View className="flex-row flex-wrap gap-2">{chips}</View>
+  }
+
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 12, gap: 8 }}
     >
-      {OPTIONS.map(option => {
-        const active = value.includes(option.value)
-        return (
-          <Pressable
-            key={option.value}
-            onPress={() => toggle(option.value)}
-            accessibilityRole="button"
-            accessibilityLabel={`Filtrar por ${option.label}`}
-            accessibilityState={{ selected: active }}
-            className={`px-4 py-2 rounded-full ${active ? 'bg-brand' : 'bg-surface border border-line'}`}
-          >
-            <Text
-              className={`text-sm font-medium ${active ? 'text-content' : 'text-content-tertiary'}`}
-            >
-              {option.label}
-            </Text>
-          </Pressable>
-        )
-      })}
+      {chips}
     </ScrollView>
   )
 }

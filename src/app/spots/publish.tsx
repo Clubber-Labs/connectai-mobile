@@ -2,19 +2,18 @@ import { useMemo, useState } from 'react'
 import { View, Text } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
-import { getApiError } from '@/shared/lib/apiError'
+import { getApiError, isConflictError } from '@/shared/lib/apiError'
+import { useMyProfile } from '@/features/users/hooks/useProfile'
 import { useCreateSpot } from '@/features/spots/hooks/useCreateSpot'
 import { SpotForm } from '@/features/spots/components/SpotForm'
-import {
-  SPOT_MAX_WINDOW_MS,
-  type CreateSpotInput,
-} from '@/features/spots/schemas/createSpotSchema'
+import { SpotLimitReached } from '@/features/spots/components/SpotLimitReached'
+import type { CreateSpotInput } from '@/features/spots/schemas/createSpotSchema'
 import type { SpotSuggestion } from '@/features/spots/types'
 import { colors } from '@/shared/theme'
 
-// O rolê vive 24h por vez (renovável) — a janela default é o ciclo inteiro,
-// ajustável nos pickers (teto de agora+24h no schema e no picker).
-const DEFAULT_DURATION_MS = SPOT_MAX_WINDOW_MS
+// Janela default = atalho "Agora · por 2h" do form (o usuário ajusta nos
+// presets/pickers; o teto de 24h vive no schema e no picker).
+const DEFAULT_DURATION_MS = 2 * 60 * 60 * 1000
 
 function parseCandidate(raw: string | undefined): SpotSuggestion | null {
   if (!raw) return null
@@ -53,7 +52,11 @@ export default function PublishSpotScreen() {
   }>()
   const candidate = useMemo(() => parseCandidate(rawCandidate), [rawCandidate])
   const create = useCreateSpot()
+  const { data: profile } = useMyProfile()
+  const isPremium = !!profile?.isPremium
   const [submitError, setSubmitError] = useState<string | null>(null)
+  // 409 (máx. de rolês ativos) abre o estado dedicado com upsell do Premium.
+  const [limitReached, setLimitReached] = useState(false)
 
   // Sem candidato válido não há o que publicar (deep link malformado) —
   // volta pro mapa, onde fica o painel de sugestões.
@@ -62,11 +65,26 @@ export default function PublishSpotScreen() {
   function handleSubmit(data: CreateSpotInput) {
     setSubmitError(null)
     create.mutate(data, {
-      onSuccess: spot => router.replace(`/spots/${spot.id}`),
-      // 409 = máx. 5 spots ativos; 400 = janela/categorias inválidas. A
-      // decisão é do backend — só refletimos a mensagem.
-      onError: error => setSubmitError(getApiError(error).message),
+      onSuccess: spot => router.replace(`/spots/${spot.id}/created`),
+      // 409 = máx. de rolês ativos → estado dedicado (com upsell do Premium);
+      // 400 (janela/categorias) e demais ficam inline no form.
+      onError: error => {
+        if (isConflictError(error)) setLimitReached(true)
+        else setSubmitError(getApiError(error).message)
+      },
     })
+  }
+
+  if (limitReached) {
+    return (
+      <View className="flex-1 bg-background">
+        <SpotLimitReached
+          isPremium={isPremium}
+          onUpgrade={() => router.push('/billing/upgrade')}
+          onBack={() => router.back()}
+        />
+      </View>
+    )
   }
 
   return (
@@ -77,18 +95,23 @@ export default function PublishSpotScreen() {
         submitting={create.isPending}
         submitError={submitError}
         headerSection={
-          <View className="bg-surface border border-line rounded-2xl p-4 gap-1">
-            <View className="flex-row items-center gap-2">
-              <Ionicons name="location" size={16} color={colors.brandText} />
-              <Text className="text-content text-base font-semibold flex-1">
+          <View className="bg-surface border border-line rounded-2xl p-3 flex-row items-center gap-3">
+            <View className="w-12 h-12 rounded-lg bg-brand-surface border border-brand-surface-strong items-center justify-center">
+              <Ionicons name="location" size={20} color={colors.brandText} />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-content text-base font-semibold"
+                numberOfLines={1}
+              >
                 {candidate.name}
               </Text>
+              {candidate.address && (
+                <Text className="text-content-subtle text-xs" numberOfLines={1}>
+                  {candidate.address}
+                </Text>
+              )}
             </View>
-            {candidate.address && (
-              <Text className="text-content-subtle text-xs">
-                {candidate.address}
-              </Text>
-            )}
           </View>
         }
       />
