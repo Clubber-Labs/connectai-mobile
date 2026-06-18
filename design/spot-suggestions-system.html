@@ -1,0 +1,3011 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ConnectAI · Sistema de Spots (recomendação de rolê)</title>
+    <style>
+      /* ───────────────────────────────────────────────────────────
+     TOKENS — espelho exato de src/global.css (tema dark único).
+     Mesma fonte da verdade dos outros docs em /design.
+     ─────────────────────────────────────────────────────────── */
+      :root {
+        --background: #000000;
+        --surface-sunken: #0a0a0a;
+        --surface: #18181b;
+        --surface-elevated: #27272a;
+        --surface-high: #3f3f46;
+        --surface-higher: #52525b;
+        --content: #ffffff;
+        --content-bright: #f4f4f5;
+        --content-secondary: #e4e4e7;
+        --content-tertiary: #d4d4d8;
+        --content-muted: #a1a1aa;
+        --content-subtle: #71717a;
+        --content-faint: #52525b;
+        --line: #27272a;
+        --line-strong: #3f3f46;
+        --line-subtle: #18181b;
+        --brand: #7c3aed;
+        --brand-emphasis: #8b5cf6;
+        --brand-strong: #6d28d9;
+        --brand-text: #a78bfa;
+        --brand-text-strong: #c4b5fd;
+        --brand-text-bright: #ddd6fe;
+        --brand-surface: #2e1065;
+        --brand-surface-strong: #4c1d95;
+        --danger: #ef4444;
+        --danger-text: #f87171;
+        --warning: #fbbf24;
+        --warning-text: #fde68a;
+        --success: #22c55e;
+        --success-text: #4ade80;
+        --success-strong: #16a34a;
+        --info: #7dd3fc;
+
+        --t-display: 28px;
+        --t-title: 20px;
+        --t-section: 17px;
+        --t-body: 15px;
+        --t-meta: 13px;
+        --t-caption: 11px;
+        --r-card: 12px;
+        --r-btn: 10px;
+        --r-chip: 999px;
+        font-synthesis: none;
+        -webkit-font-smoothing: antialiased;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #050505;
+        color: var(--content);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
+          Roboto, sans-serif;
+        line-height: 1.4;
+        padding: 48px 24px 120px;
+      }
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+
+      /* cabeçalho do doc */
+      .doc-head {
+        text-align: center;
+        margin-bottom: 56px;
+      }
+      .doc-head .eyebrow {
+        font-size: var(--t-caption);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--brand-text);
+        font-weight: 700;
+      }
+      .doc-head h1 {
+        font-size: 40px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 10px 0 8px;
+      }
+      .doc-head p {
+        color: var(--content-muted);
+        font-size: var(--t-body);
+        max-width: 680px;
+        margin: 0 auto;
+      }
+
+      /* seções */
+      section {
+        margin-bottom: 72px;
+      }
+      .sec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 6px;
+      }
+      .sec-head .num {
+        font-size: var(--t-meta);
+        font-weight: 800;
+        color: var(--brand-text);
+        background: var(--brand-surface);
+        border: 1px solid var(--brand-surface-strong);
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+      .sec-head h2 {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      .sec-sub {
+        color: var(--content-muted);
+        font-size: var(--t-body);
+        margin: 0 0 28px 40px;
+        max-width: 760px;
+      }
+      .sec-sub b {
+        color: var(--content-secondary);
+        font-weight: 700;
+      }
+
+      .grid {
+        display: grid;
+        gap: 28px;
+      }
+      .cols-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      @media (max-width: 900px) {
+        .cols-2,
+        .cols-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .label {
+        font-size: var(--t-caption);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--content-subtle);
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      .label.bad {
+        color: var(--danger-text);
+      }
+      .label.good {
+        color: var(--success-text);
+      }
+      .panel {
+        background: var(--surface-sunken);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+      }
+
+      /* botões canônicos (idênticos ao event-card-system) */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 0 20px;
+        border-radius: var(--r-btn);
+        font-size: var(--t-body);
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+      }
+      .btn-primary {
+        background: var(--brand);
+        color: #fff;
+      }
+      .btn-confirmed {
+        background: var(--brand-surface);
+        color: var(--brand-text-bright);
+        border: 1px solid var(--brand-surface-strong);
+      }
+      .btn-ghost {
+        background: var(--surface-elevated);
+        color: var(--content-secondary);
+      }
+      .btn-row {
+        display: grid;
+        gap: 12px;
+      }
+
+      /* phone frame (idêntico) */
+      .phone {
+        width: 344px;
+        background: var(--background);
+        border: 10px solid #1a1a1d;
+        border-radius: 40px;
+        overflow: hidden;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+        position: relative;
+      }
+      .screen {
+        height: 760px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background: #08080b;
+      }
+      .statusbar {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        font-size: 13px;
+        font-weight: 700;
+        flex: none;
+        z-index: 9;
+      }
+      .statusbar.over {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        color: #fff;
+      }
+      .statusbar .dots {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+      .scroll {
+        flex: 1;
+        overflow-y: auto;
+      }
+      .scroll::-webkit-scrollbar {
+        width: 0;
+      }
+
+      /* tab bar (idêntica, com FAB central) */
+      .tabbar {
+        height: 72px;
+        background: var(--surface-sunken);
+        border-top: 1px solid var(--line);
+        display: flex;
+        align-items: flex-start;
+        padding-top: 12px;
+        flex: none;
+        z-index: 6;
+      }
+      .tabbar .tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        color: var(--content-faint);
+      }
+      .tabbar .tab span {
+        font-size: 10px;
+        font-weight: 600;
+      }
+      .tabbar .tab.active {
+        color: var(--brand-text);
+      }
+      .tabbar .center {
+        width: 52px;
+        height: 52px;
+        border-radius: 999px;
+        background: var(--brand);
+        display: grid;
+        place-items: center;
+        margin-top: -18px;
+      }
+
+      /* ───────── MAP STAGE ───────── */
+      .stage {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
+      .mapbg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          115% 90% at 50% 28%,
+          #15151d 0%,
+          #0c0c11 55%,
+          #08080b 100%
+        );
+      }
+      .mroad {
+        position: absolute;
+        background: #16161d;
+        border-radius: 10px;
+      }
+      .topscrim {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 96px;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.55),
+          transparent
+        );
+        z-index: 5;
+      }
+      .pin {
+        position: absolute;
+        width: 38px;
+        height: 38px;
+        border-radius: 999px 999px 999px 2px;
+        transform: rotate(45deg);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+        z-index: 4;
+      }
+      .pin > * {
+        transform: rotate(-45deg);
+        font-weight: 800;
+        font-size: 13px;
+        color: #fff;
+      }
+      .pin.brand {
+        background: var(--brand);
+      }
+      .pin.sugg {
+        background: var(--brand);
+        border: 2px solid #fff;
+      }
+      .pin.spot {
+        background: var(--surface-elevated);
+        border: 2px solid var(--brand-emphasis);
+      }
+      .userdot {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        z-index: 4;
+      }
+      .userdot .ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        background: rgba(10, 132, 255, 0.18);
+      }
+      .userdot .av {
+        position: relative;
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 3px solid #fff;
+      }
+      .floats {
+        position: absolute;
+        right: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        align-items: center;
+        z-index: 7;
+      }
+      .fbtn {
+        width: 46px;
+        height: 46px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: rgba(24, 24, 27, 0.96);
+        border: 1px solid var(--line-strong);
+        color: var(--brand-text);
+      }
+
+      /* FAB de criação expandido (no mapa) */
+      .fabmenu {
+        position: absolute;
+        right: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-end;
+        z-index: 8;
+      }
+      .fabopt {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+      .fabopt .lbl {
+        background: rgba(24, 24, 27, 0.97);
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        padding: 8px 12px;
+        text-align: right;
+      }
+      .fabopt .lbl b {
+        font-size: 13px;
+        font-weight: 700;
+        display: block;
+      }
+      .fabopt .lbl small {
+        font-size: 10px;
+        color: var(--brand-text);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .fabopt .ic {
+        width: 46px;
+        height: 46px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        flex: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      }
+      .fabopt .ic.brand {
+        background: var(--brand);
+      }
+      .fabopt .ic.plain {
+        background: var(--surface-elevated);
+        border: 1px solid var(--line-strong);
+        color: var(--content-secondary);
+      }
+      .fabclose {
+        width: 54px;
+        height: 54px;
+        border-radius: 999px;
+        background: var(--surface-elevated);
+        border: 1px solid var(--line-strong);
+        display: grid;
+        place-items: center;
+        color: var(--content-secondary);
+        margin-top: 2px;
+        align-self: flex-end;
+      }
+
+      /* ───────── BOTTOM SHEET ───────── */
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--surface);
+        border-top: 1px solid var(--line-strong);
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 8;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .grab {
+        width: 38px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--surface-high);
+        align-self: center;
+        margin: 10px 0 4px;
+      }
+      .sheethead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 16px 8px;
+      }
+      .sheethead h3 {
+        font-size: 23px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .sheethead .x {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: var(--surface-elevated);
+        display: grid;
+        place-items: center;
+        color: var(--content-secondary);
+      }
+      .sheetbody {
+        padding: 0 16px 16px;
+        overflow-y: auto;
+      }
+      .sheetbody::-webkit-scrollbar {
+        width: 0;
+      }
+      .helptext {
+        font-size: 13px;
+        color: var(--content-muted);
+        padding: 0 16px 6px;
+      }
+
+      /* AI reason banner — A ASSINATURA DA IA (reusa o .reason do card) */
+      .reason {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 13px;
+        font-size: var(--t-meta);
+        font-weight: 600;
+        color: var(--brand-text);
+        background: linear-gradient(
+          90deg,
+          var(--brand-surface) 0%,
+          transparent 100%
+        );
+        border-bottom: 1px solid var(--line);
+      }
+      .reason.standalone {
+        border: 1px solid var(--brand-surface-strong);
+        border-radius: 10px;
+      }
+
+      /* prompt (campo de intenção) — estilo searchbar */
+      .field {
+        padding-top: 16px;
+      }
+      .flabel {
+        font-size: var(--t-meta);
+        font-weight: 700;
+        color: var(--content-secondary);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .flabel .opt {
+        font-size: var(--t-caption);
+        color: var(--content-subtle);
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+      .prompt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface-sunken);
+        border: 1px solid var(--brand);
+        border-radius: 12px;
+        padding: 13px 14px;
+      }
+      .prompt .ph {
+        flex: 1;
+        font-size: var(--t-body);
+        color: var(--content);
+      }
+      .prompt.empty .ph {
+        color: var(--content-subtle);
+      }
+      .cursor {
+        display: inline-block;
+        width: 2px;
+        height: 17px;
+        background: var(--brand-text);
+        vertical-align: -3px;
+        animation: blink 1s steps(2) infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .fchip {
+        font-size: var(--t-meta);
+        font-weight: 600;
+        padding: 8px 13px;
+        border-radius: 8px;
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+        color: var(--content-tertiary);
+        white-space: nowrap;
+      }
+      .fchip.on {
+        background: var(--brand);
+        border-color: var(--brand);
+        color: #fff;
+      }
+      .fchip .i {
+        display: inline-block;
+        vertical-align: -2px;
+        margin-right: 4px;
+      }
+
+      /* radius control */
+      .radhead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .radhead .l {
+        font-size: var(--t-meta);
+        font-weight: 700;
+        color: var(--content-secondary);
+      }
+      .radhead .v {
+        font-size: var(--t-meta);
+        font-weight: 800;
+        color: var(--brand-text);
+      }
+      .track {
+        height: 6px;
+        border-radius: 999px;
+        background: var(--line-strong);
+        position: relative;
+      }
+      .track .fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 999px;
+        background: var(--brand);
+      }
+      .track .thumb {
+        position: absolute;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: #fff;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        border: 3px solid var(--brand-emphasis);
+      }
+      .radscale {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 7px;
+        font-size: var(--t-caption);
+        color: var(--content-faint);
+      }
+      .seg {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .seg .s {
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 9px 0;
+        border-radius: 8px;
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+        color: var(--content-muted);
+      }
+      .seg .s small {
+        display: block;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--content-faint);
+        margin-top: 1px;
+      }
+      .seg .s.on {
+        background: var(--brand);
+        border-color: var(--brand);
+        color: #fff;
+      }
+      .seg .s.on small {
+        color: var(--brand-text-bright);
+      }
+
+      .quota {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 12px;
+        font-size: var(--t-meta);
+        color: var(--content-subtle);
+      }
+      .quota .d {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--success);
+      }
+
+      /* ───────── SPOT CARD (variante do EventCard) ───────── */
+      .scard {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-card);
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .scard.best {
+        border-color: var(--brand-surface-strong);
+      }
+      .hero {
+        position: relative;
+        aspect-ratio: 16/10;
+      }
+      .hero .img {
+        position: absolute;
+        inset: 0;
+      }
+      .hero .scrim {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.82) 0%,
+          rgba(0, 0, 0, 0.12) 46%,
+          rgba(0, 0, 0, 0.35) 100%
+        );
+      }
+      .hero .top {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .hero .bottom {
+        position: absolute;
+        bottom: 11px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .rankchip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 6px;
+        padding: 4px 9px;
+        font-size: var(--t-caption);
+        font-weight: 800;
+        color: #fff;
+      }
+      .rankchip .n {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: var(--brand);
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: var(--t-caption);
+        font-weight: 700;
+        padding: 5px 9px;
+        border-radius: 6px;
+      }
+      .pill-live {
+        background: rgba(34, 197, 94, 0.18);
+        color: var(--success-text);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+      }
+      .pill-closed {
+        background: rgba(0, 0, 0, 0.5);
+        color: var(--content-subtle);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .pill-loc {
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+      .placeline {
+        font-size: var(--t-meta);
+        font-weight: 600;
+        color: #fff;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+      }
+      .placeline span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .sbody {
+        padding: 13px 16px 4px;
+      }
+      .stitle {
+        font-size: var(--t-title);
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        line-height: 1.18;
+      }
+      .sdesc {
+        font-size: var(--t-meta);
+        color: var(--content-muted);
+        margin-top: 6px;
+        line-height: 1.45;
+      }
+      .smeta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 13px;
+        margin-top: 10px;
+        color: var(--content-muted);
+        font-size: var(--t-meta);
+      }
+      .smeta .it {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .smeta .star {
+        color: var(--warning);
+      }
+      .social {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+      }
+      .stack {
+        display: flex;
+      }
+      .stack .av {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        border: 2px solid var(--surface);
+        margin-left: -9px;
+        flex: none;
+      }
+      .stack .av:first-child {
+        margin-left: 0;
+      }
+      .social .txt {
+        font-size: var(--t-meta);
+        color: var(--content-secondary);
+      }
+      .social .txt b {
+        color: var(--content);
+        font-weight: 700;
+      }
+      .sfoot {
+        padding: 2px 14px 14px;
+      }
+
+      /* ───────── LISTA VERTICAL DE SUGESTÕES (sem foto) ───────── */
+      .pin.sel {
+        width: 48px;
+        height: 48px;
+        z-index: 6;
+        box-shadow:
+          0 0 0 4px rgba(124, 58, 237, 0.32),
+          0 3px 8px rgba(0, 0, 0, 0.55);
+      }
+      .pin.sel > * {
+        font-size: 15px;
+      }
+      /* pin de spot publicado = avatar do criador (a única "foto" do fluxo) */
+      .avpin {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        z-index: 4;
+      }
+      .avpin .face {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 7px rgba(0, 0, 0, 0.55);
+      }
+      .avpin .tip {
+        position: absolute;
+        left: 50%;
+        bottom: -4px;
+        width: 8px;
+        height: 8px;
+        background: #fff;
+        transform: translateX(-50%) rotate(45deg);
+        border-radius: 0 0 2px 0;
+      }
+      .avpin.sel .face {
+        width: 50px;
+        height: 50px;
+        outline: 3px solid rgba(124, 58, 237, 0.4);
+        outline-offset: 1px;
+      }
+      .cheadrow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 16px 10px;
+      }
+      .cheadrow .t {
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .cheadrow .regen {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--brand-text);
+      }
+      /* linha de sugestão — sem capa, sem avatar */
+      .srowhead {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 13px 14px 0;
+      }
+      .ranknum {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 800;
+        font-size: 12px;
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+      .placename {
+        flex: 1;
+        min-width: 0;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--content-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .placename.best {
+        color: var(--brand-text-bright);
+        font-weight: 800;
+      }
+      .placemeta {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12.5px;
+        color: var(--content-muted);
+        margin-top: 6px;
+      }
+      .choose-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 14px;
+        border-top: 1px solid var(--line);
+        margin-top: 11px;
+      }
+      .choose-link span {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--brand-text-bright);
+      }
+      .choose-link svg {
+        color: var(--brand-text);
+      }
+      .peekhint {
+        text-align: center;
+        font-size: 11px;
+        color: var(--content-faint);
+        padding: 2px 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      /* ícone-tile do lugar (no lugar da foto, que spots não têm) */
+      .thic {
+        background: var(--brand-surface);
+        border: 1px solid var(--brand-surface-strong);
+        display: grid;
+        place-items: center;
+        color: var(--brand-text);
+      }
+
+      /* hero tipográfico (sem foto) */
+      .hero-text {
+        aspect-ratio: 16/9;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 14px;
+        position: relative;
+        background: radial-gradient(
+          120% 120% at 0% 0%,
+          #4c1d95 0%,
+          #18181b 60%
+        );
+      }
+      .hero-text .top {
+        position: static;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: auto;
+      }
+
+      /* skeleton */
+      .sk {
+        background: linear-gradient(
+          90deg,
+          var(--surface) 0%,
+          var(--surface-elevated) 50%,
+          var(--surface) 100%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.3s infinite;
+        border-radius: 8px;
+      }
+      @keyframes shimmer {
+        to {
+          background-position: -200% 0;
+        }
+      }
+
+      /* publish form */
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 14px 12px;
+        flex: none;
+      }
+      .topbar .back {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        background: var(--surface-elevated);
+        display: grid;
+        place-items: center;
+        color: var(--content-secondary);
+      }
+      .topbar h3 {
+        font-size: var(--t-title);
+        font-weight: 800;
+      }
+      .form {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 16px;
+      }
+      .form::-webkit-scrollbar {
+        width: 0;
+      }
+      .placecard {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 11px;
+      }
+      .placecard .th {
+        width: 52px;
+        height: 52px;
+        border-radius: 10px;
+        flex: none;
+      }
+      .placecard b {
+        font-size: 14px;
+        font-weight: 700;
+        display: block;
+      }
+      .placecard small {
+        font-size: 12px;
+        color: var(--content-subtle);
+      }
+      .finput {
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        padding: 13px 14px;
+        font-size: var(--t-body);
+        font-weight: 600;
+        color: #fff;
+      }
+      .finput.area {
+        min-height: 62px;
+        font-weight: 400;
+        color: var(--content-secondary);
+        font-size: 14.5px;
+      }
+      .aitag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--brand-text);
+        background: var(--brand-surface);
+        border: 1px solid var(--brand-surface-strong);
+        border-radius: 999px;
+        padding: 2px 8px;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      .cats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .visseg {
+        display: flex;
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        padding: 4px;
+        gap: 4px;
+      }
+      .visseg .o {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 11px 0;
+        border-radius: 9px;
+        font-size: var(--t-meta);
+        font-weight: 700;
+        color: var(--content-muted);
+      }
+      .visseg .o.on {
+        background: var(--surface-elevated);
+        color: #fff;
+      }
+      .vishint {
+        font-size: 12px;
+        color: var(--content-subtle);
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        align-items: flex-start;
+      }
+      .stickycta {
+        padding: 13px 16px 18px;
+        border-top: 1px solid var(--line);
+        background: var(--surface-sunken);
+        flex: none;
+      }
+      .chatnote {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        font-size: 12px;
+        color: var(--content-muted);
+        margin-bottom: 11px;
+      }
+      .chatnote b {
+        color: var(--content-secondary);
+        font-weight: 700;
+      }
+
+      /* success */
+      .successbg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          120% 80% at 50% 0%,
+          #2e1065 0%,
+          #08080b 52%
+        );
+      }
+      .succwrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 24px;
+        position: relative;
+      }
+      .checkorb {
+        width: 84px;
+        height: 84px;
+        border-radius: 999px;
+        background: var(--brand);
+        display: grid;
+        place-items: center;
+        color: #fff;
+        border: 1px solid var(--brand-emphasis);
+      }
+      .succwrap h3 {
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-top: 20px;
+      }
+      .succwrap p {
+        font-size: 14px;
+        color: var(--content-muted);
+        margin-top: 8px;
+        max-width: 250px;
+      }
+      .minicard {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 22px;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        text-align: left;
+      }
+      .minicard .th {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        flex: none;
+      }
+      .minicard b {
+        font-size: 14px;
+        font-weight: 700;
+        display: block;
+      }
+      .minicard small {
+        font-size: 12px;
+        color: var(--content-subtle);
+      }
+      .ghostlink {
+        margin-top: 14px;
+        font-size: var(--t-meta);
+        font-weight: 700;
+        color: var(--content-muted);
+      }
+
+      /* state cards */
+      .statewrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 26px 24px;
+        gap: 13px;
+      }
+      .stateic {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+      }
+      .stateic.brand {
+        background: var(--brand-surface);
+        border: 1px solid var(--brand-surface-strong);
+        color: var(--brand-text);
+      }
+      .stateic.warn {
+        background: rgba(251, 191, 36, 0.14);
+        border: 1px solid rgba(251, 191, 36, 0.32);
+        color: var(--warning-text);
+      }
+      .stateic.danger {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: var(--danger-text);
+      }
+      .statewrap h3 {
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .statewrap p {
+        font-size: 13.5px;
+        color: var(--content-muted);
+        max-width: 248px;
+      }
+      .upsell {
+        width: 100%;
+        background: var(--brand-surface);
+        border: 1px solid var(--brand-surface-strong);
+        border-radius: 12px;
+        padding: 14px;
+        text-align: left;
+        margin-top: 4px;
+      }
+      .upsell b {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--brand-text-bright);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .upsell p {
+        font-size: 12.5px;
+        color: var(--content-tertiary);
+        margin: 6px 0 12px;
+        max-width: none;
+      }
+
+      /* gradients (placeholders de foto) */
+      .g1 {
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+      }
+      .g2 {
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      }
+      .g3 {
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+      }
+      .g4 {
+        background: linear-gradient(135deg, #10b981, #84cc16);
+      }
+      .g5 {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      }
+      /* spots não têm foto: sem gradientes de capa. Avatares (g1..g5) só pro pin/userdot. */
+
+      /* icons */
+      svg.i {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        display: block;
+      }
+      svg.i.sm {
+        width: 14px;
+        height: 14px;
+      }
+      svg.i.lg {
+        width: 22px;
+        height: 22px;
+      }
+      svg.i.xl {
+        width: 26px;
+        height: 26px;
+      }
+      svg.fill {
+        fill: currentColor;
+        stroke: none;
+      }
+
+      /* layout p/ telas em linha */
+      .row {
+        display: flex;
+        gap: 40px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        width: 344px;
+      }
+      .col .clabel {
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--content-subtle);
+        font-weight: 700;
+      }
+      .col .step {
+        font-size: 11px;
+        font-weight: 800;
+        color: #fff;
+        background: var(--brand);
+        border-radius: 6px;
+        padding: 2px 8px;
+        margin-right: 7px;
+      }
+      .cap {
+        font-size: 11.5px;
+        color: var(--content-subtle);
+        text-align: center;
+        max-width: 312px;
+        line-height: 1.5;
+      }
+
+      /* annotation callouts */
+      .notes {
+        margin-top: 18px;
+        display: grid;
+        gap: 10px;
+      }
+      .note {
+        display: flex;
+        gap: 10px;
+        font-size: var(--t-meta);
+        color: var(--content-tertiary);
+        align-items: flex-start;
+      }
+      .note .k {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .note.plus .k {
+        background: rgba(34, 197, 94, 0.16);
+        color: var(--success-text);
+      }
+      .note.minus .k {
+        background: rgba(239, 68, 68, 0.16);
+        color: var(--danger-text);
+      }
+      .note.warn .k {
+        background: rgba(251, 191, 36, 0.16);
+        color: var(--warning-text);
+      }
+      .note b {
+        color: var(--content);
+        font-weight: 700;
+      }
+      .notes-2 {
+        margin: 30px auto 0;
+        max-width: 1040px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 28px;
+      }
+      .pill-inline {
+        display: inline-block;
+        background: var(--surface-elevated);
+        border: 1px solid var(--line-strong);
+        border-radius: 6px;
+        padding: 1px 7px;
+        font-size: 12px;
+        color: var(--content-tertiary);
+        font-variant-numeric: tabular-nums;
+      }
+      .caption-foot {
+        text-align: center;
+        color: var(--content-faint);
+        font-size: var(--t-meta);
+        margin-top: 64px;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="doc-head">
+        <div class="eyebrow">ConnectAI · Design System</div>
+        <h1>O fluxo de Spots</h1>
+        <p>
+          A recomendação de rolê pela IA — do toque no mapa ao grupo criado — na
+          mesma língua do <span class="pill-inline">EventCard</span>. O momento
+          da IA ganha destaque sem inventar cor nova: a
+          <b style="color: var(--brand-text); font-weight: 700"
+            >faixa de motivo</b
+          >
+          vira a assinatura da IA, e o <b>título sugerido</b> carrega —
+          <b>sem foto</b> (spots ainda não têm) e <b>sem avatar nos cards</b>: o
+          avatar do criador vive só no pin do mapa. Tokens reais de
+          <span class="pill-inline">global.css</span>.
+        </p>
+      </div>
+
+      <!-- ════════════ 1. A ASSINATURA DA IA ════════════ -->
+      <section>
+        <div class="sec-head">
+          <div class="num">1</div>
+          <h2>A assinatura da IA, dentro do sistema</h2>
+        </div>
+        <p class="sec-sub">
+          Gerar um spot é a ação que diferencia o app — mas isso não justifica
+          um gradiente arco-íris ou glow (fora do nosso sistema). O destaque vem
+          de peças que <b>já existem</b>: a faixa de motivo da marca, o ícone de
+          estrela e o botão canônico. Reconhecível como "IA", coerente com o
+          resto.
+        </p>
+
+        <div class="grid cols-3">
+          <!-- reason banner -->
+          <div class="panel">
+            <div class="label">Faixa de motivo = assinatura da IA</div>
+            <div class="reason standalone" style="margin-bottom: 10px">
+              <svg class="i sm" viewBox="0 0 24 24">
+                <path
+                  d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                />
+              </svg>
+              Sugerido pra você · música ao vivo
+            </div>
+            <div class="reason standalone">
+              <svg class="i sm" viewBox="0 0 24 24">
+                <path
+                  d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                />
+              </svg>
+              Combina com seus rolês
+            </div>
+            <div class="notes">
+              <div class="note plus">
+                <span class="k">↑</span
+                ><span
+                  >Mesma faixa do card ("Marina criou", "Popular perto"). Para
+                  spots ela mostra <b>por que</b> a IA sugeriu — a query ou a
+                  preferência.</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- type / tokens -->
+          <div class="panel">
+            <div class="label">Régua &amp; marca — sem cor nova</div>
+            <div style="display: flex; flex-direction: column; gap: 11px">
+              <div>
+                <span
+                  style="
+                    font-size: var(--t-display);
+                    font-weight: 800;
+                    letter-spacing: -0.02em;
+                  "
+                  >Bora pra onde?</span
+                >
+                <div style="font-size: 11px; color: var(--content-subtle)">
+                  Display · 28/800 — título da folha
+                </div>
+              </div>
+              <div>
+                <span style="font-size: var(--t-title); font-weight: 800"
+                  >Noite de jazz no Blue Note</span
+                >
+                <div style="font-size: 11px; color: var(--content-subtle)">
+                  Título · 20/800 — copy da IA (o herói)
+                </div>
+              </div>
+              <div>
+                <span
+                  style="
+                    font-size: var(--t-meta);
+                    font-weight: 600;
+                    color: var(--content-muted);
+                  "
+                  >1,2 km · ★ 4,7 · aberto agora</span
+                >
+                <div style="font-size: 11px; color: var(--content-subtle)">
+                  Meta · 13/600
+                </div>
+              </div>
+            </div>
+            <div class="notes">
+              <div class="note plus">
+                <span class="k">r</span
+                ><span
+                  >Card <b>12px</b> · botão <b>10px</b> · chip <b>full</b>.
+                  Marca <b>violet #7c3aed</b>. Nada de aurora/glow.</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- CTA + quota -->
+          <div class="panel">
+            <div class="label">Ação &amp; cota</div>
+            <div class="btn-row">
+              <button class="btn btn-primary">
+                <svg class="i" viewBox="0 0 24 24">
+                  <path
+                    d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                  />
+                </svg>
+                Gerar sugestões
+              </button>
+              <button class="btn btn-confirmed">
+                <svg class="i" viewBox="0 0 24 24">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Escolher esse rolê
+              </button>
+            </div>
+            <div class="quota">
+              <span class="d"></span> 3 de 5 gerações restantes hoje
+            </div>
+            <div class="notes">
+              <div class="note plus">
+                <span class="k">↑</span
+                ><span
+                  >Botão canônico (brand → brand-strong no press). Cota é
+                  <b>caption</b>, nunca alerta. Free <b>5/dia</b> · Premium
+                  <b>25/dia</b>.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════ 2. O SPOTCARD ════════════ -->
+      <section>
+        <div class="sec-head">
+          <div class="num">2</div>
+          <h2>O SpotCard — variante do EventCard</h2>
+        </div>
+        <p class="sec-sub">
+          <b>Spots ainda não têm foto</b> — então o card é uma
+          <b>linha vertical sem capa</b>: número do rank, o
+          <span class="pill-inline">suggestedTitle</span> da IA como manchete, o
+          lugar e os sinais (aberto agora · nota · preço · distância).
+          <b>Nenhum avatar aqui</b> — ele vive só no pin do mapa.
+        </p>
+
+        <div class="grid cols-3">
+          <!-- com foto (best) -->
+          <div class="panel">
+            <div class="label good">Rank 1 · melhor match</div>
+            <div class="scard best" style="max-width: 300px; margin: 0 auto">
+              <div class="reason">
+                <svg class="i sm" viewBox="0 0 24 24">
+                  <path
+                    d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                  />
+                </svg>
+                Sugerido pra você · música ao vivo
+              </div>
+              <div class="srowhead">
+                <span class="ranknum">1</span>
+                <span class="placename best">Melhor match</span>
+                <span class="pill pill-live">● Aberto agora</span>
+              </div>
+              <div class="sbody">
+                <div class="stitle">Noite de jazz no Blue Note</div>
+                <div class="placemeta">
+                  <svg class="i sm" viewBox="0 0 24 24">
+                    <circle cx="12" cy="10" r="3" />
+                    <path
+                      d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"
+                    />
+                  </svg>
+                  Blue Note · R. Augusta, 1200
+                </div>
+                <div class="sdesc">
+                  Música ao vivo, drinks autorais e um clima intimista pra
+                  começar a noite.
+                </div>
+                <div class="smeta">
+                  <span class="it"
+                    ><svg class="i sm star fill" viewBox="0 0 24 24">
+                      <path
+                        d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                      />
+                    </svg>
+                    4,7 (320)</span
+                  >
+                  <span class="it">$$</span>
+                  <span class="it"
+                    ><svg class="i sm" viewBox="0 0 24 24">
+                      <path d="M3 11 22 2l-9 19-2-8-8-2z" />
+                    </svg>
+                    1,2 km</span
+                  >
+                </div>
+              </div>
+              <div class="sfoot">
+                <button class="btn btn-primary">
+                  <svg class="i" viewBox="0 0 24 24">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  Escolher esse rolê
+                </button>
+              </div>
+            </div>
+            <div class="notes">
+              <div class="note plus">
+                <span class="k">1</span
+                ><span
+                  >Rank 1 ganha a faixa de motivo + borda da marca + botão
+                  primário. <b>Sem capa</b>: a manchete da IA é o destaque.
+                  <b>Sem avatar</b> — fica no pin.</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- sem foto -->
+          <div class="panel">
+            <div class="label">Rank 2+ · linha compacta</div>
+            <div class="scard" style="max-width: 300px; margin: 0 auto">
+              <div class="srowhead">
+                <span class="ranknum">2</span>
+                <span class="placename">Boteco da Praça · 800 m</span>
+                <span class="pill pill-live">● Aberto</span>
+              </div>
+              <div class="sbody" style="padding-bottom: 2px">
+                <div class="stitle" style="font-size: 16px">
+                  Happy hour no Boteco da Praça
+                </div>
+                <div class="smeta">
+                  <span class="it"
+                    ><svg class="i sm star fill" viewBox="0 0 24 24">
+                      <path
+                        d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                      />
+                    </svg>
+                    4,5</span
+                  >
+                  <span class="it">$</span>
+                  <span class="it"
+                    ><svg class="i sm" viewBox="0 0 24 24">
+                      <path d="M3 11 22 2l-9 19-2-8-8-2z" />
+                    </svg>
+                    800 m</span
+                  >
+                </div>
+              </div>
+              <a class="choose-link"
+                ><span>Escolher esse rolê</span
+                ><svg class="i sm" viewBox="0 0 24 24">
+                  <path d="m9 18 6-6-6-6" /></svg
+              ></a>
+            </div>
+            <div class="notes">
+              <div class="note plus">
+                <span class="k">✓</span
+                ><span
+                  >Os demais ficam enxutos: rank, lugar, manchete e sinais. A
+                  linha inteira é tocável; "Escolher" no rodapé com
+                  chevron.</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- fechado + skeleton -->
+          <div class="panel">
+            <div class="label">Fechado &amp; carregando</div>
+            <div class="scard" style="max-width: 300px; margin: 0 auto 14px">
+              <div class="srowhead">
+                <span class="ranknum">3</span>
+                <span class="placename">Café Lima · 2,1 km</span>
+                <span class="pill pill-closed">Fecha · abre 18h</span>
+              </div>
+              <div class="sbody" style="padding-bottom: 2px">
+                <div class="stitle" style="font-size: 16px">
+                  Tarde de café no Café Lima
+                </div>
+                <div class="smeta">
+                  <span class="it"
+                    ><svg class="i sm star fill" viewBox="0 0 24 24">
+                      <path
+                        d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                      />
+                    </svg>
+                    4,6</span
+                  >
+                  <span class="it">$$</span>
+                  <span class="it"
+                    ><svg class="i sm" viewBox="0 0 24 24">
+                      <path d="M3 11 22 2l-9 19-2-8-8-2z" />
+                    </svg>
+                    2,1 km</span
+                  >
+                </div>
+              </div>
+              <a class="choose-link"
+                ><span>Escolher esse rolê</span
+                ><svg class="i sm" viewBox="0 0 24 24">
+                  <path d="m9 18 6-6-6-6" /></svg
+              ></a>
+            </div>
+            <div class="scard" style="max-width: 300px; margin: 0 auto">
+              <div class="srowhead">
+                <div
+                  class="sk"
+                  style="width: 24px; height: 24px; border-radius: 999px"
+                ></div>
+                <div class="sk" style="height: 13px; width: 130px"></div>
+              </div>
+              <div class="sbody">
+                <div
+                  class="sk"
+                  style="height: 18px; width: 75%; margin-bottom: 9px"
+                ></div>
+                <div class="sk" style="height: 13px; width: 45%"></div>
+              </div>
+              <div class="sfoot" style="padding-top: 12px">
+                <div class="sk" style="height: 14px; width: 130px"></div>
+              </div>
+            </div>
+            <div class="notes">
+              <div class="note plus">
+                <span class="k">✓</span
+                ><span
+                  >"Fechado" é informativo, não bloqueia (o rolê pode começar
+                  mais tarde). Skeleton com shimmer reproduz a linha — sem
+                  pulo.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════ 3. O FLUXO COMPLETO ════════════ -->
+      <section>
+        <div class="sec-head">
+          <div class="num">3</div>
+          <h2>O fluxo, ponta a ponta</h2>
+        </div>
+        <p class="sec-sub">
+          Do toque no mapa ao grupo criado. Respeita as regras reais:
+          consentimento de localização (LGPD), cota diária, janela de 24h, e o
+          chat de grupo criado na publicação.
+        </p>
+
+        <div class="row">
+          <!-- A · FAB -->
+          <div class="col">
+            <div class="clabel"><span class="step">A</span>Criar no mapa</div>
+            <div class="phone">
+              <div class="screen">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div
+                    class="mroad"
+                    style="
+                      top: 28%;
+                      left: -8%;
+                      width: 116%;
+                      height: 6px;
+                      transform: rotate(-6deg);
+                    "
+                  ></div>
+                  <div
+                    class="mroad"
+                    style="
+                      top: 62%;
+                      left: -8%;
+                      width: 116%;
+                      height: 5px;
+                      transform: rotate(5deg);
+                    "
+                  ></div>
+                  <div
+                    class="mroad"
+                    style="
+                      top: 0;
+                      left: 42%;
+                      width: 6px;
+                      height: 70%;
+                      transform: rotate(4deg);
+                    "
+                  ></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <div class="userdot" style="top: 54%; left: 44%">
+                    <div class="ring"></div>
+                    <div class="av g1"></div>
+                  </div>
+                  <div class="avpin" style="top: 34%; left: 26%">
+                    <div class="face g3"></div>
+                    <div class="tip"></div>
+                  </div>
+                  <div class="avpin" style="top: 46%; left: 70%">
+                    <div class="face g4"></div>
+                    <div class="tip"></div>
+                  </div>
+                  <div class="fabmenu" style="bottom: 22px">
+                    <div class="fabopt">
+                      <div class="lbl">
+                        <b>Sugerir rolê</b><small>com IA</small>
+                      </div>
+                      <div class="ic brand">
+                        <svg class="i lg" viewBox="0 0 24 24">
+                          <path
+                            d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="fabopt">
+                      <div class="lbl"><b>Criar evento</b></div>
+                      <div class="ic plain">
+                        <svg class="i lg" viewBox="0 0 24 24">
+                          <rect x="3" y="5" width="18" height="16" rx="2" />
+                          <path d="M16 3v4M8 3v4M3 10h18" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="fabclose">
+                      <svg class="i lg" viewBox="0 0 24 24">
+                        <path d="m6 6 12 12M18 6 6 18" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab">
+                    <svg class="i lg" viewBox="0 0 24 24">
+                      <path
+                        d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+                      /></svg
+                    ><span>Feed</span>
+                  </div>
+                  <div class="tab active">
+                    <svg class="i lg" viewBox="0 0 24 24">
+                      <circle cx="12" cy="10" r="3" />
+                      <path
+                        d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"
+                      /></svg
+                    ><span>Mapa</span>
+                  </div>
+                  <div class="tab" style="flex: 0 0 auto">
+                    <div class="center">
+                      <svg
+                        class="i lg"
+                        viewBox="0 0 24 24"
+                        style="stroke: #fff"
+                      >
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="tab">
+                    <svg class="i lg" viewBox="0 0 24 24">
+                      <path
+                        d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"
+                      /></svg
+                    ><span>Chat</span>
+                  </div>
+                  <div class="tab">
+                    <svg class="i lg" viewBox="0 0 24 24">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 21v-1a6 6 0 0 1 12 0v1" /></svg
+                    ><span>Perfil</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              O "+" abre duas rotas. "Sugerir rolê com IA" leva o ícone de
+              estrela; "Criar evento" fica neutro. Hierarquia entre a ação-herói
+              e a comum.
+            </div>
+          </div>
+
+          <!-- B · folha prompt -->
+          <div class="col">
+            <div class="clabel"><span class="step">B</span>Bora pra onde?</div>
+            <div class="phone">
+              <div class="screen">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <div class="sheet" style="height: 600px">
+                    <div class="grab"></div>
+                    <div class="sheethead">
+                      <h3>Bora pra onde?</h3>
+                      <div class="x">
+                        <svg class="i" viewBox="0 0 24 24">
+                          <path d="m6 6 12 12M18 6 6 18" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="helptext">
+                      A IA acha rolês perto de você — pelo que você descrever,
+                      ou pelas suas preferências.
+                    </div>
+                    <div class="sheetbody">
+                      <div class="field">
+                        <div class="flabel">
+                          O que você quer fazer?
+                          <span class="opt">opcional</span>
+                        </div>
+                        <div class="prompt">
+                          <svg
+                            class="i"
+                            viewBox="0 0 24 24"
+                            style="color: var(--brand-text)"
+                          >
+                            <path
+                              d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                            /></svg
+                          ><span class="ph"
+                            >bar com música ao vivo<span class="cursor"></span
+                          ></span>
+                        </div>
+                        <div class="chips">
+                          <span class="fchip on">música ao vivo</span>
+                          <span class="fchip">happy hour</span>
+                          <span class="fchip">café tranquilo</span>
+                          <span class="fchip">balada</span>
+                          <span class="fchip">comer barato</span>
+                        </div>
+                      </div>
+                      <div class="field">
+                        <div class="flabel">
+                          Distância <span class="opt">só nesta busca</span>
+                        </div>
+                        <div class="radhead">
+                          <span class="l">Raio da busca</span
+                          ><span class="v">5 km</span>
+                        </div>
+                        <div class="track">
+                          <div class="fill" style="width: 38%"></div>
+                          <div class="thumb" style="left: 38%"></div>
+                        </div>
+                        <div class="seg">
+                          <span class="s">Pertinho<small>2 km</small></span>
+                          <span class="s on">Médio<small>5 km</small></span>
+                          <span class="s">Longe<small>15 km</small></span>
+                        </div>
+                      </div>
+                      <div style="padding-top: 18px">
+                        <button class="btn btn-primary">
+                          <svg class="i" viewBox="0 0 24 24">
+                            <path
+                              d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                            />
+                          </svg>
+                          Gerar sugestões
+                        </button>
+                        <div class="quota">
+                          <span class="d"></span> 3 de 5 gerações restantes hoje
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              O campo de intenção vira um "prompt" com chips tocáveis — zero
+              digitação pra começar. Raio com atalhos (Pertinho/Médio/Longe) +
+              ajuste fino.
+            </div>
+          </div>
+
+          <!-- C · gerando -->
+          <div class="col">
+            <div class="clabel"><span class="step">C</span>Gerando</div>
+            <div class="phone">
+              <div class="screen">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <div class="sheet" style="height: 600px">
+                    <div class="grab"></div>
+                    <div class="sheethead">
+                      <h3>Bora pra onde?</h3>
+                      <div class="x">
+                        <svg class="i" viewBox="0 0 24 24">
+                          <path d="m6 6 12 12M18 6 6 18" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div style="padding: 0 16px">
+                      <div class="reason standalone">
+                        <svg class="i sm" viewBox="0 0 24 24">
+                          <path
+                            d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                          />
+                        </svg>
+                        Garimpando os melhores lugares num raio de 5 km…
+                      </div>
+                    </div>
+                    <div class="sheetbody" style="padding-top: 14px">
+                      <div class="scard">
+                        <div
+                          class="sk"
+                          style="height: 118px; border-radius: 0"
+                        ></div>
+                        <div class="sbody" style="padding-bottom: 13px">
+                          <div
+                            class="sk"
+                            style="height: 18px; width: 70%; margin-bottom: 9px"
+                          ></div>
+                          <div
+                            class="sk"
+                            style="height: 13px; width: 48%"
+                          ></div>
+                        </div>
+                      </div>
+                      <div class="scard">
+                        <div
+                          class="sk"
+                          style="height: 118px; border-radius: 0"
+                        ></div>
+                        <div class="sbody" style="padding-bottom: 13px">
+                          <div
+                            class="sk"
+                            style="height: 18px; width: 64%; margin-bottom: 9px"
+                          ></div>
+                          <div
+                            class="sk"
+                            style="height: 13px; width: 42%"
+                          ></div>
+                        </div>
+                      </div>
+                      <div class="scard" style="opacity: 0.5">
+                        <div
+                          class="sk"
+                          style="height: 118px; border-radius: 0"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              A própria faixa de motivo narra o trabalho da IA. Skeletons no
+              layout exato do SpotCard — sem spinner genérico, sem pulo quando
+              chega. O botão fica travado (protege a cota de toque-duplo).
+            </div>
+          </div>
+
+          <!-- D · sugestões (peek) -->
+          <div class="col">
+            <div class="clabel">
+              <span class="step">D</span>Sugestões · folha baixa
+            </div>
+            <div class="phone">
+              <div class="screen">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div
+                    class="mroad"
+                    style="
+                      top: 16%;
+                      left: -8%;
+                      width: 116%;
+                      height: 6px;
+                      transform: rotate(-5deg);
+                    "
+                  ></div>
+                  <div
+                    class="mroad"
+                    style="
+                      top: 0;
+                      left: 46%;
+                      width: 6px;
+                      height: 40%;
+                      transform: rotate(4deg);
+                    "
+                  ></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <!-- pins numerados (candidatos) visíveis acima da folha -->
+                  <div class="pin sugg sel" style="top: 118px; left: 78px">
+                    <span>1</span>
+                  </div>
+                  <div class="pin sugg" style="top: 164px; left: 246px">
+                    <span>2</span>
+                  </div>
+                  <div class="pin sugg" style="top: 232px; left: 150px">
+                    <span>3</span>
+                  </div>
+                  <div class="userdot" style="top: 284px; left: 150px">
+                    <div class="ring"></div>
+                    <div class="av g1"></div>
+                  </div>
+                  <div class="floats" style="bottom: 452px">
+                    <div class="fbtn">
+                      <svg class="i" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                      </svg>
+                    </div>
+                  </div>
+                  <!-- FOLHA EM MEIA-ALTURA: lista vertical, mapa + pins visíveis -->
+                  <div class="sheet" style="height: 432px">
+                    <div class="grab"></div>
+                    <div class="cheadrow">
+                      <span class="t">3 rolês pra hoje</span
+                      ><span class="regen"
+                        ><svg class="i sm" viewBox="0 0 24 24">
+                          <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5" />
+                          <path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" />
+                        </svg>
+                        Gerar de novo</span
+                      >
+                    </div>
+                    <div
+                      class="sheetbody"
+                      style="flex: 1; min-height: 0; padding-top: 2px"
+                    >
+                      <div class="scard best">
+                        <div class="reason">
+                          <svg class="i sm" viewBox="0 0 24 24">
+                            <path
+                              d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                            />
+                          </svg>
+                          Sugerido pra você · música ao vivo
+                        </div>
+                        <div class="srowhead">
+                          <span class="ranknum">1</span
+                          ><span class="placename best">Melhor match</span
+                          ><span class="pill pill-live">● Aberto agora</span>
+                        </div>
+                        <div class="sbody">
+                          <div class="stitle" style="font-size: 18px">
+                            Noite de jazz no Blue Note
+                          </div>
+                          <div class="placemeta">
+                            <svg class="i sm" viewBox="0 0 24 24">
+                              <circle cx="12" cy="10" r="3" />
+                              <path
+                                d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"
+                              />
+                            </svg>
+                            Blue Note · 1,2 km
+                          </div>
+                          <div class="smeta">
+                            <span class="it"
+                              ><svg class="i sm star fill" viewBox="0 0 24 24">
+                                <path
+                                  d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                                />
+                              </svg>
+                              4,7</span
+                            ><span class="it">$$</span>
+                          </div>
+                        </div>
+                        <div class="sfoot">
+                          <button class="btn btn-primary">
+                            <svg class="i" viewBox="0 0 24 24">
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                            Escolher esse rolê
+                          </button>
+                        </div>
+                      </div>
+                      <div class="scard">
+                        <div class="srowhead">
+                          <span class="ranknum">2</span
+                          ><span class="placename">Boteco da Praça · 800 m</span
+                          ><span class="pill pill-live">● Aberto</span>
+                        </div>
+                        <div class="sbody" style="padding-bottom: 2px">
+                          <div class="stitle" style="font-size: 16px">
+                            Happy hour no Boteco da Praça
+                          </div>
+                          <div class="smeta">
+                            <span class="it"
+                              ><svg class="i sm star fill" viewBox="0 0 24 24">
+                                <path
+                                  d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                                />
+                              </svg>
+                              4,5</span
+                            ><span class="it">· 800 m</span>
+                          </div>
+                        </div>
+                        <a class="choose-link"
+                          ><span>Escolher esse rolê</span
+                          ><svg class="i sm" viewBox="0 0 24 24">
+                            <path d="m9 18 6-6-6-6" /></svg
+                        ></a>
+                      </div>
+                    </div>
+                    <div class="peekhint">
+                      <svg class="i sm" viewBox="0 0 24 24">
+                        <path d="m18 15-6-6-6 6" />
+                      </svg>
+                      arraste pra cima pra ver tudo
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              <b style="color: var(--content-secondary)"
+                >Folha em meia-altura.</b
+              >
+              Lista vertical (sem foto); o mapa e os 3 pins respiram acima.
+              Arrastar pra cima abre a lista inteira.
+            </div>
+          </div>
+
+          <!-- D · sugestões (expandido) -->
+          <div class="col">
+            <div class="clabel">
+              <span class="step">D</span>Sugestões · lista cheia
+            </div>
+            <div class="phone">
+              <div class="screen">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <div class="pin sugg sel" style="top: 40px; left: 80px">
+                    <span>1</span>
+                  </div>
+                  <!-- FOLHA EXPANDIDA: arrastada pra cima, lista vertical completa -->
+                  <div class="sheet" style="height: 612px">
+                    <div class="grab"></div>
+                    <div class="cheadrow">
+                      <span class="t">3 rolês pra hoje</span
+                      ><span class="regen"
+                        ><svg class="i sm" viewBox="0 0 24 24">
+                          <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5" />
+                          <path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" />
+                        </svg>
+                        Gerar de novo</span
+                      >
+                    </div>
+                    <div
+                      class="sheetbody"
+                      style="flex: 1; min-height: 0; padding-top: 2px"
+                    >
+                      <div class="scard best">
+                        <div class="reason">
+                          <svg class="i sm" viewBox="0 0 24 24">
+                            <path
+                              d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                            />
+                          </svg>
+                          Sugerido pra você · música ao vivo
+                        </div>
+                        <div class="srowhead">
+                          <span class="ranknum">1</span
+                          ><span class="placename best">Melhor match</span
+                          ><span class="pill pill-live">● Aberto agora</span>
+                        </div>
+                        <div class="sbody">
+                          <div class="stitle" style="font-size: 18px">
+                            Noite de jazz no Blue Note
+                          </div>
+                          <div class="placemeta">
+                            <svg class="i sm" viewBox="0 0 24 24">
+                              <circle cx="12" cy="10" r="3" />
+                              <path
+                                d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"
+                              />
+                            </svg>
+                            Blue Note · R. Augusta, 1200
+                          </div>
+                          <div class="sdesc">
+                            Música ao vivo, drinks autorais e um clima intimista
+                            pra começar a noite.
+                          </div>
+                          <div class="smeta">
+                            <span class="it"
+                              ><svg class="i sm star fill" viewBox="0 0 24 24">
+                                <path
+                                  d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                                />
+                              </svg>
+                              4,7 (320)</span
+                            ><span class="it">$$</span
+                            ><span class="it"
+                              ><svg class="i sm" viewBox="0 0 24 24">
+                                <path d="M3 11 22 2l-9 19-2-8-8-2z" />
+                              </svg>
+                              1,2 km</span
+                            >
+                          </div>
+                        </div>
+                        <div class="sfoot">
+                          <button class="btn btn-primary">
+                            <svg class="i" viewBox="0 0 24 24">
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                            Escolher esse rolê
+                          </button>
+                        </div>
+                      </div>
+                      <div class="scard">
+                        <div class="srowhead">
+                          <span class="ranknum">2</span
+                          ><span class="placename">Boteco da Praça · 800 m</span
+                          ><span class="pill pill-live">● Aberto</span>
+                        </div>
+                        <div class="sbody" style="padding-bottom: 2px">
+                          <div class="stitle" style="font-size: 16px">
+                            Happy hour no Boteco da Praça
+                          </div>
+                          <div class="smeta">
+                            <span class="it"
+                              ><svg class="i sm star fill" viewBox="0 0 24 24">
+                                <path
+                                  d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                                />
+                              </svg>
+                              4,5</span
+                            ><span class="it">$</span
+                            ><span class="it"
+                              ><svg class="i sm" viewBox="0 0 24 24">
+                                <path d="M3 11 22 2l-9 19-2-8-8-2z" />
+                              </svg>
+                              800 m</span
+                            >
+                          </div>
+                        </div>
+                        <a class="choose-link"
+                          ><span>Escolher esse rolê</span
+                          ><svg class="i sm" viewBox="0 0 24 24">
+                            <path d="m9 18 6-6-6-6" /></svg
+                        ></a>
+                      </div>
+                      <div class="scard">
+                        <div class="srowhead">
+                          <span class="ranknum">3</span
+                          ><span class="placename">Café Lima · 2,1 km</span
+                          ><span class="pill pill-closed"
+                            >Fecha · abre 18h</span
+                          >
+                        </div>
+                        <div class="sbody" style="padding-bottom: 2px">
+                          <div class="stitle" style="font-size: 16px">
+                            Tarde de café no Café Lima
+                          </div>
+                          <div class="smeta">
+                            <span class="it"
+                              ><svg class="i sm star fill" viewBox="0 0 24 24">
+                                <path
+                                  d="M12 17.3 6.2 21l1.5-6.6L2.5 9.8l6.7-.6L12 3l2.8 6.2 6.7.6-5.2 4.6L17.8 21z"
+                                />
+                              </svg>
+                              4,6</span
+                            ><span class="it">$$</span
+                            ><span class="it"
+                              ><svg class="i sm" viewBox="0 0 24 24">
+                                <path d="M3 11 22 2l-9 19-2-8-8-2z" />
+                              </svg>
+                              2,1 km</span
+                            >
+                          </div>
+                        </div>
+                        <a class="choose-link"
+                          ><span>Escolher esse rolê</span
+                          ><svg class="i sm" viewBox="0 0 24 24">
+                            <path d="m9 18 6-6-6-6" /></svg
+                        ></a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              Arrastada pra cima: a lista vertical inteira. Rank 1 com faixa de
+              motivo + botão; os demais como linhas compactas tocáveis.
+            </div>
+          </div>
+
+          <!-- E · publicar -->
+          <div class="col">
+            <div class="clabel"><span class="step">E</span>Publicar</div>
+            <div class="phone">
+              <div class="screen">
+                <div class="statusbar">
+                  <span>9:41</span>
+                  <div class="dots">
+                    <span>●</span><span>●</span><span>▰</span>
+                  </div>
+                </div>
+                <div class="topbar">
+                  <div class="back">
+                    <svg class="i" viewBox="0 0 24 24">
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </div>
+                  <h3>Publicar rolê</h3>
+                </div>
+                <div class="form">
+                  <div class="placecard">
+                    <div class="th thic">
+                      <svg class="i lg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="10" r="3" />
+                        <path
+                          d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <b>Blue Note</b><small>R. Augusta, 1200 · 1,2 km</small>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="flabel">
+                      Título
+                      <span class="aitag"
+                        ><svg class="i sm" viewBox="0 0 24 24">
+                          <path
+                            d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                          />
+                        </svg>
+                        sugerido pela IA</span
+                      >
+                    </div>
+                    <div class="finput">Noite de jazz no Blue Note</div>
+                  </div>
+                  <div class="field">
+                    <div class="flabel">
+                      Descrição <span class="opt">opcional</span>
+                    </div>
+                    <div class="finput area">
+                      Música ao vivo, drinks autorais e um clima intimista pra
+                      começar a noite.
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="flabel">Quando</div>
+                    <div class="seg">
+                      <span class="s on">Agora<small>por 2h</small></span>
+                      <span class="s">Hoje à noite<small>20h–24h</small></span>
+                      <span class="s">Escolher<small>até 24h</small></span>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="flabel">
+                      Categorias <span class="opt">1 a 5</span>
+                    </div>
+                    <div class="cats">
+                      <span class="fchip on"
+                        ><svg
+                          class="i sm"
+                          viewBox="0 0 24 24"
+                          style="display: inline-block; vertical-align: -2px"
+                        >
+                          <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                        Bar</span
+                      >
+                      <span class="fchip on">Música</span>
+                      <span class="fchip">Balada</span>
+                      <span class="fchip">Gastronomia</span>
+                    </div>
+                  </div>
+                  <div class="field" style="padding-bottom: 16px">
+                    <div class="flabel">Quem vê</div>
+                    <div class="visseg">
+                      <div class="o on">
+                        <svg class="i sm" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="9" />
+                          <path
+                            d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"
+                          />
+                        </svg>
+                        Público
+                      </div>
+                      <div class="o">
+                        <svg class="i sm" viewBox="0 0 24 24">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                        </svg>
+                        Amigos
+                      </div>
+                    </div>
+                    <div class="vishint">
+                      <svg
+                        class="i sm"
+                        viewBox="0 0 24 24"
+                        style="flex: none; margin-top: 1px"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 16v-4M12 8h.01" />
+                      </svg>
+                      Qualquer pessoa verá o lugar, o horário e sua foto no
+                      mapa.
+                    </div>
+                  </div>
+                </div>
+                <div class="stickycta">
+                  <div class="chatnote">
+                    <svg class="i sm" viewBox="0 0 24 24">
+                      <path
+                        d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"
+                      />
+                    </svg>
+                    Publicar cria o <b>grupo de chat</b> do rolê
+                  </div>
+                  <button class="btn btn-primary">
+                    <svg class="i" viewBox="0 0 24 24">
+                      <path
+                        d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                      />
+                    </svg>
+                    Publicar rolê
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              Copy da IA pré-preenchida e editável (tag "sugerido pela IA").
+              Tempo por presets em vez de dois pickers crus. "Escolher" abre os
+              pickers (teto 24h). Visibilidade segmentada.
+            </div>
+          </div>
+
+          <!-- F · sucesso -->
+          <div class="col">
+            <div class="clabel"><span class="step">F</span>No ar</div>
+            <div class="phone">
+              <div class="screen">
+                <div class="statusbar over">
+                  <span>9:41</span>
+                  <div class="dots">
+                    <span>●</span><span>●</span><span>▰</span>
+                  </div>
+                </div>
+                <div class="successbg"></div>
+                <div class="succwrap">
+                  <div class="checkorb">
+                    <svg class="i xl" viewBox="0 0 24 24">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  </div>
+                  <h3>Rolê no ar!</h3>
+                  <p>
+                    Seu spot fica visível no mapa por 24h. Agora chama a galera.
+                  </p>
+                  <div class="minicard">
+                    <div class="th thic">
+                      <svg class="i lg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="10" r="3" />
+                        <path
+                          d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"
+                        />
+                      </svg>
+                    </div>
+                    <div style="flex: 1">
+                      <b>Noite de jazz no Blue Note</b
+                      ><small>Hoje 21h → 23h · Público</small>
+                    </div>
+                    <div class="pill pill-live" style="flex: none">
+                      ● ao vivo
+                    </div>
+                  </div>
+                  <div style="width: 100%; margin-top: 16px">
+                    <button class="btn btn-primary">
+                      <svg class="i" viewBox="0 0 24 24">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M19 8v6M22 11h-6" />
+                      </svg>
+                      Convidar amigos pro grupo
+                    </button>
+                  </div>
+                  <div class="ghostlink">Abrir o chat do rolê</div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              Recompensa sóbria (sem confete piscante): check da marca,
+              confirmação de "24h no ar" e a próxima ação óbvia — convidar a
+              galera pro grupo que já foi criado.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════ 4. ESTADOS ════════════ -->
+      <section>
+        <div class="sec-head">
+          <div class="num">4</div>
+          <h2>Estados — os caminhos infelizes</h2>
+        </div>
+        <p class="sec-sub">
+          O que o código já trata, agora com tratamento visual coerente. Sem
+          <span class="pill-inline">Alert.alert</span>, sem toast — o estado é a
+          própria tela.
+        </p>
+
+        <div class="row">
+          <!-- sem consentimento -->
+          <div class="col" style="width: 300px">
+            <div class="clabel">LGPD · sem localização</div>
+            <div class="phone" style="width: 300px">
+              <div class="screen" style="height: 600px">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <div class="sheet" style="height: 430px">
+                    <div class="grab"></div>
+                    <div class="statewrap">
+                      <div class="stateic brand">
+                        <svg class="i xl" viewBox="0 0 24 24">
+                          <path
+                            d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"
+                          />
+                          <path d="m9 12 2 2 4-4" />
+                        </svg>
+                      </div>
+                      <h3>Precisamos da sua localização</h3>
+                      <p>
+                        Pra sugerir rolês perto de você. Usada só agora — nada
+                        de rastreamento em segundo plano.
+                      </p>
+                      <div style="width: 100%; margin-top: 4px">
+                        <button class="btn btn-primary">
+                          Ativar localização
+                        </button>
+                      </div>
+                      <div class="ghostlink">Abrir ajustes de privacidade</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              Gate de privacidade antes de pedir a permissão do SO.
+              Transparência sobre o uso pontual (LGPD).
+            </div>
+          </div>
+
+          <!-- vazio -->
+          <div class="col" style="width: 300px">
+            <div class="clabel">Gerou e veio vazio</div>
+            <div class="phone" style="width: 300px">
+              <div class="screen" style="height: 600px">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <div class="sheet" style="height: 430px">
+                    <div class="grab"></div>
+                    <div class="statewrap">
+                      <div class="stateic brand">
+                        <svg class="i xl" viewBox="0 0 24 24">
+                          <path
+                            d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                          />
+                        </svg>
+                      </div>
+                      <h3>Nada à altura por aqui</h3>
+                      <p>
+                        A IA não achou bons lugares nessa busca. Tente aumentar
+                        o raio ou descrever melhor o que você quer.
+                      </p>
+                      <div style="width: 100%; margin-top: 4px">
+                        <button class="btn btn-ghost">
+                          Aumentar raio pra 15 km
+                        </button>
+                      </div>
+                      <div class="ghostlink">Editar descrição</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              Distingue "ainda não gerou" de "0 resultados". Oferece a próxima
+              ação (raio maior), não um beco sem saída.
+            </div>
+          </div>
+
+          <!-- cota -->
+          <div class="col" style="width: 300px">
+            <div class="clabel">Cota diária esgotada</div>
+            <div class="phone" style="width: 300px">
+              <div class="screen" style="height: 600px">
+                <div class="stage">
+                  <div class="mapbg"></div>
+                  <div class="topscrim"></div>
+                  <div class="statusbar over">
+                    <span>9:41</span>
+                    <div class="dots">
+                      <span>●</span><span>●</span><span>▰</span>
+                    </div>
+                  </div>
+                  <div class="sheet" style="height: 478px">
+                    <div class="grab"></div>
+                    <div class="statewrap" style="gap: 11px; padding-top: 22px">
+                      <div class="stateic warn">
+                        <svg class="i xl" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="9" />
+                          <path d="M12 7v5l3 2" />
+                        </svg>
+                      </div>
+                      <h3>Você usou as 5 gerações de hoje</h3>
+                      <p>
+                        Elas voltam amanhã. Quer continuar descobrindo agora?
+                      </p>
+                      <div class="upsell">
+                        <b
+                          ><svg class="i sm" viewBox="0 0 24 24">
+                            <path
+                              d="M12 3l2.2 5 5.3.4-4 3.5 1.2 5.2L12 19.8 7.3 17.1l1.2-5.2-4-3.5 5.3-.4z"
+                            />
+                          </svg>
+                          ConnectAI Premium</b
+                        >
+                        <p>
+                          25 gerações por dia, raio maior e mais spots ativos.
+                        </p>
+                        <button
+                          class="btn btn-primary"
+                          style="min-height: 44px"
+                        >
+                          Conhecer o Premium
+                        </button>
+                      </div>
+                      <div class="ghostlink">Ver rolês já no mapa</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              O limite vira oportunidade: upsell sóbrio do Premium (liga ao
+              fluxo de billing) + saída útil pro mapa.
+            </div>
+          </div>
+
+          <!-- 409 -->
+          <div class="col" style="width: 300px">
+            <div class="clabel">Limite de spots (409)</div>
+            <div class="phone" style="width: 300px">
+              <div class="screen" style="height: 600px">
+                <div class="statusbar">
+                  <span>9:41</span>
+                  <div class="dots">
+                    <span>●</span><span>●</span><span>▰</span>
+                  </div>
+                </div>
+                <div class="topbar">
+                  <div class="back">
+                    <svg class="i" viewBox="0 0 24 24">
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </div>
+                  <h3>Publicar rolê</h3>
+                </div>
+                <div
+                  class="statewrap"
+                  style="justify-content: flex-start; padding-top: 48px"
+                >
+                  <div class="stateic danger">
+                    <svg class="i xl" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M5 5l14 14" />
+                    </svg>
+                  </div>
+                  <h3>Você já tem 5 rolês ativos</h3>
+                  <p>
+                    Esse é o limite simultâneo. Encerre um ou deixe expirar pra
+                    publicar outro.
+                  </p>
+                  <div style="width: 100%; margin-top: 4px">
+                    <button class="btn btn-ghost">Ver meus rolês ativos</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">
+              Erro de submit (máx. 5 ativos) inline na tela de publicar — sem
+              alert. Aponta a saída.
+            </div>
+          </div>
+        </div>
+
+        <div class="notes-2">
+          <div class="note plus">
+            <span class="k">1</span
+            ><span
+              ><b>Sem foto, sem avatar no card</b>: spots não têm imagem hoje,
+              então a sugestão é uma <b>linha vertical</b> — rank, manchete da
+              IA, lugar e sinais. O avatar do criador vive
+              <b>só no pin do mapa</b> (e fica assim).</span
+            >
+          </div>
+          <div class="note plus">
+            <span class="k">2</span
+            ><span
+              ><b>Sem aurora, sem glow</b>: o "momento IA" é a faixa de motivo +
+              o ícone de estrela. Reconhecível e dentro do sistema — a correção
+              em relação ao 1º rascunho.</span
+            >
+          </div>
+          <div class="note plus">
+            <span class="k">3</span
+            ><span
+              ><b>Zero dependência de backend nova</b>: o card usa só o que
+              <span class="pill-inline">/spots/suggestions</span> já devolve —
+              nome, <span class="pill-inline">suggestedTitle</span>, nota,
+              preço, <span class="pill-inline">openNow</span>, distância. Nada
+              de <span class="pill-inline">photoUrl</span> ou avatares de
+              amigos.</span
+            >
+          </div>
+          <div class="note plus">
+            <span class="k">4</span
+            ><span
+              ><b>Coerência</b>: a mesma linha serve o preview do mapa e a
+              lista. Botão, pill e tipografia idênticos ao EventCard, feed e
+              perfil.</span
+            >
+          </div>
+          <div class="note plus">
+            <span class="k">5</span
+            ><span
+              ><b>Folha de múltiplos níveis</b>: resultados chegam em
+              <b>meia-altura</b> (lista vertical) pra o mapa e os pins
+              respirarem; arrastar pra cima abre tudo. Implementável com
+              <span class="pill-inline">@gorhom/bottom-sheet</span> (snapPoints)
+              sobre o reanimated/gesture-handler que já temos.</span
+            >
+          </div>
+          <div class="note plus">
+            <span class="k">6</span
+            ><span
+              ><b>Pin ↔ linha sincronizados</b>: os candidatos são pins
+              <b>numerados</b> (não avatar — ainda não são spots); o item ativo
+              destaca o pin (<span class="pill-inline">.sel</span>, maior +
+              halo). Spots já publicados é que aparecem com o avatar do criador
+              no pin.</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <div class="caption-foot">
+        Tokens reais de <span class="pill-inline">src/global.css</span> · tema
+        dark único · marca violet #7c3aed · sem aurora/glow · toque ≥44px ·
+        contraste WCAG AA.<br />
+        Sugestão sem foto (spots não têm) · avatar só no pin · reúsa faixa de
+        motivo, manchete, botão e tipografia do
+        <span class="pill-inline">EventCard</span>. Próximos: detalhe do spot,
+        chat do grupo, "Meus spots".
+      </div>
+    </div>
+  </body>
+</html>

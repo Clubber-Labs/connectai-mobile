@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native'
-import { CategoryChip } from './CategoryChip'
+import { Chip } from './Chip'
 import type { Subcategory } from '@/shared/types'
 
 type Props = {
@@ -28,7 +28,7 @@ export function InterestGroup({
         {items.map(item => {
           const active = selected.includes(item.value)
           return (
-            <CategoryChip
+            <Chip
               key={item.value}
               label={item.label}
               active={active}

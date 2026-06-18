@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { View, Text, TextInput } from 'react-native'
 import { colors } from '@/shared/theme'
 import { MIN_QUERY_LENGTH } from '../hooks/useSuggestSpots'
@@ -14,6 +15,8 @@ type Props = {
 // Texto livre da intenção. Quando preenchido, o backend ignora as preferências
 // de rolê e busca por isto — o help abaixo deixa explícito.
 export function SpotQueryInput({ value, onChange, editable = true }: Props) {
+  // Foco realça a borda na cor da marca (sem glow) — sinaliza o campo ativo.
+  const [focused, setFocused] = useState(false)
   // Só avisa o mínimo quando o usuário começou a digitar algo curto demais —
   // texto vazio é estado válido (cai nas preferências).
   const tooShort =
@@ -26,7 +29,9 @@ export function SpotQueryInput({ value, onChange, editable = true }: Props) {
         <Text className="text-content-subtle text-xs">(opcional)</Text>
       </Text>
       <TextInput
-        className="border border-line bg-surface rounded-xl px-4 py-3.5 text-base text-content"
+        className={`border bg-surface rounded-xl px-4 py-3.5 text-base text-content ${
+          focused ? 'border-brand' : 'border-line'
+        }`}
         placeholder="bar com música ao vivo"
         placeholderTextColor={colors.contentSubtle}
         value={value}
@@ -34,6 +39,8 @@ export function SpotQueryInput({ value, onChange, editable = true }: Props) {
         editable={editable}
         maxLength={MAX_QUERY_LENGTH}
         returnKeyType="search"
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
       {tooShort ? (
         <Text className="text-content-subtle text-xs">

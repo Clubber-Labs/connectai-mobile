@@ -1,15 +1,31 @@
+import { useState } from 'react'
 import { View, Text, FlatList, Linking, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated'
+import { runOnJS } from 'react-native-worklets'
 import { Button } from '@/shared/components/Button'
 import { FormError } from '@/shared/components/FormError'
 import { RadiusSlider } from '@/shared/components/RadiusSlider'
 import { useKeyboardSheetLift } from '@/shared/hooks/useKeyboardSheetLift'
-import { isValidationError } from '@/shared/lib/apiError'
+import {
+  isValidationError,
+  isTooManyRequestsError,
+} from '@/shared/lib/apiError'
+import { useMyProfile } from '@/features/users/hooks/useProfile'
 import type { useSuggestSpots } from '../hooks/useSuggestSpots'
 import { SPOT_RADIUS_MIN_KM, SPOT_RADIUS_MAX_KM } from '../hooks/useSpotPrefs'
 import { suggestionsErrorMessage } from '../utils/suggestionsError'
 import { SpotSuggestionCard } from './SpotSuggestionCard'
+import { SpotConsentNeeded } from './SpotConsentNeeded'
+import { SpotEmptyResults } from './SpotEmptyResults'
+import { SpotQuotaExhausted } from './SpotQuotaExhausted'
 import { SpotQueryInput } from './SpotQueryInput'
 import type { SpotSuggestion } from '../types'
 import { colors } from '@/shared/theme'
@@ -19,6 +35,10 @@ const LOCATION_ISSUE_MESSAGES = {
     'Permissão de localização negada. Ative nos ajustes do aparelho para gerar sugestões.',
   error: 'Não foi possível obter sua localização. Tente novamente.',
 } as const
+
+// data vazio reutilizável — evita criar [] a cada render quando a cota esgotada
+// substitui a lista pelo estado dedicado.
+const NO_SUGGESTIONS: SpotSuggestion[] = []
 
 type Props = {
   // O fluxo vive na tela do mapa — fechar o painel não descarta as sugestões
@@ -31,10 +51,40 @@ type Props = {
 
 // Painel da metade de baixo da tab do mapa: gera e lista as sugestões da IA
 // enquanto os balões dos spots e os rascunhos continuam visíveis em cima.
+//
+// Dois modos pra folha não engolir o mapa (os pins ranqueados precisam aparecer):
+//  - entrada: folha alta com os controles (raio + prompt + gerar);
+//  - resultados: folha baixa (~meia-altura) só com a lista + cabeçalho compacto.
+// "Gerar de novo" reabre os controles (com voltar) sem gastar outra geração.
 export function SpotSuggestionsPanel({ suggest, onChoose, onClose }: Props) {
   const router = useRouter()
   // Levanta a folha acima do teclado no iOS (Android: adjustResize já resolve).
   const { ref: sheetRef, lift: keyboardLift } = useKeyboardSheetLift()
+  // Volta pros controles depois de já ter resultados (ajustar raio/intenção).
+  const [editing, setEditing] = useState(false)
+
+  // Arrastar a alça pra baixo fecha a folha: segue o dedo; além do limiar (ou
+  // num flick rápido), desliza pra fora e fecha; senão, volta com mola.
+  const dragY = useSharedValue(0)
+  const dragGesture = Gesture.Pan()
+    .onUpdate(e => {
+      dragY.value = Math.max(0, e.translationY)
+    })
+    .onEnd(e => {
+      if (e.translationY > 120 || e.velocityY > 800) {
+        dragY.value = withTiming(900, { duration: 200 }, finished => {
+          if (finished) runOnJS(onClose)()
+        })
+      } else {
+        dragY.value = withSpring(0, { damping: 22, stiffness: 220 })
+      }
+    })
+  // Combina o arraste com o lift do teclado num só transform da folha.
+  const sheetStyle = useAnimatedStyle(
+    () => ({ transform: [{ translateY: dragY.value - keyboardLift }] }),
+    [keyboardLift],
+  )
+
   const {
     hasLocationConsent,
     suggestions,
@@ -51,57 +101,75 @@ export function SpotSuggestionsPanel({ suggest, onChoose, onClose }: Props) {
     handleGenerate,
   } = suggest
 
-  // Só após uma geração que voltou vazia — no estado inicial a lista vazia é
-  // esperada (ainda nem gerou). A IA descarta lugares ruins, então 0 é possível.
-  const listEmpty =
-    hasGenerated && !isGenerating ? (
-      <View className="items-center gap-2 px-2 pt-6">
-        <Ionicons
-          name="sparkles-outline"
-          size={28}
-          color={colors.contentSubtle}
-        />
-        <Text className="text-content-tertiary text-sm font-semibold text-center">
-          Nenhuma sugestão encontrada
-        </Text>
-        <Text className="text-content-muted text-sm text-center">
-          A IA não achou bons lugares para essa busca. Tente aumentar o raio ou
-          descreva o que você quer fazer.
-        </Text>
-      </View>
-    ) : null
+  const { data: profile } = useMyProfile()
+  const isPremium = !!profile?.isPremium
+  // Cota zerada nesta sessão (remaining 0) ou 429 de uma sessão anterior.
+  const quotaExhausted =
+    remaining === 0 || isTooManyRequestsError(generateError)
+
+  const count = suggestions.length
+  // Há resultados pra mostrar/voltar; durante a geração mantém os controles
+  // (botão em loading) em vez de saltar pro modo resultados com a lista antiga.
+  const canReturn = hasGenerated && count > 0
+  const showResults = canReturn && !editing && !isGenerating
+  // Cota esgotada toma a folha inteira (sem lista de sugestões embaixo) — só
+  // entra no modo de entrada; com resultados à mostra o usuário ainda os vê.
+  const showQuota = quotaExhausted && !showResults
+  // Gerou e veio vazio: estado dedicado (igual cota/consentimento) no lugar dos
+  // controles, até o usuário editar a busca.
+  const showEmpty =
+    hasLocationConsent &&
+    !quotaExhausted &&
+    hasGenerated &&
+    count === 0 &&
+    !isGenerating &&
+    !editing
+  // Qualquer estado dedicado esconde a intro (a folha foca no estado).
+  const showTakeover = !hasLocationConsent || quotaExhausted || showEmpty
+
+  // Gerar a partir dos controles fecha o modo edição: quando os resultados
+  // voltam, a folha recolhe sozinha pro modo compacto.
+  function submitGenerate() {
+    setEditing(false)
+    handleGenerate()
+  }
+
+  // Faixa de motivo do melhor match (assinatura da IA): a intenção digitada
+  // quando há query válida; senão, as preferências de rolê do usuário.
+  const bestReason = hasValidQuery
+    ? `Sugerido pra você · ${query.trim()}`
+    : 'Combina com seus rolês'
 
   const header = (
     <View className="gap-3 pb-4">
-      <Text className="text-content-muted text-sm">
-        A IA sugere rolês dentro do raio escolhido, com base nas suas
-        preferências — ou no que você descrever. Escolha um, publique e chame a
-        galera pro grupo.
-      </Text>
+      {!showTakeover && (
+        <Text className="text-content-muted text-sm">
+          A IA sugere rolês dentro do raio escolhido, com base nas suas
+          preferências — ou no que você descrever. Escolha um, publique e chame
+          a galera pro grupo.
+        </Text>
+      )}
 
       {!hasLocationConsent ? (
-        <View className="bg-surface border border-line rounded-2xl p-4 gap-3">
-          <View className="flex-row items-center gap-2">
-            <Ionicons
-              name="shield-checkmark-outline"
-              size={18}
-              color={colors.brandText}
-            />
-            <Text className="text-content-secondary text-sm font-semibold flex-1">
-              Precisamos da sua localização
-            </Text>
-          </View>
-          <Text className="text-content-muted text-sm">
-            Para sugerir e mostrar rolês perto de você, ative o consentimento de
-            localização precisa. Ela é usada só neste momento — nada de
-            rastreamento em segundo plano.
-          </Text>
-          <Button
-            label="Abrir configurações de privacidade"
-            variant="secondary"
-            onPress={() => router.push('/profile/privacy')}
-          />
-        </View>
+        <SpotConsentNeeded
+          onOpenPrivacy={() => router.push('/profile/privacy')}
+        />
+      ) : quotaExhausted ? (
+        <SpotQuotaExhausted
+          isPremium={isPremium}
+          onUpgrade={() => router.push('/billing/upgrade')}
+          onSeeMap={onClose}
+        />
+      ) : showEmpty ? (
+        <SpotEmptyResults
+          radiusKm={radiusKm}
+          maxRadiusKm={SPOT_RADIUS_MAX_KM}
+          onIncreaseRadius={km => {
+            setRadiusKm(km)
+            handleGenerate(km)
+          }}
+          onEditQuery={() => setEditing(true)}
+        />
       ) : (
         <View className="gap-3">
           <View className="gap-1">
@@ -113,9 +181,6 @@ export function SpotSuggestionsPanel({ suggest, onChoose, onClose }: Props) {
               onCommit={setRadiusKm}
               disabled={isGenerating}
             />
-            <Text className="text-content-subtle text-xs">
-              Vale só para esta busca — o raio padrão fica em Ajustes.
-            </Text>
           </View>
           <SpotQueryInput
             value={query}
@@ -130,17 +195,15 @@ export function SpotSuggestionsPanel({ suggest, onChoose, onClose }: Props) {
                   ? 'Gerar novamente'
                   : 'Gerar sugestões'
             }
-            onPress={handleGenerate}
+            onPress={submitGenerate}
             loading={isGenerating}
             // Quota zerada (conhecida após a 1ª geração): o aviso abaixo já
             // explica; clicável só renderia um 429 garantido.
             disabled={isGenerating || remaining === 0}
           />
-          {remaining !== undefined && (
+          {remaining !== undefined && remaining > 0 && (
             <Text className="text-content-subtle text-xs text-center">
-              {remaining === 0
-                ? 'Você usou todas as gerações de hoje.'
-                : `${remaining} ${remaining === 1 ? 'geração restante' : 'gerações restantes'} hoje`}
+              {`${remaining} ${remaining === 1 ? 'geração restante' : 'gerações restantes'} hoje`}
             </Text>
           )}
           {locationIssue && (
@@ -175,31 +238,79 @@ export function SpotSuggestionsPanel({ suggest, onChoose, onClose }: Props) {
   )
 
   return (
-    <View
+    <Animated.View
       ref={sheetRef}
-      className="absolute left-0 right-0 max-h-[80%] bottom-0 bg-surface-sunken rounded-t-3xl border-t border-line"
-      style={{ transform: [{ translateY: -keyboardLift }] }}
+      style={[
+        {
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          maxHeight: showResults ? '55%' : '85%',
+          backgroundColor: colors.surfaceSunken,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          borderTopWidth: 1,
+          borderTopColor: colors.line,
+        },
+        sheetStyle,
+      ]}
     >
-      <View className="items-center pt-2 pb-1">
-        <View className="w-10 h-1 bg-surface-high rounded-full" />
-      </View>
+      <GestureDetector gesture={dragGesture}>
+        <View className="items-center pt-3 pb-3">
+          <View className="w-10 h-1 bg-surface-high rounded-full" />
+        </View>
+      </GestureDetector>
       <View className="flex-row items-center justify-between px-5 pb-2">
-        <Text className="text-content text-lg font-bold">Bora pra onde?</Text>
-        <Pressable
-          onPress={onClose}
-          className="w-8 h-8 items-center justify-center"
-          accessibilityLabel="Fechar sugestões"
-        >
-          <Ionicons name="close" size={22} color={colors.contentMuted} />
-        </Pressable>
+        <View className="flex-row items-center gap-1.5 flex-1">
+          {editing && canReturn && (
+            <Pressable
+              onPress={() => setEditing(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Voltar para as sugestões"
+              hitSlop={8}
+            >
+              <Ionicons name="chevron-back" size={22} color={colors.content} />
+            </Pressable>
+          )}
+          <Text className="text-content text-lg font-bold">
+            {showResults
+              ? `${count} ${count === 1 ? 'rolê' : 'rolês'} pra hoje`
+              : 'Bora pra onde?'}
+          </Text>
+        </View>
+        <View className="flex-row items-center gap-4">
+          {showResults && (
+            <Pressable
+              onPress={() => setEditing(true)}
+              className="flex-row items-center gap-1.5"
+              accessibilityRole="button"
+              accessibilityLabel="Gerar de novo"
+              hitSlop={8}
+            >
+              <Ionicons name="refresh" size={16} color={colors.brandText} />
+              <Text className="text-brand-text text-sm font-semibold">
+                Gerar de novo
+              </Text>
+            </Pressable>
+          )}
+          <Pressable
+            onPress={onClose}
+            className="w-8 h-8 items-center justify-center"
+            accessibilityLabel="Fechar sugestões"
+          >
+            <Ionicons name="close" size={22} color={colors.contentMuted} />
+          </Pressable>
+        </View>
       </View>
       <FlatList
         // A folha tem teto (max-h); flexShrink deixa a lista encolher e rolar
         // dentro dele com muitos cards. Sem isto a lista estica a folha além da
         // tela e a virtualização não rola (flex-1 colaparia: base 0 em pai auto).
         style={{ flexShrink: 1 }}
-        // Ordem ranqueada pela IA — renderiza como veio, sem reordenar.
-        data={suggestions}
+        // Ordem ranqueada pela IA — renderiza como veio, sem reordenar. Na cota
+        // esgotada a lista some: o estado dedicado (no header) toma a folha.
+        data={showQuota ? NO_SUGGESTIONS : suggestions}
         keyExtractor={item => item.placeId}
         // O campo de intenção vive no header: sem isto, o 1º tap em "Gerar" com
         // o teclado aberto só fecharia o teclado em vez de disparar a geração.
@@ -209,16 +320,17 @@ export function SpotSuggestionsPanel({ suggest, onChoose, onClose }: Props) {
           paddingBottom: 24,
           gap: 12,
         }}
-        ListHeaderComponent={header}
-        ListEmptyComponent={listEmpty}
+        // No modo resultados os controles somem — sobra só a lista compacta.
+        ListHeaderComponent={showResults ? null : header}
         renderItem={({ item, index }) => (
           <SpotSuggestionCard
             suggestion={item}
             rank={index + 1}
             onChoose={() => onChoose(item)}
+            reason={index === 0 ? bestReason : undefined}
           />
         )}
       />
-    </View>
+    </Animated.View>
   )
 }

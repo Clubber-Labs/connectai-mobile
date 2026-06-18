@@ -21,7 +21,7 @@ export function EventDateChip({ date, muted = false, compact = false }: Props) {
   const { month, day } = parts(date)
   return (
     <View
-      className={`overflow-hidden rounded-lg border border-white/15 bg-black/70 ${
+      className={`overflow-hidden rounded-lg border border-white/15 ${
         compact ? 'w-10' : 'w-12'
       }`}
     >

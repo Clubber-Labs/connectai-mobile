@@ -49,6 +49,13 @@ export function EventImagePicker({
               className="w-20 h-20 rounded-xl bg-surface-elevated"
               resizeMode="cover"
             />
+            {i === 0 && (
+              <View className="absolute bottom-1 left-1 rounded bg-background/70 border border-line-strong px-1.5 py-0.5">
+                <Text className="text-content text-[9px] font-bold uppercase">
+                  Capa
+                </Text>
+              </View>
+            )}
             <Pressable
               onPress={() => remove(i)}
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-surface border border-line-strong items-center justify-center"

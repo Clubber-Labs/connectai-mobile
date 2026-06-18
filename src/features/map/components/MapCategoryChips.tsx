@@ -1,5 +1,6 @@
-import { ScrollView, Pressable, Text } from 'react-native'
+import { ScrollView } from 'react-native'
 import { useCategories } from '@/shared/hooks/useCategories'
+import { Chip } from '@/shared/components/Chip'
 import { useMapUiStore } from '../store/mapUiStore'
 
 // Chips de categoria sobre o mapa — filtro rápido multi-select sincronizado com
@@ -41,32 +42,5 @@ export function MapCategoryChips() {
         />
       ))}
     </ScrollView>
-  )
-}
-
-function Chip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string
-  active: boolean
-  onPress: () => void
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      className={`rounded-lg border px-3 py-2 ${
-        active ? 'border-brand bg-brand' : 'border-line-strong bg-surface/95'
-      }`}
-    >
-      <Text
-        className={`text-xs font-bold ${active ? 'text-content' : 'text-content-secondary'}`}
-      >
-        {label}
-      </Text>
-    </Pressable>
   )
 }

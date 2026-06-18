@@ -1,6 +1,6 @@
 import { View, ActivityIndicator } from 'react-native'
 import { useCategories } from '@/shared/hooks/useCategories'
-import { CategoryChip } from './CategoryChip'
+import { Chip } from './Chip'
 import { colors } from '@/shared/theme'
 
 type Props = {
@@ -38,7 +38,7 @@ export function CategoryMultiSelect({ value, onChange, max = 10 }: Props) {
       {categories.map(category => {
         const active = value.includes(category.value)
         return (
-          <CategoryChip
+          <Chip
             key={category.value}
             label={category.label}
             active={active}

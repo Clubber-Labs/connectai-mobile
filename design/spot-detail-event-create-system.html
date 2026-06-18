@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ConnectAI · Detalhe do rolê & Criar evento</title>
+<style>
+  /* ───────────────────────────────────────────────────────────
+     TOKENS — espelho exato de src/global.css (tema dark único).
+     Mesma fonte da verdade de spot-suggestions-system.html.
+     ─────────────────────────────────────────────────────────── */
+  :root{
+    --background:#000000;--surface-sunken:#0a0a0a;--surface:#18181b;--surface-elevated:#27272a;
+    --surface-high:#3f3f46;--surface-higher:#52525b;
+    --content:#ffffff;--content-bright:#f4f4f5;--content-secondary:#e4e4e7;--content-tertiary:#d4d4d8;
+    --content-muted:#a1a1aa;--content-subtle:#71717a;--content-faint:#52525b;
+    --line:#27272a;--line-strong:#3f3f46;--line-subtle:#18181b;
+    --brand:#7c3aed;--brand-emphasis:#8b5cf6;--brand-strong:#6d28d9;--brand-text:#a78bfa;
+    --brand-text-strong:#c4b5fd;--brand-text-bright:#ddd6fe;--brand-surface:#2e1065;--brand-surface-strong:#4c1d95;
+    --danger:#ef4444;--danger-strong:#dc2626;--danger-text:#f87171;--warning:#fbbf24;--warning-text:#fde68a;
+    --success:#22c55e;--success-text:#4ade80;--success-strong:#16a34a;--info:#7dd3fc;
+
+    --t-display:28px;--t-title:20px;--t-section:17px;--t-body:15px;--t-meta:13px;--t-caption:11px;
+    --r-card:12px;--r-btn:10px;--r-chip:999px;
+    font-synthesis:none;-webkit-font-smoothing:antialiased;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050505;color:var(--content);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif;line-height:1.4;padding:48px 24px 120px}
+  .wrap{max-width:1180px;margin:0 auto}
+
+  .doc-head{text-align:center;margin-bottom:56px}
+  .doc-head .eyebrow{font-size:var(--t-caption);letter-spacing:.18em;text-transform:uppercase;color:var(--brand-text);font-weight:700}
+  .doc-head h1{font-size:40px;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px}
+  .doc-head p{color:var(--content-muted);font-size:var(--t-body);max-width:720px;margin:0 auto}
+
+  section{margin-bottom:72px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .sec-head .num{font-size:var(--t-meta);font-weight:800;color:var(--brand-text);background:var(--brand-surface);border:1px solid var(--brand-surface-strong);width:28px;height:28px;border-radius:999px;display:grid;place-items:center;flex:none}
+  .sec-head h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+  .sec-sub{color:var(--content-muted);font-size:var(--t-body);margin:0 0 28px 40px;max-width:780px}
+  .sec-sub b{color:var(--content-secondary);font-weight:700}
+
+  .label{font-size:var(--t-caption);letter-spacing:.14em;text-transform:uppercase;color:var(--content-subtle);font-weight:700;margin-bottom:12px}
+
+  /* botões canônicos */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:var(--r-btn);font-size:var(--t-body);font-weight:700;border:none;cursor:pointer;width:100%}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-confirmed{background:var(--brand-surface);color:var(--brand-text-bright);border:1px solid var(--brand-surface-strong)}
+  .btn-ghost{background:var(--surface-elevated);color:var(--content-secondary)}
+  .btn-secondary{background:transparent;border:1px solid var(--line-strong);color:var(--content-secondary)}
+  .btn-danger{background:var(--danger-strong);color:#fff}
+  .btn-row{display:grid;gap:12px}
+
+  /* phone frame */
+  .phone{width:344px;background:var(--background);border:10px solid #1a1a1d;border-radius:40px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.45);position:relative}
+  .screen{height:780px;overflow:hidden;position:relative;display:flex;flex-direction:column;background:#08080b}
+  .statusbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:700;flex:none;z-index:9}
+  .statusbar .dots{display:flex;gap:5px;align-items:center}
+
+  /* app header (back · ConnectAI · sino) — igual ao app */
+  .apphead{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 12px;flex:none;border-bottom:1px solid var(--line-subtle)}
+  .apphead .ic{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;color:var(--content-secondary)}
+  .apphead .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px}
+  .apphead .brand .logo{width:30px;height:30px;border-radius:999px;background:var(--brand);display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff}
+
+  /* topbar simples (back + título) */
+  .topbar{display:flex;align-items:center;gap:12px;padding:8px 14px 12px;flex:none}
+  .topbar .back{width:38px;height:38px;border-radius:999px;background:var(--surface-elevated);display:grid;place-items:center;color:var(--content-secondary)}
+  .topbar h3{font-size:var(--t-title);font-weight:800}
+
+  /* ───────── DETALHE DO ROLÊ ───────── */
+  .detailscroll{flex:1;overflow-y:auto;padding:16px 16px 26px;display:flex;flex-direction:column;gap:17px}
+  .detailscroll::-webkit-scrollbar{width:0}
+
+  .creatorrow{display:flex;align-items:center;gap:11px}
+  .creatorrow .av{width:42px;height:42px;border-radius:999px;flex:none}
+  .creatorrow .who{flex:1;min-width:0}
+  .creatorrow b{font-size:14px;font-weight:700;display:block}
+  .creatorrow small{font-size:12px;color:var(--content-subtle)}
+  .creatorrow .chev{color:var(--content-faint)}
+
+  .detailtitle{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  .detaildesc{font-size:14.5px;color:var(--content-tertiary);margin-top:9px;line-height:1.5}
+  .statusline{display:flex;align-items:center;gap:9px;margin-top:11px}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:var(--t-caption);font-weight:700;padding:5px 10px;border-radius:7px}
+  .pill-live{background:rgba(34,197,94,.16);color:var(--success-text);border:1px solid rgba(34,197,94,.32)}
+  .pill-canceled{background:rgba(239,68,68,.1);color:var(--danger-text);border:1px solid rgba(239,68,68,.28)}
+  .endsin{font-size:12.5px;color:var(--content-subtle);font-weight:600}
+
+  .catrow{display:flex;flex-wrap:wrap;gap:8px}
+  .catbadge{font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;background:var(--brand-surface);border:1px solid var(--brand-surface-strong);color:var(--brand-text-bright)}
+
+  /* info card (Quando / Grupo) — o upgrade vs as linhas soltas de hoje */
+  .infocard{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .inforow{display:flex;align-items:center;gap:12px;padding:13px 14px}
+  .inforow + .inforow{border-top:1px solid var(--line)}
+  .inforow .tile{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;background:var(--brand-surface);border:1px solid var(--brand-surface-strong);color:var(--brand-text)}
+  .inforow .body{flex:1;min-width:0}
+  .inforow .l{font-size:11.5px;color:var(--content-subtle);font-weight:600}
+  .inforow .v{font-size:14.5px;color:var(--content-secondary);font-weight:600;margin-top:2px}
+  .inforow .chev{color:var(--content-faint)}
+  .stack{display:flex;align-items:center}
+  .stack .av{width:24px;height:24px;border-radius:999px;border:2px solid var(--surface);margin-left:-8px;flex:none}
+  .stack .av:first-child{margin-left:0}
+
+  /* mapa do detalhe */
+  .detailmap{height:152px;border-radius:14px;overflow:hidden;position:relative;border:1px solid var(--line)}
+  .mapbg{position:absolute;inset:0;background:radial-gradient(115% 90% at 50% 40%,#15151d 0%,#0c0c11 60%,#08080b 100%)}
+  .mroad{position:absolute;background:#16161d;border-radius:10px}
+  .avpin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4}
+  .avpin .face{width:40px;height:40px;border-radius:999px;border:3px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.55)}
+  .avpin .tip{position:absolute;left:50%;bottom:-4px;width:8px;height:8px;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:0 0 2px 0}
+  .mapchip{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(10,10,11,.92);border:1px solid var(--line-strong);border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--content-secondary);z-index:5}
+
+  /* seção de gerência */
+  .mgmtsep{border-top:1px solid var(--line);margin-top:2px;padding-top:15px}
+  .mgmthead{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--content-subtle);font-weight:700;margin-bottom:11px}
+  .renewhint{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--brand-text-strong);background:var(--brand-surface);border:1px solid var(--brand-surface-strong);border-radius:11px;padding:11px 12px;margin-bottom:12px;line-height:1.45}
+  .renewhint svg{flex:none;margin-top:1px}
+
+  /* Variante B — lista de ações */
+  .actionlist{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .actionrow{display:flex;align-items:center;gap:12px;padding:14px}
+  .actionrow + .actionrow{border-top:1px solid var(--line)}
+  .actionrow .ic{width:36px;height:36px;border-radius:10px;background:var(--surface-elevated);display:grid;place-items:center;color:var(--content-secondary);flex:none}
+  .actionrow .t{flex:1}
+  .actionrow .t b{font-size:14.5px;font-weight:600;color:var(--content-secondary);display:block}
+  .actionrow .t small{font-size:11.5px;color:var(--content-subtle)}
+  .actionrow .chev{color:var(--content-faint)}
+  .actionrow.danger .t b{color:var(--danger-text)}
+  .actionrow.danger .ic{background:rgba(239,68,68,.1);color:var(--danger-text)}
+
+  /* ───────── CRIAR EVENTO ───────── */
+  .form{flex:1;overflow-y:auto;padding:2px 16px 16px}
+  .form::-webkit-scrollbar{width:0}
+  .field{padding-top:17px}
+  .flabel{font-size:var(--t-meta);font-weight:700;color:var(--content-secondary);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+  .flabel .opt{font-size:var(--t-caption);color:var(--content-subtle);font-weight:600;letter-spacing:0;text-transform:none}
+  .finput{background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:13px 14px;font-size:var(--t-body);font-weight:600;color:#fff;display:flex;align-items:center;gap:10px}
+  .finput.ph{color:var(--content-subtle);font-weight:500}
+  .finput.area{min-height:64px;font-weight:400;color:var(--content-secondary);font-size:14.5px;align-items:flex-start}
+  .finput .lead{color:var(--content-muted);flex:none}
+  .finput .grow{flex:1}
+  .finput .chev{color:var(--content-faint);flex:none}
+  .cats{display:flex;flex-wrap:wrap;gap:8px}
+  .fchip{font-size:var(--t-meta);font-weight:600;padding:8px 13px;border-radius:8px;background:var(--surface);border:1px solid var(--line-strong);color:var(--content-tertiary);white-space:nowrap}
+  .fchip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .fchip .i{display:inline-block;vertical-align:-2px;margin-right:4px}
+  .visseg{display:flex;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:4px;gap:4px}
+  .visseg .o{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 0;border-radius:9px;font-size:var(--t-meta);font-weight:700;color:var(--content-muted)}
+  .visseg .o.on{background:var(--surface-elevated);color:#fff}
+  .vishint{font-size:12px;color:var(--content-subtle);margin-top:8px;display:flex;gap:6px;align-items:flex-start}
+  .vishint svg{flex:none;margin-top:1px}
+
+  /* fotos do evento (eventos TÊM imagem — diferença-chave vs spots) */
+  .photorow{display:flex;gap:9px;flex-wrap:wrap}
+  .photoadd{width:88px;height:88px;border-radius:13px;border:1.5px dashed var(--line-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--content-muted);font-size:11px;font-weight:600;background:var(--surface-sunken)}
+  .photothumb{width:88px;height:88px;border-radius:13px;position:relative;overflow:hidden}
+  .photothumb .rm{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:999px;background:rgba(0,0,0,.62);display:grid;place-items:center;color:#fff}
+  .photothumb .cover{position:absolute;left:5px;bottom:5px;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 6px;color:#fff}
+
+  .pickmap{height:150px;border-radius:12px;overflow:hidden;position:relative;border:1px solid var(--line-strong)}
+  .pickpin{position:absolute;left:50%;top:46%;transform:translate(-50%,-100%);z-index:4;color:var(--brand);filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+  .pickhint{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:11.5px;color:var(--content-secondary);background:linear-gradient(to top,rgba(0,0,0,.7),transparent);padding:16px 0 8px;font-weight:600}
+
+  .stickycta{padding:13px 16px 18px;border-top:1px solid var(--line);background:var(--surface-sunken);flex:none}
+
+  /* gradientes (avatares/fotos placeholders) */
+  .g1{background:linear-gradient(135deg,#7c3aed,#ec4899)}.g2{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
+  .g3{background:linear-gradient(135deg,#f59e0b,#ef4444)}.g4{background:linear-gradient(135deg,#10b981,#84cc16)}.g5{background:linear-gradient(135deg,#8b5cf6,#6366f1)}
+
+  svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+  svg.i.sm{width:14px;height:14px}svg.i.lg{width:22px;height:22px}svg.i.xl{width:26px;height:26px}
+  svg.fill{fill:currentColor;stroke:none}
+
+  .row{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  .col{display:flex;flex-direction:column;align-items:center;gap:14px;width:344px}
+  .col .clabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--content-subtle);font-weight:700}
+  .col .clabel b{color:var(--brand-text);font-weight:800}
+  .cap{font-size:11.5px;color:var(--content-subtle);text-align:center;max-width:320px;line-height:1.5}
+
+  .notes{margin-top:18px;display:grid;gap:10px}
+  .note{display:flex;gap:10px;font-size:var(--t-meta);color:var(--content-tertiary);align-items:flex-start}
+  .note .k{flex:none;width:22px;height:22px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:800}
+  .note.plus .k{background:rgba(34,197,94,.16);color:var(--success-text)}
+  .note b{color:var(--content);font-weight:700}
+  .notes-2{margin:30px auto 0;max-width:1040px;display:grid;grid-template-columns:1fr 1fr;gap:10px 28px}
+  .pill-inline{display:inline-block;background:var(--surface-elevated);border:1px solid var(--line-strong);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--content-tertiary)}
+  .caption-foot{text-align:center;color:var(--content-faint);font-size:var(--t-meta);margin-top:64px;line-height:1.6}
+  .pickone{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--brand-text-bright);background:var(--brand-surface);border:1px solid var(--brand-surface-strong);border-radius:999px;padding:5px 13px;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <div class="eyebrow">ConnectAI · Design System</div>
+    <h1>Detalhe do rolê &amp; Criar evento</h1>
+    <p>Os dois redesigns que faltavam, na mesma língua do fluxo de Spots: <b>cards com tile de ícone</b>, <b>pílula de status</b>, <b>controle segmentado</b> e <b>CTA fixo no rodapé</b>. Tokens reais de <span class="pill-inline">global.css</span> · marca violet #7c3aed · sem aurora/glow. A <b>assinatura de IA</b> (estrela) fica só nos spots — eventos são criados à mão.</p>
+  </div>
+
+  <!-- ════════════ 1. DETALHE DO SEU ROLÊ ════════════ -->
+  <section>
+    <div class="sec-head"><div class="num">1</div><h2>Detalhe do seu rolê — visão de dono</h2></div>
+    <p class="sec-sub">A tela que hoje é uma pilha de botões ganha hierarquia: <b>título + status</b> no topo, um <b>card de informações</b> (quando · grupo) com tiles de ícone, o mapa com o <b>avatar no pin</b> (a única "foto" do rolê) e, separadas, as <b>ações de dono</b>. As duas variantes abaixo diferem só no bloco "Gerenciar rolê" — <b>escolha uma</b>.</p>
+
+    <div class="row">
+
+      <!-- OPÇÃO A · botões empilhados -->
+      <div class="col">
+        <div class="clabel">Opção A · <b>botões empilhados</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="apphead">
+            <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div>
+            <div class="brand"><span class="logo">C</span> ConnectAI</div>
+            <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+          </div>
+          <div class="detailscroll">
+            <div class="creatorrow">
+              <div class="av g1"></div>
+              <div class="who"><b>Neto Bonato</b><small>@netobonato sugeriu esse rolê</small></div>
+              <div class="chev"><svg class="i sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+            </div>
+
+            <div>
+              <div class="detailtitle">Club Vibe — o nome já diz tudo</div>
+              <div class="statusline">
+                <span class="pill pill-live">● no ar</span>
+                <span class="endsin">termina hoje às 04:08</span>
+              </div>
+              <div class="detaildesc">Balada com a vibe certa pra curtir com a galera.</div>
+            </div>
+
+            <div class="catrow">
+              <span class="catbadge">Vida noturna</span><span class="catbadge">Música</span>
+              <span class="catbadge">Festa</span><span class="catbadge">Balada</span><span class="catbadge">Dança</span>
+            </div>
+
+            <div class="infocard">
+              <div class="inforow">
+                <div class="tile"><svg class="i lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                <div class="body"><div class="l">Quando</div><div class="v">17 de junho · 02:08 – 04:08</div></div>
+              </div>
+              <div class="inforow">
+                <div class="tile"><svg class="i lg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+                <div class="body"><div class="l">Grupo do rolê</div><div class="v">1 pessoa no grupo</div></div>
+                <div class="stack"><div class="av g1"></div></div>
+              </div>
+            </div>
+
+            <div class="detailmap">
+              <div class="mapbg"></div>
+              <div class="mroad" style="top:30%;left:-8%;width:116%;height:5px;transform:rotate(-6deg)"></div>
+              <div class="mroad" style="top:66%;left:-8%;width:116%;height:4px;transform:rotate(5deg)"></div>
+              <div class="mroad" style="top:0;left:44%;width:5px;height:100%;transform:rotate(4deg)"></div>
+              <div class="avpin"><div class="face g1"></div><div class="tip"></div></div>
+              <div class="mapchip"><svg class="i sm" viewBox="0 0 24 24"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg> Como chegar</div>
+            </div>
+
+            <button class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg> Abrir chat do grupo</button>
+
+            <div class="mgmtsep">
+              <div class="mgmthead">Gerenciar rolê</div>
+              <div class="btn-row">
+                <button class="btn btn-ghost"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg> Renovar por +24h</button>
+                <button class="btn btn-secondary"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Editar rolê</button>
+                <button class="btn btn-danger"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg> Cancelar rolê</button>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Três botões full-width com ícone. Renovar (ghost) · Editar (contorno) · Cancelar (vermelho cheio). Explícito — as ações são o foco do dono.</div>
+      </div>
+
+      <!-- OPÇÃO B · lista de ações -->
+      <div class="col">
+        <div class="clabel">Opção B · <b>lista em card</b></div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="apphead">
+            <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div>
+            <div class="brand"><span class="logo">C</span> ConnectAI</div>
+            <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+          </div>
+          <div class="detailscroll">
+            <div class="creatorrow">
+              <div class="av g1"></div>
+              <div class="who"><b>Neto Bonato</b><small>@netobonato sugeriu esse rolê</small></div>
+              <div class="chev"><svg class="i sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+            </div>
+
+            <div>
+              <div class="detailtitle">Club Vibe — o nome já diz tudo</div>
+              <div class="statusline">
+                <span class="pill pill-live">● no ar</span>
+                <span class="endsin">termina hoje às 04:08</span>
+              </div>
+              <div class="detaildesc">Balada com a vibe certa pra curtir com a galera.</div>
+            </div>
+
+            <div class="catrow">
+              <span class="catbadge">Vida noturna</span><span class="catbadge">Música</span>
+              <span class="catbadge">Festa</span><span class="catbadge">Balada</span><span class="catbadge">Dança</span>
+            </div>
+
+            <div class="infocard">
+              <div class="inforow">
+                <div class="tile"><svg class="i lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                <div class="body"><div class="l">Quando</div><div class="v">17 de junho · 02:08 – 04:08</div></div>
+              </div>
+              <div class="inforow">
+                <div class="tile"><svg class="i lg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+                <div class="body"><div class="l">Grupo do rolê</div><div class="v">1 pessoa no grupo</div></div>
+                <div class="stack"><div class="av g1"></div></div>
+              </div>
+            </div>
+
+            <div class="detailmap">
+              <div class="mapbg"></div>
+              <div class="mroad" style="top:30%;left:-8%;width:116%;height:5px;transform:rotate(-6deg)"></div>
+              <div class="mroad" style="top:66%;left:-8%;width:116%;height:4px;transform:rotate(5deg)"></div>
+              <div class="mroad" style="top:0;left:44%;width:5px;height:100%;transform:rotate(4deg)"></div>
+              <div class="avpin"><div class="face g1"></div><div class="tip"></div></div>
+              <div class="mapchip"><svg class="i sm" viewBox="0 0 24 24"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg> Como chegar</div>
+            </div>
+
+            <button class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg> Abrir chat do grupo</button>
+
+            <div class="mgmtsep">
+              <div class="mgmthead">Gerenciar rolê</div>
+              <div class="actionlist">
+                <div class="actionrow">
+                  <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg></div>
+                  <div class="t"><b>Renovar por +24h</b><small>mantém o rolê no mapa</small></div>
+                  <div class="chev"><svg class="i sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+                </div>
+                <div class="actionrow">
+                  <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+                  <div class="t"><b>Editar rolê</b><small>título e descrição</small></div>
+                  <div class="chev"><svg class="i sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+                </div>
+                <div class="actionrow danger">
+                  <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div>
+                  <div class="t"><b>Cancelar rolê</b><small>sai do mapa pra todos</small></div>
+                  <div class="chev"><svg class="i sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Um card estilo "ajustes": linhas com ícone, subtítulo e chevron. Cancelar em vermelho. Mais enxuto e premium; deixa o CTA do chat respirar sozinho.</div>
+      </div>
+
+    </div>
+
+    <div class="notes-2">
+      <div class="note plus"><span class="k">1</span><span><b>Card de informações</b> com tile de ícone (Quando · Grupo) no lugar das linhas soltas de hoje — mesma linguagem do mini-card de sucesso e do place-card de publicar.</span></div>
+      <div class="note plus"><span class="k">2</span><span><b>Pílula de status</b> "no ar" (verde) / "cancelado" (vermelho) + horário de término — o dono entende na hora se precisa renovar.</span></div>
+      <div class="note plus"><span class="k">3</span><span><b>Avatar no pin</b> do mapa (a única "foto" do rolê, coerente com o resto do sistema). "Como chegar" vira chip sobre o mapa.</span></div>
+      <div class="note plus"><span class="k">4</span><span><b>Quando expira</b> (deep-link da notificação "seu rolê está acabando"): em ambas as opções, <b>Renovar sobe como botão primário</b> (violeta) com a faixa de aviso acima — a urgência fura o padrão.</span></div>
+    </div>
+  </section>
+
+  <!-- ════════════ 2. CRIAR EVENTO ════════════ -->
+  <section>
+    <div class="sec-head"><div class="num">2</div><h2>Criar evento — o mesmo padrão do Publicar rolê</h2></div>
+    <p class="sec-sub">O form ganha a mesma casca: <b>labels com hint</b>, inputs com ícone-guia, <b>visibilidade segmentada</b> (Público / Privado) e <b>CTA fixo no rodapé</b>. A diferença real vs. o rolê: <b>eventos têm foto</b> — então a capa abre o form — e <b>não têm IA</b>, então nada de estrela. Datas continuam livres (sem teto de 24h).</p>
+
+    <div class="row">
+
+      <!-- estado vazio -->
+      <div class="col">
+        <div class="clabel">Form · começo</div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Criar evento</h3></div>
+          <div class="form">
+            <div class="field" style="padding-top:6px"><div class="flabel">Fotos <span class="opt">opcional</span></div>
+              <div class="photorow">
+                <div class="photoadd"><svg class="i lg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Adicionar</div>
+              </div>
+            </div>
+            <div class="field"><div class="flabel">Título</div>
+              <div class="finput ph"><span class="grow">Festival de música no parque</span></div></div>
+            <div class="field"><div class="flabel">Descrição <span class="opt">opcional</span></div>
+              <div class="finput area ph"><span class="grow">Conte mais sobre o evento…</span></div></div>
+            <div class="field"><div class="flabel">Data e hora</div>
+              <div class="finput ph"><svg class="i lead" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span class="grow">Selecione a data e hora</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div>
+            <div class="field"><div class="flabel">Horário de término <span class="opt">opcional</span></div>
+              <div class="finput ph"><svg class="i lead" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="grow">Quando termina</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div>
+            <div class="field"><div class="flabel">Categorias <span class="opt">ao menos 1</span></div>
+              <div class="cats">
+                <span class="fchip">Música</span><span class="fchip">Esportes</span><span class="fchip">Tecnologia</span>
+                <span class="fchip">Gastronomia</span><span class="fchip">Arte</span><span class="fchip">Vida noturna</span>
+              </div></div>
+          </div>
+          <div class="stickycta">
+            <button class="btn btn-primary">Criar evento</button>
+          </div>
+        </div></div>
+        <div class="cap"><b style="color:var(--content-secondary)">Capa primeiro</b> (eventos têm foto, diferente do rolê). Inputs com ícone-guia e placeholder claro. CTA "Criar evento" fixo no rodapé — sem rolar até o fim.</div>
+      </div>
+
+      <!-- estado preenchido -->
+      <div class="col">
+        <div class="clabel">Form · preenchido</div>
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><div class="dots"><span>●</span><span>●</span><span>▰</span></div></div>
+          <div class="topbar"><div class="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div><h3>Criar evento</h3></div>
+          <div class="form">
+            <div class="field" style="padding-top:6px"><div class="flabel">Fotos <span class="opt">2 de 5</span></div>
+              <div class="photorow">
+                <div class="photothumb g2"><div class="cover">Capa</div><div class="rm"><svg class="i sm" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></div></div>
+                <div class="photothumb g3"><div class="rm"><svg class="i sm" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></div></div>
+                <div class="photoadd"><svg class="i lg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Adicionar</div>
+              </div>
+            </div>
+            <div class="field"><div class="flabel">Título</div>
+              <div class="finput"><span class="grow">Festival de Inverno no Parque</span></div></div>
+            <div class="field"><div class="flabel">Data e hora</div>
+              <div class="finput"><svg class="i lead" viewBox="0 0 24 24" style="color:var(--brand-text)"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span class="grow">28 de junho · 18:00</span><svg class="i sm chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div>
+            <div class="field"><div class="flabel">Categorias <span class="opt">ao menos 1</span></div>
+              <div class="cats">
+                <span class="fchip on"><svg class="i sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Música</span>
+                <span class="fchip on"><svg class="i sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Arte</span>
+                <span class="fchip">Gastronomia</span><span class="fchip">Família</span>
+              </div></div>
+            <div class="field"><div class="flabel">Endereço</div>
+              <div class="finput"><svg class="i lead" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span class="grow">Parque Barigui, Curitiba</span></div></div>
+            <div class="field"><div class="flabel">Local no mapa</div>
+              <div class="pickmap">
+                <div class="mapbg"></div>
+                <div class="mroad" style="top:38%;left:-8%;width:116%;height:5px;transform:rotate(-6deg)"></div>
+                <div class="mroad" style="top:0;left:50%;width:5px;height:100%;transform:rotate(4deg)"></div>
+                <div class="pickpin"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5" fill="#fff"/></svg></div>
+                <div class="pickhint">Toque no mapa pra ajustar o ponto</div>
+              </div></div>
+            <div class="field" style="padding-bottom:16px"><div class="flabel">Quem vê</div>
+              <div class="visseg">
+                <div class="o on"><svg class="i sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg> Público</div>
+                <div class="o"><svg class="i sm" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Privado</div>
+              </div>
+              <div class="vishint"><svg class="i sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg> Visível pra qualquer pessoa no mapa e na busca.</div>
+            </div>
+          </div>
+          <div class="stickycta">
+            <button class="btn btn-primary">Criar evento</button>
+          </div>
+        </div></div>
+        <div class="cap">Capa marcada na 1ª foto. Categorias com check (igual ao rolê). Endereço com autocomplete + ajuste fino no mapa. Visibilidade segmentada Público / Privado com dica.</div>
+      </div>
+
+    </div>
+
+    <div class="notes-2">
+      <div class="note plus"><span class="k">1</span><span><b>CTA fixo no rodapé</b> ("Criar evento") como no Publicar rolê — não precisa rolar o form inteiro pra enviar. O mesmo form serve <b>criar e editar</b>.</span></div>
+      <div class="note plus"><span class="k">2</span><span><b>Visibilidade segmentada</b> Público / Privado (substitui o switch solto) — mesma peça do "Quem vê" do rolê, com dica embaixo.</span></div>
+      <div class="note plus"><span class="k">3</span><span><b>Sem estrela de IA</b>: eventos são criados à mão. A assinatura de IA continua exclusiva dos spots — a diferença fica clara.</span></div>
+      <div class="note plus"><span class="k">4</span><span><b>Fotos no topo</b>: eventos têm capa (spots não). Primeira imagem marcada como "Capa"; as demais reordenáveis. Datas livres, sem teto de 24h.</span></div>
+    </div>
+  </section>
+
+  <div class="caption-foot">
+    Tokens reais de <span class="pill-inline">src/global.css</span> · tema dark único · marca violet #7c3aed · sem aurora/glow · toque ≥44px.<br>
+    Detalhe do rolê reúsa card/tile/pílula do fluxo de Spots · Criar evento reúsa a casca do Publicar rolê (label+hint, segmentado, CTA fixo). Falta você escolher: <b style="color:var(--brand-text-bright)">Opção A ou B</b> nas ações de dono.
+  </div>
+
+</div>
+</body>
+</html>
