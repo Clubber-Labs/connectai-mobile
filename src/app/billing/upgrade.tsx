@@ -8,7 +8,6 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import { useMyProfile } from '@/features/users/hooks/useProfile'
 import { useSubscribePremium } from '@/features/billing/hooks/useSubscribePremium'
 import { useSubscription } from '@/features/billing/hooks/useSubscription'
 import { usePlan } from '@/features/billing/hooks/usePlan'
@@ -28,7 +27,6 @@ const TERMINAL_STATUSES = ['CANCELED', 'INCOMPLETE_EXPIRED', 'UNPAID']
 
 export default function UpgradeScreen() {
   const router = useRouter()
-  const { data: profile } = useMyProfile()
   const { data: plan, isLoading: planLoading } = usePlan()
   const subscribe = useSubscribePremium()
 
@@ -50,10 +48,15 @@ export default function UpgradeScreen() {
     if (activated) router.replace('/billing/manage')
   }, [activated, router])
 
-  // Já é premium e não veio do fluxo de pagamento: nada a vender aqui.
+  // Já existe assinatura: nada a vender aqui → vai pra tela de gerenciar.
+  // Decide pela MESMA fonte que a manage (que volta pra cá quando subscription
+  // é null), então as duas guardas são complementares e nunca entram em
+  // ping-pong. Antes isso usava profile.isPremium: quando o premium ficava sem
+  // subscription (estado dessincronizado), upgrade↔manage se redirecionavam em
+  // loop infinito (Maximum update depth, crash).
   useEffect(() => {
-    if (profile?.isPremium && !activating) router.replace('/billing/manage')
-  }, [profile?.isPremium, activating, router])
+    if (subscription && !activating) router.replace('/billing/manage')
+  }, [subscription, activating, router])
 
   // Timeout: se o webhook não confirmar a tempo, sai do spinner pra UI de saída.
   useEffect(() => {
