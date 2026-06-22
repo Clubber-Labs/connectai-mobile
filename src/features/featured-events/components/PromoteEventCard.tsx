@@ -8,7 +8,7 @@ import { FormError } from '@/shared/components/FormError'
 import { useConfirm } from '@/shared/lib/confirm'
 import { getApiError } from '@/shared/lib/apiError'
 import { colors } from '@/shared/theme'
-import { formatDateTime } from '@/shared/utils/dateFormat'
+import { formatShortDate } from '@/shared/utils/dateFormat'
 import { usePromoteEvent } from '../hooks/usePromoteEvent'
 import { useCancelPromotion } from '../hooks/useCancelPromotion'
 import { useFeaturedEvent } from '../hooks/useFeaturedEvent'
@@ -44,6 +44,16 @@ export function PromoteEventCard({
   const [startDay, setStartDay] = useState<Date | undefined>()
   const [endDay, setEndDay] = useState<Date | undefined>()
 
+  // Mudar o início pra trás pode deixar um `endDay` já escolhido fora do teto
+  // (o maximumDate do picker só restringe novas seleções, não revalida o atual).
+  // Reclampa o fim aqui pra nunca enviar uma janela inválida.
+  function handleStartDayChange(day: Date | undefined) {
+    setStartDay(day)
+    if (!day || !endDay) return
+    const cap = day.getTime() + (MAX_PROMOTION_DAYS - 1) * DAY_MS
+    if (endDay.getTime() > cap) setEndDay(new Date(cap))
+  }
+
   function handlePromote() {
     if (!startDay || !endDay) return
     // Mapeia os dias escolhidos pra timestamps: começa no início do dia (ou
@@ -58,6 +68,11 @@ export function PromoteEventCard({
       Math.min(dayEnd.getTime(), new Date(eventDate).getTime()),
     )
     if (startsAt >= endsAt) return
+    // Guard de duração (belt-and-suspenders com o clamp e com o backend): nunca
+    // dispara a request com janela acima do teto.
+    if (endsAt.getTime() - startsAt.getTime() > MAX_PROMOTION_DAYS * DAY_MS) {
+      return
+    }
     promote.mutate({
       startsAt: startsAt.toISOString(),
       endsAt: endsAt.toISOString(),
@@ -99,13 +114,13 @@ export function PromoteEventCard({
           <Text className="text-content-muted text-sm">
             De{' '}
             <Text className="text-content">
-              {formatDateTime(feature.startsAt)}
+              {formatShortDate(feature.startsAt)}
             </Text>
           </Text>
           <Text className="text-content-muted text-sm">
             Até{' '}
             <Text className="text-content">
-              {formatDateTime(feature.endsAt)}
+              {formatShortDate(feature.endsAt)}
             </Text>
           </Text>
         </View>
@@ -212,7 +227,7 @@ export function PromoteEventCard({
         </Text>
         <DatePicker
           value={startDay}
-          onChange={setStartDay}
+          onChange={handleStartDayChange}
           placeholder="Selecione o dia"
           minimumDate={now}
           maximumDate={maxDate}
