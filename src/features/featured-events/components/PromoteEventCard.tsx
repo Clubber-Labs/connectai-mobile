@@ -18,7 +18,7 @@ import { SponsoredBadge } from './SponsoredBadge'
 // O backend é a fonte da verdade (rejeita com mensagem se divergir); aqui é só
 // pra limitar o picker e avisar o usuário.
 const MAX_PROMOTION_DAYS = 7
-const MAX_PROMOTION_MS = MAX_PROMOTION_DAYS * 24 * 60 * 60 * 1000
+const DAY_MS = 24 * 60 * 60 * 1000
 
 type Props = {
   eventId: string
@@ -40,11 +40,23 @@ export function PromoteEventCard({
   const promote = usePromoteEvent(eventId)
   const cancel = useCancelPromotion(eventId)
 
-  const [startsAt, setStartsAt] = useState<Date | undefined>()
-  const [endsAt, setEndsAt] = useState<Date | undefined>()
+  // Promoção é por DIA (sem hora): o usuário escolhe o primeiro e o último dia.
+  const [startDay, setStartDay] = useState<Date | undefined>()
+  const [endDay, setEndDay] = useState<Date | undefined>()
 
   function handlePromote() {
-    if (!startsAt || !endsAt) return
+    if (!startDay || !endDay) return
+    // Mapeia os dias escolhidos pra timestamps: começa no início do dia (ou
+    // agora, se for hoje) e vai até o fim do último dia, sem passar da data do
+    // evento. A hora exata não importa pro usuário — o backend valida o resto.
+    const dayStart = new Date(startDay)
+    dayStart.setHours(0, 0, 0, 0)
+    const startsAt = new Date(Math.max(Date.now(), dayStart.getTime()))
+    const dayEnd = new Date(endDay)
+    dayEnd.setHours(23, 59, 59, 999)
+    const endsAt = new Date(
+      Math.min(dayEnd.getTime(), new Date(eventDate).getTime()),
+    )
     if (startsAt >= endsAt) return
     promote.mutate({
       startsAt: startsAt.toISOString(),
@@ -169,10 +181,14 @@ export function PromoteEventCard({
   // Case 4: Premium, no active feature — show promotion form
   const now = new Date()
   const maxDate = new Date(eventDate)
-  // Fim no máximo em início + MAX_PROMOTION_DAYS (e nunca além da data do evento).
-  const endMaxDate = startsAt
+  // Último dia selecionável no "Fim": no máximo MAX_PROMOTION_DAYS dias corridos
+  // contando o dia inicial (logo, início + 6 dias) e nunca além da data do evento.
+  const endMaxDate = startDay
     ? new Date(
-        Math.min(startsAt.getTime() + MAX_PROMOTION_MS, maxDate.getTime()),
+        Math.min(
+          startDay.getTime() + (MAX_PROMOTION_DAYS - 1) * DAY_MS,
+          maxDate.getTime(),
+        ),
       )
     : maxDate
 
@@ -192,32 +208,32 @@ export function PromoteEventCard({
 
       <View className="gap-1">
         <Text className="text-sm font-medium text-content-tertiary">
-          Início da promoção
+          Primeiro dia
         </Text>
         <DatePicker
-          value={startsAt}
-          onChange={setStartsAt}
-          placeholder="Selecione data e hora"
+          value={startDay}
+          onChange={setStartDay}
+          placeholder="Selecione o dia"
           minimumDate={now}
           maximumDate={maxDate}
-          mode="datetime"
+          mode="date"
         />
       </View>
 
       <View className="gap-1">
         <Text className="text-sm font-medium text-content-tertiary">
-          Fim da promoção
+          Último dia
         </Text>
         <DatePicker
-          value={endsAt}
-          onChange={setEndsAt}
-          placeholder="Selecione data e hora"
-          minimumDate={startsAt ?? now}
+          value={endDay}
+          onChange={setEndDay}
+          placeholder="Selecione o dia"
+          minimumDate={startDay ?? now}
           maximumDate={endMaxDate}
-          mode="datetime"
+          mode="date"
         />
         <Text className="text-content-subtle text-xs">
-          Máximo de {MAX_PROMOTION_DAYS} dias por destaque.
+          Promoção por dia — máximo de {MAX_PROMOTION_DAYS} dias por destaque.
         </Text>
       </View>
 
@@ -229,7 +245,7 @@ export function PromoteEventCard({
         label="Promover evento"
         onPress={handlePromote}
         loading={promote.isPending}
-        disabled={!startsAt || !endsAt || startsAt >= endsAt}
+        disabled={!startDay || !endDay || endDay < startDay}
       />
     </View>
   )
